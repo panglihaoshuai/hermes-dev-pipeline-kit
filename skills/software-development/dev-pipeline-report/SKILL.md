@@ -1,0 +1,176 @@
+---
+name: dev-pipeline-report
+description: "Use when a Hermes development pipeline task needs its final evidence, verification, Codex verdict, commit/PR status, or acceptance decision reported."
+version: 1.0.0
+author: Codex
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [development, evidence, report, verification, codex-review]
+    related_skills: [dev-pipeline-orchestrator, gstack-review]
+---
+
+# Development Pipeline Report
+
+Use this as the final report format for `dev-pipeline-orchestrator`. Do not claim acceptance unless Codex review is PASS.
+
+## Executive Status
+
+- pipeline mode:
+- execution complete:
+- verification complete:
+- acceptance complete:
+- Codex verdict:
+- commit/PR status:
+- current gate:
+- stopped reason:
+- next automatic action:
+- user action required:
+- if user action required, why:
+
+## Role Performance
+
+- Hermes role performed:
+  - product manager: yes/no
+  - architect: yes/no
+  - QA verifier: yes/no
+- ClaudeCode role performed:
+  - implementation worker: yes/no
+- Codex role:
+  - not used / optional review / required gate / diagnosis / diff review
+- Codex disabled by user: yes/no
+
+## Task Classification
+
+- scale:
+- reasons:
+- risk level:
+
+## Intake Quality
+
+- original user prompt:
+- normalized task brief:
+- assumptions made:
+- questions asked:
+- questions skipped and why:
+- proceeded with defaults: yes/no
+- ambiguity level: low / medium / high
+- product direction confidence: high / medium / low
+
+## Plan Evidence
+
+- plan path:
+- gstack review:
+- obra/writing-plans:
+- Codex plan review:
+- Codex plan review verdict:
+
+## Work Orders
+
+| id | owner | required skill | files | retry count | status | evidence |
+| -- | ----- | -------------- | ----- | ----------- | ------ | -------- |
+
+- failed work order id:
+
+## Verification Evidence
+
+| command | exit code | key output | pass/fail |
+| ------- | --------- | ---------- | --------- |
+
+## Diff Summary
+
+- files changed:
+- generated files:
+- explicit staged files only?
+
+## Codex Review
+
+- verdict:
+- Codex plan review verdict:
+- Codex diff review verdict:
+- blocking issues:
+- resolved issues:
+- remaining risks:
+
+## Commit / PR
+
+- branch:
+- commit:
+- PR:
+- rollback command:
+
+## GitHub / Publish Readiness
+
+- publish requested: yes/no
+- GitHub remote present: present/missing/unknown
+- gh auth available: available/unavailable/unknown
+- GitHub skill/plugin available: available/unavailable/unknown
+- package manager:
+- build command:
+- test command:
+- project protocol files:
+  - README.md: present/missing/intentionally skipped
+  - CLAUDE.md: present/missing/intentionally skipped
+  - AGENTS.md: present/missing/intentionally skipped
+  - .github/workflows: present/missing/intentionally skipped
+- safe to commit: yes/no
+- safe to push/create PR: yes/no
+- user approval required: yes/no
+- recommended next action:
+
+## Final Decision
+
+Choose exactly one:
+- ACCEPTED
+- NOT ACCEPTED
+- PARTIAL
+- BLOCKED
+
+## Follow-up Backlog
+
+Every remaining risk after task completion must be classified per the Risk Classification Policy and listed in this table:
+
+| id | category | description | related to current task? | blocker? | recommended handling |
+| -- | -------- | ----------- | ------------------------ | -------- | -------------------- |
+
+Only BLOCKER and TASK_RELATED items may trigger automatic repair work orders.
+BASELINE_TECH_DEBT, OPTIONAL_POLISH, and BACKLOG items are recorded only.
+
+The report must explicitly state:
+
+- `safe to stop: yes/no`
+- `safe to commit: yes/no`
+- `safe to push/PR: yes/no`
+- `follow-up work required now: yes/no`
+
+If follow-up work is not required now, Hermes must not ask the user to continue repair.
+
+## Hard Rules
+
+- `acceptance complete: true` requires Codex verdict PASS.
+- Local grep is not acceptance.
+- Partial typecheck is not acceptance.
+- `git add -A` is not allowed for feature commits.
+- Hand-edited generated files are blocking unless Codex approves and evidence explains why.
+- Timeout requires a `timeout checkpoint`, not completion.
+- Forbidden file violations must be recorded in Verification Evidence AND Diff Summary, even if the change was technically necessary. The Final Decision should be PARTIAL or BLOCKED, not ACCEPTED.
+- Unrelated baseline technical debt must not trigger automatic repair work orders.
+- Post-commit verification findings must not be turned into a new development task unless the user explicitly asks.
+
+## Auto-Run Reporting Semantics
+
+In `auto_run`, report must not default to "next command for user to copy."
+
+Instead:
+- If the pipeline can continue automatically, state the next automatic action.
+- If user action is required, state the exact blocking reason.
+- If Codex FAIL/UNKNOWN, stop with blocking issues.
+- If commit/PR is next, ask approval.
+
+## Pitfalls
+
+1. **Forbidden file violations are the most common Claude Code failure mode.** Always run `git diff --name-status` in Gate 6 and cross-check against the work order's forbidden files list. Claude Code will not self-report violations.
+2. **Codex review is optional for S but the report must explain why.** Don't just skip it — state: "S 级, minimal risk, Codex review not required per Gate 7 rules."
+3. **The report is the ONLY artifact that proves the pipeline ran.** Without it, the pipeline did not finish. Never skip Gate 8.
+4. **Publish lane smoke tests use a different gate naming (A-G).** When the user asks for a publish lane smoke test, the gates map as: A→Gate 0 (detection), B→Gate 1 (repo discovery), C→toolchain discovery, D→package discovery, E→protocol file check, F→Gate 6 (verification), G→Gate 9.5 (approval stop). The report format is identical — use the standard `GitHub / Publish Readiness` section. See `references/github-publish-lane-smoke-test-2026-06-03.md` in the orchestrator skill for a complete PASS example.

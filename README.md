@@ -1,0 +1,317 @@
+# Hermes Dev Pipeline Kit
+
+一个可安装的 Hermes 开发流程 skill 包，将 Hermes 变成 **产品经理 + 架构师 + QA 调度器**，指挥 ClaudeCode 执行、通过 Codex 审查。
+
+A portable Hermes workflow kit: Hermes acts as product manager, architect, workflow owner, and QA verifier — delegating implementation to ClaudeCode and gating through Codex.
+
+This is NOT an official Hermes, Claude Code, Codex, OpenAI, Anthropic, or gstack project.
+
+---
+
+## 用 Hermes 安装 / Install with Hermes
+
+把本仓库链接发给 Hermes：
+
+```text
+安装这个 Hermes 工作流：<repo-url>
+```
+
+Hermes 会自动：clone → 读取 BOOTSTRAP.md → 检查依赖 → 运行 install --dry-run → 运行 doctor → 询问你是否安装。
+
+## 手动安装 / Manual Install
+
+```bash
+git clone <repo-url>
+cd hermes-dev-pipeline-kit
+bash scripts/install.sh --dry-run    # 预览
+bash scripts/install.sh --yes        # 安装
+bash scripts/doctor.sh               # 验证
+```
+
+---
+
+## 免责声明 / Disclaimer
+
+本项目不是 Hermes Agent、Claude Code、Codex 或 gstack 的官方项目。
+
+This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
+
+- Hermes, Claude Code, Codex, gstack, Matt Pocock skills, gh CLI 均为外部依赖，本项目不包含也不安装这些工具。
+- 本项目仅提供 Hermes skill 文件、协议模板和安装脚本。
+- 使用前请确保已安装 Hermes Agent 和 Claude Code CLI。
+- 本项目不收集任何数据，不发送任何网络请求。
+
+---
+
+## 目录
+
+- [免责声明 / Disclaimer](#免责声明--disclaimer)
+- [这是什么](#这是什么)
+- [角色分工](#角色分工)
+- [前置条件](#前置条件)
+- [安装前须知](#安装前须知)
+- [安装](#安装)
+- [验证](#验证)
+- [如何触发](#如何触发)
+- [S/M/L 工作流概览](#sml-工作流概览)
+- [安全规则](#安全规则)
+- [GitHub 发布通道](#github-发布通道)
+- [简短提示词协议](#简短提示词协议)
+- [卸载](#卸载)
+- [License](#license)
+
+---
+
+## 这是什么
+
+hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完整的软件开发调度能力：
+
+- **产品经理**：解读用户意图、定义 scope、拆分任务
+- **架构师**：设计实现方案、选择技术路径
+- **QA 调度器**：验证 ClaudeCode 输出、收集证据、决定通过/驳回
+- **ClaudeCode**：执行具体编码
+- **Codex**：独立审查门禁（plan review + diff review）
+
+整个流程有 9+ 个 Gate，每个 Gate 有明确的输入/输出/通过标准。
+
+---
+
+## 角色分工
+
+```
+┌─────────────────────────────────────────────────┐
+│                  用户 (User)                      │
+│   "修一下 toast 不消失的问题" / "加个功能"           │
+└──────────────────┬──────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────┐
+│              Hermes (调度器)                       │
+│  产品经理 ── 架构师 ── QA 验证器                     │
+│  · 意图识别    · 任务分类    · 制定计划               │
+│  · 拆分 WO     · 验证证据    · 决定通过/驳回          │
+└────────┬────────────────────────────┬────────────┘
+         │                            │
+         ▼                            ▼
+┌────────────────────┐    ┌──────────────────────┐
+│   ClaudeCode       │    │   Codex (审查门禁)     │
+│   执行工人          │    │   · Plan Review       │
+│   · 实现 WO        │    │   · Diff Review       │
+│   · 运行测试        │◄───│   · PASS / FAIL       │
+│   · 返回证据        │    │   · 风险诊断           │
+└────────────────────┘    └──────────────────────┘
+```
+
+**核心原则：**
+- Hermes 不做实质编码，不自我验收
+- ClaudeCode 只执行，不规划
+- Codex 独立审查，PASS 后才能标记 acceptance complete
+
+---
+
+## 前置条件
+
+| 条件 | 必需 | 说明 |
+|------|------|------|
+| Hermes Agent | ✅ | 已安装且可用 |
+| Claude Code CLI | ✅ | `claude` 命令可用 |
+| Codex CLI | 可选 | L 级任务、recovery、高风险 M 级需要 |
+| Node.js | 可选 | 用于 doctor.sh 验证 |
+
+---
+
+## 安装前须知
+
+- 运行 `bash scripts/install.sh --dry-run` 预览安装过程，确认无误后再安装。
+- 安装脚本会修改 `~/.hermes/skills/software-development/` 目录。
+- 安装脚本会检查 `~/.claude/CLAUDE.md` 是否包含 Hermes Delegation Protocol，如缺失会提示追加，但不会自动修改该文件。
+- doctor.sh 检查本工具包的安装状态，不检查 Hermes / Claude Code / Codex 的整体运行健康。
+- 本工具包不安装全局依赖，不写入 secret，不修改环境变量。
+
+---
+
+## 安装
+
+```bash
+bash scripts/install.sh
+```
+
+安装脚本会：
+1. 将 skills 复制到 `~/.hermes/skills/software-development/`
+2. 注册 skill 元数据
+3. 验证关键文件完整性
+
+---
+
+## 验证
+
+```bash
+bash scripts/doctor.sh
+```
+
+doctor.sh 检查：
+- skill 文件是否完整
+- templates 是否就位
+- Hermes Agent 是否可用
+- Claude Code CLI 是否可用
+- Codex CLI 是否可用（可选）
+
+---
+
+## 如何触发
+
+安装后，对 Hermes 说以下任意一种即可触发：
+
+| 你说 | 行为 |
+|------|------|
+| `用 dev skill 做 XXX` | 显式触发开发流程 |
+| `加个功能` | feature_development 意图 |
+| `修一下` | small_fix 意图 |
+| `重构 XXX` | 自动分类为 M/L |
+| `把这个想法落地` | idea_to_product 意图 |
+| `恢复之前那个没做好的功能` | recovery 意图（L 级） |
+| `把项目整理好上传 GitHub` | GitHub publish 通道 |
+
+Hermes 会自动识别意图、分类 S/M/L、选择对应流程。
+
+---
+
+## S/M/L 工作流概览
+
+### S 级（Small Fix）
+
+```
+Gate 0: 意图识别 + 分类
+  → Gate 1: 上下文发现
+    → Gate 4: ClaudeCode 执行
+      → Gate 6: Hermes 验证
+        → Gate 8: 报告
+```
+
+- 单文件、无 API、无 store、~100 行以内
+- Codex 可选
+- 快速路径，一个 WO
+
+### M 级（Feature / Medium）
+
+```
+Gate 0: 意图识别 + 分类
+  → Gate 1: 上下文发现
+    → Gate 2: 计划
+      → Gate 3: WO 拆分
+        → Gate 4-6: ClaudeCode 执行 + 验证循环
+          → Gate 7: Codex Diff Review（高风险时必需）
+            → Gate 8: 报告
+              → Gate 9: Commit 审批
+```
+
+- 2-5 文件、一个 feature slice
+- 高风险 M 级（API + state、generated files、auth）Codex 自动介入
+
+### L 级（Large / Complex）
+
+```
+Gate 0: 意图识别 + 分类
+  → Gate 1: 上下文发现
+    → Gate 2: 计划（writing-plans + gstack plan-eng-review）
+      → Gate 3: WO 拆分
+        → Gate 3.5: Codex Plan Review（必需）
+          → Gate 4-6: ClaudeCode 执行 + 验证循环
+            → Gate 7: Codex Diff Review（必需）
+              → Gate 8: 报告
+                → Gate 9: Commit 审批
+```
+
+- 6+ 文件、AI API、auth/security、generated files、CI/CD、recovery 等
+- Codex Plan Review 和 Diff Review 均为必需
+
+---
+
+## 安全规则
+
+| 规则 | 说明 |
+|------|------|
+| 🚫 不自动 push | 任何 push 操作需要用户审批 |
+| 🚫 不自动创建 PR | PR 创建需要用户审批 |
+| 🚫 不自动创建公开仓库 | 公开仓库创建需要明确审批 |
+| 🚫 不用 `git add -A` | 必须显式列出 staged 文件 |
+| 🚫 不提交 secrets | secrets 永远不进 commit |
+| ✅ Commit 需审批 | Gate 9 必须暂停等用户确认 |
+| ✅ Generated files 不能手改 | 必须用官方生成命令 |
+| ✅ Forbidden files 越权即 FAIL | ClaudeCode 改了禁止文件 → Gate 6 捕获 |
+| ✅ Codex PASS 才能标记 acceptance | 没有 Codex PASS 就不能说"完成" |
+
+详见 [docs/safety-rules.md](docs/safety-rules.md)。
+
+---
+
+## GitHub 发布通道
+
+当用户说"上传 GitHub"、"创建仓库"、"推送到 GitHub"等，Hermes 进入 **Publish Lane**：
+
+```
+Gate A: 发布意图检测
+  → Gate B: 仓库发现 (git status/remote/branch)
+    → Gate C: GitHub 工具链发现 (gh CLI/auth/skills)
+      → Gate D: 包/构建发现 (package manager/scripts)
+        → Gate E: 协议文件检查 (README/CLAUDE/AGENTS/CI)
+          → Gate F: 验证
+            → Gate G: 发布审批暂停 ⛔
+```
+
+**Gate G 是硬停止门禁**——所有发现就绪后，pipeline 暂停，等待用户明确批准 push/create repo/PR。
+
+正常开发流程在 Gate 9 停止，不会进入 Publish Lane，除非用户明确要求。
+
+---
+
+## 简短提示词协议
+
+Hermes 不要求用户提供完整的任务描述。简短提示词会被自动展开：
+
+**输入：** `修一下 toast 不消失的问题`
+
+**Hermes 内部展开为：**
+- user goal: 修复 toast 通知不自动消失
+- inferred intent: small_fix
+- project path: 当前项目
+- risk classification: S 或 M
+- verification commands: 需要确认的命令
+- Codex: S 级可选
+- approval gates: commit 需审批
+
+Hermes 会在报告的 "Intake Quality" 部分记录所有推断假设。
+
+详见 [docs/workflow-overview.md](docs/workflow-overview.md)。
+
+---
+
+## 卸载
+
+```bash
+# 先预览会删除什么
+bash scripts/uninstall.sh --dry-run
+
+# 确认后执行
+bash scripts/uninstall.sh
+```
+
+---
+
+## License
+
+MIT
+
+---
+
+## 相关文档
+
+| 文档 | 内容 |
+|------|------|
+| [docs/workflow-overview.md](docs/workflow-overview.md) | 完整 9-Gate 流程详解 |
+| [docs/usage-examples.md](docs/usage-examples.md) | 5 个使用示例 |
+| [docs/safety-rules.md](docs/safety-rules.md) | 安全规则完整说明 |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | 常见问题排查 |
+| [examples/simple-prompt-smoke.md](examples/simple-prompt-smoke.md) | 简短提示词全流程 trace |
+| [examples/github-publish-smoke.md](examples/github-publish-smoke.md) | GitHub 发布通道 smoke test |
+| [examples/recovery-task-smoke.md](examples/recovery-task-smoke.md) | Recovery 任务全流程 trace |

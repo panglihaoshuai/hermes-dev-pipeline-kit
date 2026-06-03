@@ -1,0 +1,93 @@
+name: hermes-dev-pipeline-kit
+version: 0.1.0
+description: >
+  Portable Hermes workflow skills for development pipeline orchestration.
+  Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
+
+entrypoints:
+  agent_bootstrap: BOOTSTRAP.md
+  human_readme: README.md
+  agent_install_guide: docs/agent-install.md
+  install: scripts/install.sh
+  install_deps: scripts/install-deps.sh
+  doctor: scripts/doctor.sh
+  uninstall: scripts/uninstall.sh
+  manifest: manifest.yaml
+
+skills:
+  hermes:
+    required:
+      - path: skills/software-development/dev-pipeline-orchestrator
+        install_to: "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
+        description: Main development task entrypoint with pipeline orchestration
+      - path: skills/software-development/dev-pipeline-report
+        install_to: "~/.hermes/skills/software-development/dev-pipeline-report"
+        description: Final evidence/verification report format
+
+protocols:
+  claude_code:
+    required_protocol: protocols/claude-delegation-protocol.md
+    target_hint: "~/.claude/CLAUDE.md"
+    description: >
+      Hermes Delegation Protocol — teaches ClaudeCode to obey work orders
+      from dev-pipeline-orchestrator. The installer checks if this protocol
+      exists in ~/.claude/CLAUDE.md and warns if missing, but never overwrites.
+
+dependencies:
+  required_tools:
+    - name: git
+      source: system
+      auto_install: false
+      description: Version control, required for clone and skill management
+    - name: bash
+      source: system
+      auto_install: false
+      description: Shell interpreter for install/doctor/uninstall scripts
+    - name: grep
+      source: system
+      auto_install: false
+      description: Pattern matching for doctor checks and CI
+
+  recommended_hermes_skills:
+    - name: gstack
+      source: https://github.com/garrytan/gstack
+      auto_install: approval_required
+      description: >
+        Provides plan-eng-review, plan-ceo-review, investigate, ship, review,
+        retro, and other development workflow skills used by dev-pipeline-orchestrator.
+        Install requires user approval.
+
+  recommended_claude_code_skills:
+    - name: mattpocock-skills
+      source: https://github.com/mattpocock/skills
+      auto_install: approval_required
+      description: >
+        Matt Pocock's skills (tdd, diagnose, prototype, to-issues, grill-me)
+        used by ClaudeCode when executing work orders.
+        Install requires user approval.
+
+  optional_tools:
+    - name: gh
+      source: https://cli.github.com/
+      auto_install: false
+      description: >
+        GitHub CLI for repo creation, push, PR operations.
+        Used by GitHub Publish / Project Bootstrap Lane.
+        Not required for core pipeline functionality.
+
+safety:
+  never_commit_secrets: true
+  never_git_add_all: true
+  never_overwrite_claude_md: true
+  require_approval_for_dependency_install: true
+  require_approval_for_push_or_repo_create: true
+  require_approval_for_claude_md_modification: true
+  installer_modifies:
+    - "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
+    - "~/.hermes/skills/software-development/dev-pipeline-report"
+  installer_does_not_modify:
+    - "~/.claude/CLAUDE.md"  # only warns, never writes
+    - "~/.claude/settings.json"
+    - "any business project"
+    - "any git remote"
+    - "any environment variable"
