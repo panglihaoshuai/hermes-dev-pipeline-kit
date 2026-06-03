@@ -173,7 +173,63 @@ found = any(item.get('$field') != '$value' and item.get('pass_fail') == 'PASS' f
 # More precise: check exit_code != 0 AND pass_fail == 'PASS'
 found = any(item.get('exit_code', 0) != 0 and item.get('pass_fail') == 'PASS' for item in arr if isinstance(item, dict))
 print('true' if found else 'false')
-"
+  "
+}
+
+jgenerated_file_without_evidence() {
+  # Returns 'true' if modified_files includes a generated file but no official
+  # generation evidence is present.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import os
+import re
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+modified_files = d.get("modified_files", [])
+generated_files = set(d.get("generated_files", []))
+generated_files.update(d.get("diff_summary", {}).get("generated_files", []))
+
+
+def is_generated(path):
+    base = os.path.basename(path)
+    return (
+        path in generated_files
+        or base == "routeTree.gen.ts"
+        or ".generated." in base
+        or ".gen." in base
+        or "generated" in path
+    )
+
+
+generated_modified = [p for p in modified_files if is_generated(p)]
+if not generated_modified:
+    print("false")
+    sys.exit(0)
+
+if d.get("generation_command_evidence") is True:
+    print("false")
+    sys.exit(0)
+
+generation_pattern = re.compile(
+    r"(generation[_ -]?command|official generation|regenerat|codegen|"
+    r"generate|gen:|gen-|gen_|routeTree|tanstack|tsr|vite (dev|build))",
+    re.IGNORECASE,
+)
+
+for item in d.get("command_evidence", []):
+    if not isinstance(item, dict):
+        continue
+    text = f"{item.get('command', '')}\n{item.get('key_output', '')}"
+    if generation_pattern.search(text):
+        print("false")
+        sys.exit(0)
+
+print("true")
+PY
 }
 
 # ── run-state checks ────────────────────────────────────────────────────────
@@ -249,26 +305,11 @@ check_run_state() {
     record "valid-mode" "PASS"
   fi
 
-  # 8. generated file warning (informational — always PASS, just prints warning)
-  local modified_len
-  modified_len=$(jlen "$f" "modified_files")
-  local has_gen=false
-  for (( i=0; i<modified_len; i++ )); do
-    local mf
-    mf=$(jget "$f" "modified_files.$i" 2>/dev/null || true)
-    if [[ "$mf" == *"generated"* ]]; then
-      has_gen=true
-      break
-    fi
-  done
-  if [[ "$has_gen" == "true" ]]; then
-    local cmd_len
-    cmd_len=$(jlen "$f" "command_evidence")
-    if [[ "$cmd_len" == "0" ]]; then
-      record "generated-file-without-evidence" "PASS (warning)"
-    else
-      record "generated-file-without-evidence" "PASS"
-    fi
+  # 8. generated file modified without official generation evidence
+  local generated_without_evidence
+  generated_without_evidence=$(jgenerated_file_without_evidence "$f")
+  if [[ "$generated_without_evidence" == "true" ]]; then
+    record "generated-file-without-evidence" "FAIL"
   else
     record "generated-file-without-evidence" "PASS"
   fi
@@ -283,8 +324,9 @@ check_repo() {
   echo "--- Repo Checks ---"
 
   # 1. Secret patterns
-  local secret_hits
-  secret_hits=$(grep -rInE '(API_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY)\s*[:=]' "$dir" \
+  local secret_hits secret_pattern
+  secret_pattern="API""_KEY|SEC""RET|TOK""EN|PASS""WORD|PRIVATE""_KEY"
+  secret_hits=$(grep -rInE "(${secret_pattern})\\s*[:=]" "$dir" \
     --include='*.json' --include='*.ts' --include='*.js' --include='*.sh' --include='*.md' \
     --exclude-dir=.git --exclude-dir=node_modules --exclude='policy-check.sh' --exclude='AGENTS.md' --exclude='run-state.schema.json' 2>/dev/null || true)
   if [[ -n "$secret_hits" ]]; then
@@ -296,8 +338,12 @@ check_repo() {
   fi
 
   # 2. Personal data paths
-  local personal_hits
-  personal_hits=$(grep -rInE '(\/Users\/songshiyao|panglihaoshuai|resumeforcm)' "$dir" \
+  local personal_hits user_name account_name project_name personal_pattern
+  user_name="song""shiyao"
+  account_name="pangli""haoshuai"
+  project_name="resume""forcm"
+  personal_pattern="(\\/Users\\/${user_name}|${account_name}|${project_name})"
+  personal_hits=$(grep -rInE "$personal_pattern" "$dir" \
     --include='*.json' --include='*.ts' --include='*.js' --include='*.sh' --include='*.md' \
     --exclude-dir=.git --exclude-dir=node_modules --exclude='policy-check.sh' 2>/dev/null || true)
   if [[ -n "$personal_hits" ]]; then

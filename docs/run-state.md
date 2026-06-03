@@ -58,6 +58,8 @@ The run-state is updated at each gate transition:
 | `allowed_files`    | string[] | Files the run may modify                       |
 | `forbidden_files`  | string[] | Files the run must NOT modify                  |
 | `modified_files`   | string[] | Files actually modified                        |
+| `generated_files`  | string[] | Known generated artifacts, optional            |
+| `generation_command_evidence` | boolean | True when official generation command evidence exists, optional |
 | `command_evidence` | array    | Commands run with exit codes and results       |
 | `codex`            | object   | Codex review verdicts                          |
 | `verification`     | object   | Git diff, test, and typecheck results          |
@@ -101,10 +103,13 @@ These flags track whether the user has approved destructive operations:
 `policy-check.sh` reads the run-state JSON and validates pipeline policies:
 
 1. **Forbidden file check** — ensures `modified_files` contains no entries from `forbidden_files`
-2. **Codex review check** — for M/L tasks, ensures plan_review and diff_review verdicts are not FAIL
-3. **Verification check** — ensures `tests_pass` is true and `git_diff_check_exit` is 0
-4. **Acceptance check** — ensures `acceptance.complete` is true and `final_decision` is ACCEPTED
-5. **Approval gate checks** — ensures required approvals are granted before proceeding
+2. **Generated file check** — if `modified_files` contains `routeTree.gen.ts`, `*.generated.*`, `*.gen.*`, a path containing `generated`, or a file listed in `generated_files`, then official generation command evidence is required
+3. **Codex review check** — for M/L tasks, ensures plan_review and diff_review verdicts are not FAIL
+4. **Verification check** — ensures `tests_pass` is true and `git_diff_check_exit` is 0
+5. **Acceptance check** — ensures `acceptance.complete` is true and `final_decision` is ACCEPTED
+6. **Approval gate checks** — ensures required approvals are granted before proceeding
+
+Generated files without `generation_command_evidence: true` or matching command evidence fail for every task scale, including S-level tasks.
 
 If any check fails, `policy-check.sh` exits non-zero with a description of the violation.
 

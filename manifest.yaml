@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.1.0
+version: 0.2.0
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -11,6 +11,7 @@ entrypoints:
   install: scripts/install.sh
   install_deps: scripts/install-deps.sh
   doctor: scripts/doctor.sh
+  ci_local: scripts/ci-local.sh
   uninstall: scripts/uninstall.sh
   manifest: manifest.yaml
 

@@ -81,6 +81,7 @@ ENTRYPOINT_FILES=(
   "README.md"
   "scripts/install.sh"
   "scripts/doctor.sh"
+  "scripts/ci-local.sh"
   "scripts/uninstall.sh"
   "scripts/install-deps.sh"
   "protocols/claude-delegation-protocol.md"

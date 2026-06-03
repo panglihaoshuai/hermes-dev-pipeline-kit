@@ -130,6 +130,17 @@
         "type": "string"
       }
     },
+    "generated_files": {
+      "type": "array",
+      "description": "Files known to be generated artifacts. If any are modified, generation evidence is required.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generation_command_evidence": {
+      "type": "boolean",
+      "description": "True when the run explicitly verified that generated files were produced by an official generation command."
+    },
     "command_evidence": {
       "type": "array",
       "description": "Record of commands executed and their results.",

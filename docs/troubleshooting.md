@@ -181,6 +181,8 @@ Gate 3.5 或 Gate 7 的 Codex review 返回 FAIL 或 UNKNOWN。
 ### 症状
 `git diff --name-status` 显示 generated file 被修改，且没有证据表明使用了官方生成命令。
 
+在 v0.2 中，这不是 warning。`policy-check.sh` 必须返回 FAIL，即使任务是 S 级。
+
 ### 典型 generated files
 - `routeTree.gen.ts`（TanStack Router）
 - `*.generated.ts`（GraphQL codegen）

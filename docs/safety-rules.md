@@ -87,6 +87,8 @@ Gate 6 验证时会检查 staged files 中是否有 secrets 模式。
 ### 阻塞条件
 Generated files 被手改且没有 Codex 批准 → **blocking issue**。
 
+在 v0.2 policy-check 中，只要 `modified_files` 包含 generated file 且没有官方 generation command evidence，检查必须 **FAIL**。这个规则适用于所有任务级别，包括 S 级。
+
 ---
 
 ## 5. Forbidden Files 越权即 FAIL
