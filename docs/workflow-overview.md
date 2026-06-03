@@ -439,3 +439,17 @@ git diff --stat              # 改动统计
 | `auto_run`（默认） | 完整流程——分类、计划、拆 WO、Codex plan review（需时）、ClaudeCode 执行、Hermes 验证、Codex diff review（需时）、report、仅在阻塞条件时停止 |
 
 默认 `auto_run`，除非用户明确说 dry-run / plan-only / audit-only / 只读 / 只审查。
+
+---
+
+## v0.2 Harness Hardening
+
+v0.2 增加了以下可执行检查：
+
+- `run-state schema`: pipeline 执行状态的 JSON schema 定义
+- `policy-check.sh`: 基于 run-state 的安全策略检查
+- `smoke scripts`: 4 个 harness behavior fixture checks
+- `check-manifest.sh`: manifest.yaml 完整性检查
+- `dev-pipeline-report schema`: 报告的 JSON 格式定义
+
+这些是 **harness checks**，不是 runtime 引擎。它们能抓住一部分危险状态，但不能证明所有 runtime 行为都符合预期。

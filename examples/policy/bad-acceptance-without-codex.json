@@ -1,0 +1,75 @@
+{
+  "run_id": "2026-06-03T15:10:00Z",
+  "project": "my-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 9",
+  "classification": {
+    "scale": "L",
+    "reasons": [
+      "Cross-module refactor",
+      "Schema migration required",
+      "Multiple dependency changes"
+    ],
+    "risk_level": "high"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "hermes",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "status": "completed",
+      "files": ["src/core/engine.ts", "src/core/types.ts"],
+      "retries": 1
+    }
+  ],
+  "allowed_files": [
+    "src/core/engine.ts",
+    "src/core/types.ts",
+    "tests/core/engine.test.ts"
+  ],
+  "forbidden_files": [
+    ".env",
+    "secrets.json"
+  ],
+  "modified_files": [
+    "src/core/engine.ts",
+    "src/core/types.ts"
+  ],
+  "command_evidence": [
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "key_output": "All tests passed",
+      "pass_fail": "PASS"
+    },
+    {
+      "command": "tsc --noEmit",
+      "exit_code": 0,
+      "key_output": "No type errors",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "UNKNOWN",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/core/engine.ts\nM\tsrc/core/types.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": 0
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

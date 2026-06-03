@@ -107,4 +107,19 @@ rm -rf /tmp/hermes-dev-pipeline-kit-install
 |-----------|---------|
 | Core skills + protocol + all deps | PASS |
 | Core skills + protocol, some optional deps missing | PARTIAL |
-| Core skills missing or protocol missing | FAIL |
+|| Core skills missing or protocol missing | FAIL |
+
+## v0.2 Additional Checks
+
+安装后，agent 可以运行以下额外检查：
+
+```bash
+bash scripts/check-manifest.sh              # 验证 manifest 完整性
+bash scripts/policy-check.sh --repo .       # 验证仓库无 policy 违规
+bash scripts/smoke/smoke-small-fix.sh       # S 级 behavior fixture
+bash scripts/smoke/smoke-forbidden-file.sh  # forbidden file fixture
+bash scripts/smoke/smoke-codex-required.sh  # Codex required fixture
+bash scripts/smoke/smoke-publish-lane-stop.sh # publish lane stop fixture
+```
+
+这些是 harness fixture checks，不是真 Hermes E2E tests。

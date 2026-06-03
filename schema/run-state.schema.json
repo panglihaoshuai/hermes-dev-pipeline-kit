@@ -1,0 +1,295 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/run-state.schema.json",
+  "title": "Run State",
+  "description": "Pipeline execution state snapshot for hermes-dev-pipeline-kit. Captures gate progression, classification, work orders, verification results, and approval status.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "project",
+    "mode",
+    "current_gate",
+    "classification",
+    "work_orders",
+    "allowed_files",
+    "forbidden_files",
+    "modified_files",
+    "command_evidence",
+    "codex",
+    "verification",
+    "acceptance",
+    "approval_gates",
+    "baseline_debt",
+    "follow_up_backlog"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this pipeline run (UUID or ISO 8601 timestamp).",
+      "minLength": 1
+    },
+    "project": {
+      "type": "string",
+      "description": "Project path or name being processed.",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "description": "Pipeline execution mode.",
+      "enum": ["dry_run", "plan_only", "auto_run"]
+    },
+    "current_gate": {
+      "type": "string",
+      "description": "Current pipeline gate (e.g. 'Gate 0', 'Gate 3.5', 'Gate 9').",
+      "minLength": 1
+    },
+    "classification": {
+      "type": "object",
+      "description": "Task scale classification determined at Gate 0.",
+      "required": ["scale", "reasons", "risk_level"],
+      "additionalProperties": false,
+      "properties": {
+        "scale": {
+          "type": "string",
+          "description": "Task size classification.",
+          "enum": ["S", "M", "L"]
+        },
+        "reasons": {
+          "type": "array",
+          "description": "Reasons for the assigned scale.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risk_level": {
+          "type": "string",
+          "description": "Risk assessment level.",
+          "enum": ["low", "medium", "high"]
+        }
+      }
+    },
+    "work_orders": {
+      "type": "array",
+      "description": "List of work orders (subtasks) for this run.",
+      "items": {
+        "type": "object",
+        "required": ["id", "owner", "required_skill", "status", "files", "retries"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique work order identifier."
+          },
+          "owner": {
+            "type": "string",
+            "description": "Agent or user responsible for this work order."
+          },
+          "required_skill": {
+            "type": "string",
+            "description": "Skill required to execute this work order."
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of the work order.",
+            "enum": ["pending", "in_progress", "completed", "failed", "blocked"]
+          },
+          "files": {
+            "type": "array",
+            "description": "Files affected by this work order.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "retries": {
+            "type": "integer",
+            "description": "Number of retry attempts.",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "allowed_files": {
+      "type": "array",
+      "description": "Files this run is permitted to modify.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_files": {
+      "type": "array",
+      "description": "Files this run must not modify.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "modified_files": {
+      "type": "array",
+      "description": "Files actually modified during this run.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "command_evidence": {
+      "type": "array",
+      "description": "Record of commands executed and their results.",
+      "items": {
+        "type": "object",
+        "required": ["command", "exit_code", "key_output", "pass_fail"],
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command that was executed."
+          },
+          "exit_code": {
+            "type": "integer",
+            "description": "Exit code returned by the command."
+          },
+          "key_output": {
+            "type": "string",
+            "description": "Key output or summary from the command."
+          },
+          "pass_fail": {
+            "type": "string",
+            "description": "Whether the command passed or failed.",
+            "enum": ["PASS", "FAIL"]
+          }
+        }
+      }
+    },
+    "codex": {
+      "type": "object",
+      "description": "Codex review results. S-level tasks set verdicts to NOT_REQUIRED.",
+      "required": ["plan_review_verdict", "diff_review_verdict", "disabled_by_user"],
+      "additionalProperties": false,
+      "properties": {
+        "plan_review_verdict": {
+          "type": "string",
+          "description": "Verdict from Codex plan review.",
+          "enum": ["PASS", "PASS_WITH_REQUIRED_CHANGES", "FAIL", "UNKNOWN", "NOT_REQUIRED"]
+        },
+        "diff_review_verdict": {
+          "type": "string",
+          "description": "Verdict from Codex diff review.",
+          "enum": ["PASS", "PASS_WITH_REQUIRED_CHANGES", "FAIL", "UNKNOWN", "NOT_REQUIRED"]
+        },
+        "disabled_by_user": {
+          "type": "boolean",
+          "description": "Whether Codex review was explicitly disabled by the user."
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "description": "Verification results from final checks.",
+      "required": ["git_diff_name_status", "git_diff_check_exit", "tests_pass", "typecheck_exit"],
+      "additionalProperties": false,
+      "properties": {
+        "git_diff_name_status": {
+          "type": "string",
+          "description": "Output of git diff --name-status against baseline."
+        },
+        "git_diff_check_exit": {
+          "type": "integer",
+          "description": "Exit code from git diff --check (0 = no conflicts/issues)."
+        },
+        "tests_pass": {
+          "type": "boolean",
+          "description": "Whether all tests passed."
+        },
+        "typecheck_exit": {
+          "type": ["integer", "null"],
+          "description": "Exit code from typecheck command, or null if not applicable."
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "description": "Final acceptance status of the pipeline run.",
+      "required": ["complete", "final_decision"],
+      "additionalProperties": false,
+      "properties": {
+        "complete": {
+          "type": "boolean",
+          "description": "Whether the pipeline run completed all required gates."
+        },
+        "final_decision": {
+          "type": "string",
+          "description": "Final acceptance decision.",
+          "enum": ["ACCEPTED", "NOT_ACCEPTED", "PARTIAL", "BLOCKED"]
+        }
+      }
+    },
+    "approval_gates": {
+      "type": "object",
+      "description": "User approval status for destructive operations.",
+      "required": ["commit_approved", "push_approved", "pr_approved", "repo_create_approved"],
+      "additionalProperties": false,
+      "properties": {
+        "commit_approved": {
+          "type": "boolean",
+          "description": "Whether git commit was approved by user."
+        },
+        "push_approved": {
+          "type": "boolean",
+          "description": "Whether git push was approved by user."
+        },
+        "pr_approved": {
+          "type": "boolean",
+          "description": "Whether pull request creation was approved by user."
+        },
+        "repo_create_approved": {
+          "type": "boolean",
+          "description": "Whether repository creation was approved by user."
+        }
+      }
+    },
+    "baseline_debt": {
+      "type": "array",
+      "description": "Pre-existing technical debt acknowledged at run start.",
+      "items": {
+        "type": "object",
+        "required": ["category", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Debt category (e.g. 'missing_tests', 'no_types', 'dead_code')."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the debt item."
+          }
+        }
+      }
+    },
+    "follow_up_backlog": {
+      "type": "array",
+      "description": "Items deferred to future runs.",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "description", "blocker"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the backlog item."
+          },
+          "category": {
+            "type": "string",
+            "description": "Backlog category (e.g. 'refactor', 'test_coverage', 'documentation')."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the follow-up item."
+          },
+          "blocker": {
+            "type": "string",
+            "description": "What blocks this item from being addressed now, or 'none' if just deferred."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "run_id": "2026-06-03T15:20:00Z",
+  "project": "my-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 9",
+  "classification": {
+    "scale": "S",
+    "reasons": [
+      "Type generation update",
+      "No logic changes"
+    ],
+    "risk_level": "low"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "hermes",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "status": "completed",
+      "files": ["src/generated-types.ts"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": [
+    "src/generated-types.ts"
+  ],
+  "forbidden_files": [
+    ".env",
+    "secrets.json"
+  ],
+  "modified_files": [
+    "src/generated-types.ts"
+  ],
+  "command_evidence": [],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/generated-types.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": 0
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "PARTIAL"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

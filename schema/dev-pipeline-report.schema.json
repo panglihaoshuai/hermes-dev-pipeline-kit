@@ -1,0 +1,250 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hermes-dev-pipeline-kit/schema/dev-pipeline-report.schema.json",
+  "title": "Dev Pipeline Report",
+  "description": "Schema for the dev-pipeline-report output produced by the Hermes dev pipeline.",
+  "type": "object",
+  "required": [
+    "pipeline_mode",
+    "execution_complete",
+    "verification_complete",
+    "acceptance_complete",
+    "codex_verdict",
+    "current_gate",
+    "stopped_reason",
+    "next_automatic_action",
+    "user_action_required",
+    "user_action_reason",
+    "role_performance",
+    "task_classification",
+    "intake_quality",
+    "work_orders",
+    "verification_evidence",
+    "diff_summary",
+    "codex_review",
+    "final_decision",
+    "follow_up_backlog",
+    "safety"
+  ],
+  "properties": {
+    "pipeline_mode": {
+      "type": "string",
+      "enum": ["dry_run", "plan_only", "auto_run"],
+      "description": "The mode the pipeline executed in."
+    },
+    "execution_complete": {
+      "type": "boolean",
+      "description": "Whether the execution phase completed."
+    },
+    "verification_complete": {
+      "type": "boolean",
+      "description": "Whether the verification phase completed."
+    },
+    "acceptance_complete": {
+      "type": "boolean",
+      "description": "Whether the acceptance phase completed."
+    },
+    "codex_verdict": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_REQUIRED_CHANGES", "FAIL", "UNKNOWN", "NOT_REQUIRED"],
+      "description": "Verdict from Codex review, or NOT_REQUIRED if skipped."
+    },
+    "commit_pr_status": {
+      "type": "string",
+      "description": "Status of commit and/or PR creation (e.g. 'committed_locally', 'pr_opened', 'not_attempted')."
+    },
+    "current_gate": {
+      "type": "string",
+      "description": "The gate the pipeline is currently at or stopped at."
+    },
+    "stopped_reason": {
+      "type": "string",
+      "description": "Why the pipeline stopped. Empty string if not stopped early."
+    },
+    "next_automatic_action": {
+      "type": "string",
+      "description": "What the pipeline will do next automatically, or empty if none."
+    },
+    "user_action_required": {
+      "type": "boolean",
+      "description": "Whether the user needs to take manual action."
+    },
+    "user_action_reason": {
+      "type": "string",
+      "description": "Explanation of what the user needs to do, or empty if none."
+    },
+    "role_performance": {
+      "type": "object",
+      "description": "Which roles performed their assigned work.",
+      "properties": {
+        "hermes": {
+          "type": "object",
+          "properties": {
+            "product_manager": { "type": "boolean" },
+            "architect": { "type": "boolean" },
+            "qa_verifier": { "type": "boolean" }
+          },
+          "required": ["product_manager", "architect", "qa_verifier"]
+        },
+        "claude_code": {
+          "type": "object",
+          "properties": {
+            "implementation_worker": { "type": "boolean" }
+          },
+          "required": ["implementation_worker"]
+        },
+        "codex": {
+          "type": "object",
+          "properties": {
+            "role": { "type": "string" },
+            "disabled_by_user": { "type": "boolean" }
+          },
+          "required": ["role", "disabled_by_user"]
+        }
+      },
+      "required": ["hermes", "claude_code", "codex"]
+    },
+    "task_classification": {
+      "type": "object",
+      "description": "Classification of the task scale and risk.",
+      "properties": {
+        "scale": {
+          "type": "string",
+          "enum": ["S", "M", "L"],
+          "description": "Task size classification."
+        },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Reasons for the scale classification."
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Assessed risk level."
+        }
+      },
+      "required": ["scale", "reasons", "risk_level"]
+    },
+    "intake_quality": {
+      "type": "object",
+      "description": "Quality assessment of the initial user request intake.",
+      "properties": {
+        "original_prompt": { "type": "string" },
+        "normalized_brief": { "type": "string" },
+        "assumptions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "questions_asked": { "type": "integer", "minimum": 0 },
+        "proceeded_with_defaults": { "type": "boolean" },
+        "ambiguity_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "product_direction_confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        }
+      },
+      "required": [
+        "original_prompt",
+        "normalized_brief",
+        "assumptions",
+        "questions_asked",
+        "proceeded_with_defaults",
+        "ambiguity_level",
+        "product_direction_confidence"
+      ]
+    },
+    "work_orders": {
+      "type": "array",
+      "description": "Work orders issued during the pipeline run.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "owner": { "type": "string" },
+          "required_skill": { "type": "string" },
+          "files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "retry_count": { "type": "integer", "minimum": 0 },
+          "status": { "type": "string" },
+          "evidence": { "type": "string" }
+        },
+        "required": ["id", "owner", "required_skill", "files", "retry_count", "status", "evidence"]
+      }
+    },
+    "verification_evidence": {
+      "type": "array",
+      "description": "Commands run during verification and their results.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "key_output": { "type": "string" },
+          "pass_fail": { "type": "string", "enum": ["PASS", "FAIL"] }
+        },
+        "required": ["command", "exit_code", "key_output", "pass_fail"]
+      }
+    },
+    "diff_summary": {
+      "type": "object",
+      "description": "Summary of the code diff produced.",
+      "properties": {
+        "files_changed": { "type": "integer", "minimum": 0 },
+        "generated_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "explicit_staged_only": { "type": "boolean" }
+      },
+      "required": ["files_changed", "generated_files", "explicit_staged_only"]
+    },
+    "codex_review": {
+      "type": "object",
+      "description": "Results of Codex plan and diff review.",
+      "properties": {
+        "plan_review_verdict": { "type": "string" },
+        "diff_review_verdict": { "type": "string" },
+        "blocking_issues": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "remaining_risks": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["plan_review_verdict", "diff_review_verdict", "blocking_issues", "remaining_risks"]
+    },
+    "github_publish_readiness": {
+      "type": "object",
+      "description": "Assessment of readiness to publish to GitHub. Optional field."
+    },
+    "final_decision": {
+      "type": "string",
+      "enum": ["ACCEPTED", "NOT_ACCEPTED", "PARTIAL", "BLOCKED"],
+      "description": "Final acceptance decision."
+    },
+    "follow_up_backlog": {
+      "type": "array",
+      "description": "Items that should be followed up on after the pipeline run.",
+      "items": { "type": "string" }
+    },
+    "safety": {
+      "type": "object",
+      "description": "Safety flags indicating what operations are safe to perform.",
+      "properties": {
+        "safe_to_stop": { "type": "boolean" },
+        "safe_to_commit": { "type": "boolean" },
+        "safe_to_push_pr": { "type": "boolean" },
+        "follow_up_required_now": { "type": "boolean" }
+      },
+      "required": ["safe_to_stop", "safe_to_commit", "safe_to_push_pr", "follow_up_required_now"]
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "run_id": "2026-06-03T14:30:00Z",
+  "project": "my-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 9",
+  "classification": {
+    "scale": "S",
+    "reasons": [
+      "Single file change",
+      "No new dependencies",
+      "No schema or migration changes",
+      "Pure bug fix with clear scope"
+    ],
+    "risk_level": "low"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "hermes",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "status": "completed",
+      "files": ["src/utils/format.ts"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": [
+    "src/utils/format.ts",
+    "tests/utils/format.test.ts"
+  ],
+  "forbidden_files": [
+    ".env",
+    ".env.local",
+    "secrets.json"
+  ],
+  "modified_files": [
+    "src/utils/format.ts"
+  ],
+  "command_evidence": [
+    {
+      "command": "bash -n scripts/*.sh",
+      "exit_code": 0,
+      "key_output": "All scripts pass syntax check",
+      "pass_fail": "PASS"
+    },
+    {
+      "command": "npm test -- --passWithNoTests",
+      "exit_code": 0,
+      "key_output": "Test Suites: 1 passed, 1 total",
+      "pass_fail": "PASS"
+    },
+    {
+      "command": "git diff --check HEAD",
+      "exit_code": 0,
+      "key_output": "No whitespace errors",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/utils/format.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

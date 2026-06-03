@@ -1,0 +1,67 @@
+{
+  "run_id": "2026-06-03T15:00:00Z",
+  "project": "my-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 9",
+  "classification": {
+    "scale": "M",
+    "reasons": [
+      "Multiple file changes",
+      "Bug fix with moderate scope"
+    ],
+    "risk_level": "medium"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "hermes",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "status": "completed",
+      "files": ["src/index.js", "package.json"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": [
+    "src/index.js",
+    "src/utils.js"
+  ],
+  "forbidden_files": [
+    "package.json",
+    ".env"
+  ],
+  "modified_files": [
+    "src/index.js",
+    "package.json"
+  ],
+  "command_evidence": [
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "key_output": "All tests passed",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/index.js\nM\tpackage.json",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

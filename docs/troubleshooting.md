@@ -277,4 +277,22 @@ GitHub Publish Lane 的 Gate E 发现缺少 README.md / CLAUDE.md / AGENTS.md / 
 | generated file 被手改 | 没用官方命令 | 查找官方生成命令 |
 | Pipeline 不继续 | 模式或工具问题 | 检查 auto_run 模式 |
 | 分类偏低 | Gate 0 未仔细检查 | 升级分类 |
-| Publish Lane 缺文件 | 协议文件缺失 | 从 templates 创建 |
+|| Publish Lane 缺文件 | 协议文件缺失 | 从 templates 创建 |
+
+---
+
+## policy-check 报告 FAIL
+
+如果 `bash scripts/policy-check.sh --run-state <file>` 报告 FAIL：
+
+1. 查看具体哪个 check 失败
+2. 如果是 forbidden-file-violation：检查 modified_files 是否包含 forbidden_files 中的文件
+3. 如果是 acceptance-codex-consistency：检查 L 级任务是否有 Codex diff PASS
+4. 如果是 commit-without-tests：检查 verification.tests_pass 是否为 true
+
+## smoke test 失败
+
+如果 smoke script 失败：
+1. 运行 `bash scripts/smoke/smoke-<name>.sh` 查看具体输出
+2. 检查 policy-check.sh 是否正常工作
+3. 检查 examples/ 下的 fixture 文件是否完整
