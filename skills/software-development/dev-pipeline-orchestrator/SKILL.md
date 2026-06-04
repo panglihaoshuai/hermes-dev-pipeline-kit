@@ -364,11 +364,11 @@ Hermes must choose report verbosity by task scale. The first screen is always wr
 For S-level small fixes:
 
 - show one concise Owner Summary;
-- show current stage only when useful;
-- skip full Stage Update unless there is a transition or failure;
-- include Skill Trace summary, not full table unless requested;
-- include Responsibility Trace only if failure/blocker occurs;
-- include Approval Inbox only if approval is required.
+- keep all required report sections visible;
+- shorten each section instead of replacing the report with a flat checklist;
+- include a compact Skill Trace table;
+- include compact Responsibility Trace even when there is no failure;
+- include Approval Inbox with `无。` when no approval is required.
 
 Required first-screen fields:
 
@@ -378,6 +378,68 @@ Required first-screen fields:
 - 最大风险
 - 是否需要你决定
 - 下一步
+
+### Strict Compact Report Contract
+
+Compact report does not mean no report.
+
+For S-level tasks, Hermes may shorten details, but it must still output these visible Chinese sections:
+
+1. `## 负责人摘要`
+2. `## 阶段更新`
+3. `## 技能使用证据`
+4. `## 责任归因`
+5. `## 待你审批`
+
+Each section may be short, but must not be replaced by a flat checklist.
+
+Minimum S-level compact report:
+
+```markdown
+## 负责人摘要
+
+- 任务：
+- 当前状态：绿 / 黄 / 红
+- 当前阶段：
+- 最大风险：
+- 需要你决定：
+- 下一步：
+
+## 阶段更新
+
+- 上一阶段：
+- 当前阶段：
+- 使用的 skill / 工具：
+- 是否需要你现在决策：
+
+## 技能使用证据
+
+| 层级 | skill / 工具 | 证据 | 结论 |
+|---|---|---|---|
+| Hermes | dev-pipeline-orchestrator | ... | PASS |
+| ClaudeCode | ... | ... | PASS / SKIPPED |
+| Codex | ... | 跳过原因 | SKIPPED |
+
+## 责任归因
+
+| 事项 | 责任方 | 状态 | 证据 |
+|---|---|---|---|
+| 实现 | ClaudeCode / Hermes | 完成 | ... |
+| 验证 | Hermes | 完成 | ... |
+| 清理 | Hermes | 完成 | ... |
+
+## 待你审批
+
+无。
+```
+
+Rules:
+
+- If user explicitly asks final report to include specific sections, Hermes must include those sections even for S-level compact tasks.
+- Hermes must not merely say "负责人摘要：中文" or "技能使用证据：完整" without showing the actual section.
+- If a command was blocked, denied, retried, or skipped, compact report must mention it under 阶段更新 or 责任归因.
+- If a temporary directory was created and deleted, compact report must state cleanup evidence.
+- If Codex / gstack / Matt skill was skipped, compact report must include skipped reason.
 
 ### M-level standard report
 

@@ -1,0 +1,70 @@
+{
+  "run_id": "bad-compact-checklist-only",
+  "project": "/tmp/hermes-real-smoke",
+  "mode": "auto_run",
+  "current_gate": "Gate 8",
+  "classification": {
+    "scale": "S",
+    "reasons": ["Small add(a,b) smoke task", "Checklist-only report"],
+    "risk_level": "low"
+  },
+  "work_orders": [
+    {
+      "id": "wo-add-smoke",
+      "owner": "hermes",
+      "required_skill": "small_fix",
+      "status": "completed",
+      "files": ["add.js", "test.js"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": ["add.js", "test.js"],
+  "forbidden_files": [".env"],
+  "modified_files": ["add.js", "test.js"],
+  "command_evidence": [
+    {
+      "command": "node --test test.js",
+      "exit_code": 0,
+      "key_output": "add(a,b) tests passed",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "N/A temporary smoke directory",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "report_scale": "compact",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "checklist_only_report": [
+    "add.js + test.js 创建并验证通过",
+    "测试 PASS，exit code 0",
+    "报告模式：S-level compact",
+    "负责人摘要：中文",
+    "技能使用证据：完整",
+    "责任归因：Hermes / ClaudeCode",
+    "待审批事项：无",
+    "临时文件已清理"
+  ],
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

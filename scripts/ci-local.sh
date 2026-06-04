@@ -109,6 +109,7 @@ main() {
   bash scripts/policy-check.sh --run-state examples/policy/good-chinese-skill-trace.json
   bash scripts/policy-check.sh --run-state examples/policy/good-owner-summary.json
   bash scripts/policy-check.sh --run-state examples/policy/good-compact-s-report.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-compact-structured-report.json
   bash scripts/policy-check.sh --run-state examples/policy/good-full-l-report.json
 
   section "Policy negative fixtures"
@@ -128,6 +129,8 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-l-compact-report.json
   expect_fail "bad-failure-without-responsibility" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-failure-without-responsibility.json
+  expect_fail "bad-compact-checklist-only" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-compact-checklist-only.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh

@@ -1,31 +1,31 @@
 {
-  "run_id": "good-compact-s-report",
-  "project": "sample-app",
+  "run_id": "good-compact-structured-report",
+  "project": "/tmp/hermes-real-smoke",
   "mode": "auto_run",
   "current_gate": "Gate 8",
   "classification": {
     "scale": "S",
-    "reasons": ["Single file small fix", "No user decision required"],
+    "reasons": ["Small add(a,b) smoke task", "Temporary directory cleaned"],
     "risk_level": "low"
   },
   "work_orders": [
     {
-      "id": "wo-001",
+      "id": "wo-add-smoke",
       "owner": "hermes",
       "required_skill": "small_fix",
       "status": "completed",
-      "files": ["src/format.ts"],
+      "files": ["add.js", "test.js"],
       "retries": 0
     }
   ],
-  "allowed_files": ["src/format.ts"],
+  "allowed_files": ["add.js", "test.js"],
   "forbidden_files": [".env"],
-  "modified_files": ["src/format.ts"],
+  "modified_files": ["add.js", "test.js"],
   "command_evidence": [
     {
-      "command": "npm test -- format",
+      "command": "node --test test.js",
       "exit_code": 0,
-      "key_output": "1 test passed",
+      "key_output": "add(a,b) tests passed",
       "pass_fail": "PASS"
     }
   ],
@@ -35,7 +35,7 @@
     "disabled_by_user": false
   },
   "verification": {
-    "git_diff_name_status": "M\tsrc/format.ts",
+    "git_diff_name_status": "N/A temporary smoke directory",
     "git_diff_check_exit": 0,
     "tests_pass": true,
     "typecheck_exit": null
@@ -50,7 +50,7 @@
   "responsibility_trace_required": true,
   "approval_inbox_required": false,
   "owner_summary": {
-    "task": "格式化小修",
+    "task": "实现 add(a,b) 小任务",
     "status_color": "green",
     "current_stage_label": "证据报告输出",
     "progress": {
@@ -62,17 +62,17 @@
       "codex_review": "not_required",
       "approval": "not_required"
     },
-    "largest_risk": "无阻塞风险。",
+    "largest_risk": "无阻塞风险；临时目录已清理。",
     "needs_user_decision": false,
-    "next_action": "输出 compact report。"
+    "next_action": "结束本次 smoke。"
   },
   "stage_updates": [
     {
       "from": "Hermes 验证",
       "to": "证据报告输出",
-      "tools_or_skills": ["dev-pipeline-orchestrator", "npm test -- format"],
+      "tools_or_skills": ["dev-pipeline-orchestrator", "node --test"],
       "goal": "输出最小结构化 compact report",
-      "next_gate_condition": "报告包含负责人摘要、阶段更新、技能使用证据、责任归因、待你审批",
+      "next_gate_condition": "报告包含五个必需中文栏目",
       "needs_user_decision": false
     }
   ],
@@ -81,14 +81,21 @@
       "item": "实现",
       "owner": "Hermes",
       "status": "complete",
-      "evidence": "src/format.ts modified",
+      "evidence": "add.js created with add(a,b)",
       "blocking": false
     },
     {
       "item": "验证",
       "owner": "Hermes",
       "status": "complete",
-      "evidence": "npm test -- format exit 0",
+      "evidence": "node --test test.js exit 0",
+      "blocking": false
+    },
+    {
+      "item": "清理",
+      "owner": "Hermes",
+      "status": "complete",
+      "evidence": "/tmp/hermes-real-smoke removed",
       "blocking": false
     }
   ],
@@ -101,7 +108,15 @@
     "entry_skill": "dev-pipeline-orchestrator",
     "mode": "auto_run",
     "phase": "verification",
-    "hermes_skills": [],
+    "hermes_skills": [
+      {
+        "name": "dev-pipeline-orchestrator",
+        "planned": true,
+        "used": true,
+        "evidence": "S-level compact report selected and verified",
+        "verdict": "PASS"
+      }
+    ],
     "claudecode_skills": [],
     "codex_gates": [
       {

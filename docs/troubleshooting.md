@@ -231,6 +231,8 @@ WARN  report-scale
 ### 常见原因
 - S 级小修使用了 `report_scale=full`，但没有失败或审批事项，导致过度汇报 warning
 - L / recovery / publish 使用了 `report_scale=compact`
+- S 级 compact 只输出 checklist，缺少结构化栏目
+- `report_scale=compact` 且验收完成，但缺少 `stage_updates`、`skill_trace`、`responsibility_trace` 或 `approval_inbox`
 - 失败 / 阻塞时缺少 `responsibility_trace`
 - 需要 commit / push / PR / publish / 安装依赖 / 修改全局配置时缺少 `approval_inbox`
 - `owner_summary.status_color=green`，但测试、命令、Skill Trace 或 Codex evidence 仍失败
@@ -248,7 +250,9 @@ WARN  report-scale
 }
 ```
 
-S 级默认 `compact`，M 级默认 `standard`，L / recovery / publish 默认 `full`。如果有失败或阻塞，把 `responsibility_trace_required` 设为 `true` 并补齐失败点、责任方、原因、修复建议和是否阻塞。如果有审批事项，把 `approval_inbox_required` 设为 `true` 并集中列出审批项。
+S 级默认 `compact`，M 级默认 `standard`，L / recovery / publish 默认 `full`。Compact 不是 checklist-only：即使是 S 级，也必须保留 `负责人摘要`、`阶段更新`、`技能使用证据`、`责任归因`、`待你审批` 五个结构化栏目。JSON 中必须有 `owner_summary`、`stage_updates`、`skill_trace`、`responsibility_trace`、`approval_inbox`。
+
+如果有失败或阻塞，把 `responsibility_trace_required` 设为 `true` 并补齐失败点、责任方、原因、修复建议和是否阻塞。如果有审批事项，把 `approval_inbox_required` 设为 `true` 并集中列出审批项。
 
 ---
 

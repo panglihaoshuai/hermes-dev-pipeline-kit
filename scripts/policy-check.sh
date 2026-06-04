@@ -684,6 +684,27 @@ if scale == "S" and report_scale == "full" and not failure_exists and not approv
 if full_required and report_scale == "compact":
     print("FAIL")
     sys.exit(0)
+
+if report_scale == "compact" and acceptance_complete:
+    # Strict Compact Report Contract: compact means shorter sections, not a
+    # checklist-only report. Empty approval_inbox is allowed to mean "无", but
+    # the section must be represented.
+    if not isinstance(d.get("owner_summary"), dict):
+        print("FAIL")
+        sys.exit(0)
+    if not non_empty(d.get("stage_updates")):
+        print("FAIL")
+        sys.exit(0)
+    if not isinstance(d.get("skill_trace"), dict):
+        print("FAIL")
+        sys.exit(0)
+    if not non_empty(d.get("responsibility_trace")):
+        print("FAIL")
+        sys.exit(0)
+    if "approval_inbox" not in d or not isinstance(d.get("approval_inbox"), list):
+        print("FAIL")
+        sys.exit(0)
+
 if owner_summary_required and not isinstance(d.get("owner_summary"), dict):
     print("FAIL")
     sys.exit(0)

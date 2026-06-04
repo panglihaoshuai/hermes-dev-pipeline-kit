@@ -86,11 +86,13 @@ Hermes 在 Gate 0 分类后同时确定最终报告尺度：
 
 | 分类 | report_scale | 第一屏策略 |
 |---|---|---|
-| S | compact | 只给 Owner Summary 必要字段，避免小修官僚化 |
+| S | compact | 保留五个结构化栏目，但每栏只写必要信息，避免小修官僚化 |
 | M | standard | 给 Owner Summary、主要阶段更新、Skill Trace 和验证摘要 |
 | L / recovery / publish | full | 给完整报告，包括责任归因、审批、Codex、policy/doctor/ci-local、backlog |
 
 失败 / 阻塞会强制要求责任归因。commit / push / PR / publish / 安装依赖 / 破坏性动作 / 修改全局配置会强制要求 `待你审批`。
+
+S-level compact report 仍必须包含 `负责人摘要`、`阶段更新`、`技能使用证据`、`责任归因`、`待你审批`。它可以短，但不能退化成打勾列表。
 
 ### 输入
 用户的自然语言请求，可能是完整描述，也可能是简短的一句话。
@@ -402,6 +404,7 @@ git diff --stat              # 改动统计
 - 只有 Codex PASS 才能设置 `acceptance complete: true`
 - 报告是唯一能证明 pipeline 跑过的 artifact
 - 如果 `acceptance complete: true`，报告必须有负责人摘要
+- 如果 `report_scale=compact` 且验收完成，报告仍必须有阶段更新、技能使用证据、责任归因和待审批结构
 - 如果失败 / 阻塞 / full report，报告必须有责任归因
 - 如果等待用户审批，报告必须集中列出待审批事项
 

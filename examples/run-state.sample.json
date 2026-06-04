@@ -89,8 +89,8 @@
   },
   "report_scale": "compact",
   "owner_summary_required": true,
-  "stage_update_required": false,
-  "responsibility_trace_required": false,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
   "approval_inbox_required": false,
   "stage_updates": [
     {

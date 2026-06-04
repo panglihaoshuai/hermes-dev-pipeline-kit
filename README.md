@@ -175,11 +175,19 @@ Hermes 必须按任务规模选择 `report_scale`：
 
 | 任务规模 | report_scale | 汇报要求 |
 |---|---|---|
-| S 级小修 | compact | 第一屏只给简洁 Owner Summary；Skill Trace 用摘要；无失败/审批时可省略完整阶段更新、责任归因和审批表 |
+| S 级小修 | compact | 第一屏给简洁 Owner Summary；仍必须包含阶段更新、技能使用证据、责任归因、待审批事项这些结构化栏目 |
 | M 级功能 | standard | 输出 Owner Summary、主要阶段更新、Skill Trace 表格、验证摘要；有风险/修复/失败/审批时输出责任归因和待审批事项 |
 | L / recovery / publish | full | 输出完整 Owner Summary、每个主要 Gate 的阶段更新、完整 Skill Trace、责任归因、待审批、Codex 审查、policy/doctor/ci-local 证据和 backlog |
 
 失败或阻塞时，责任归因必须输出。需要 commit / push / PR / publish / 安装依赖 / 破坏性动作 / 修改全局配置时，`待你审批` 必须集中输出，不能藏在段落里。
+
+小任务小汇报不是取消报告，而是结构压缩。S-level compact report 不能只输出 checklist，也不能只写“负责人摘要：中文”“技能使用证据：完整”。它仍必须显示：
+
+- `## 负责人摘要`
+- `## 阶段更新`
+- `## 技能使用证据`
+- `## 责任归因`
+- `## 待你审批`
 
 ---
 

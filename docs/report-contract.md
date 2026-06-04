@@ -122,6 +122,18 @@ Scale mapping:
 
 If an S-level task uses `full` without failure or approval, policy-check may warn for over-reporting. If L/recovery/publish uses `compact`, policy-check fails. If any task fails or blocks, responsibility trace is mandatory. If commit / push / PR / publish / dependency install / destructive action / global config change is needed, approval inbox is mandatory.
 
+### Strict Compact Report Contract
+
+Compact report means structural compression, not removing the report. For accepted S-level compact reports, the visible Markdown report must still include:
+
+- `## 负责人摘要`
+- `## 阶段更新`
+- `## 技能使用证据`
+- `## 责任归因`
+- `## 待你审批`
+
+The JSON report must therefore include `owner_summary`, `stage_updates`, `skill_trace`, `responsibility_trace`, and `approval_inbox`. `approval_inbox` may be an empty array to represent `无。`, but the field must exist. A checklist-only report that merely claims these sections are complete is invalid.
+
 This contract does not claim that the runtime always follows the protocol. It makes missing owner-facing summaries and missing approval disclosure visible to policy checks and reviewers.
 
 ## How policy-check can validate reports

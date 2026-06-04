@@ -239,15 +239,15 @@
     },
     "stage_update_required": {
       "type": "boolean",
-      "description": "Whether stage update narration is required for this task scale or state."
+      "description": "Whether stage update narration is required for this task scale or state. Compact reports still require at least one structured stage update when accepted."
     },
     "responsibility_trace_required": {
       "type": "boolean",
-      "description": "Whether responsibility trace is required because of scale, risk, failure, or blocker state."
+      "description": "Whether responsibility trace is required because of scale, risk, failure, or blocker state. Accepted compact reports still require a compact responsibility trace."
     },
     "approval_inbox_required": {
       "type": "boolean",
-      "description": "Whether approval items must be centralized in the approval inbox."
+      "description": "Whether approval items must be centralized in the approval inbox. Compact reports must still include approval_inbox, which may be an empty array for '无'."
     },
     "allowed_files": {
       "type": "array",
