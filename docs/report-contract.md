@@ -77,6 +77,20 @@ PASS. If acceptance is complete while required Matt skill evidence is missing,
 This is a disclosure and evidence contract. It does not prove hidden runtime
 invocation unless Hermes or ClaudeCode expose machine-readable runtime traces.
 
+## 中文阶段播报与技能使用证据
+
+`skill_trace` also carries Chinese display fields for user-facing narration:
+
+- `display_language`: usually `zh-CN`;
+- `current_phase_label`: Chinese phase label, such as `方案设计与计划编写` or `Hermes 验证`;
+- `current_phase_internal`: internal phase key for machine trace;
+- `user_visible_skill_banner`: whether Hermes showed the active workflow banner;
+- `clarification_trace`: why blocking questions were asked and what stage follows.
+
+If `display_language` is `zh-CN`, `current_phase_label` is required by policy-check. If clarification questions exist, `clarification_trace.why_questions_are_needed` is required.
+
+The Markdown report must include a Chinese `技能使用证据` table explaining which Hermes/gstack skills, ClaudeCode Matt skills, Codex gates, and local validation tools were planned, used, skipped, and evidenced.
+
 ## How policy-check can validate reports
 
 A policy-check script or CI step can validate any pipeline report by:

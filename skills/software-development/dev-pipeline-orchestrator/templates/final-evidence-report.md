@@ -41,6 +41,30 @@
 | id | required skill | status | evidence |
 | -- | -------------- | ------ | -------- |
 
+## 中文 Skill Trace / 技能使用证据
+
+| 层级 | 使用的 skill / 工具 | 计划使用 | 实际使用 | 证据 | 结论 |
+|---|---|---:|---:|---|---|
+| Hermes 入口 | dev-pipeline-orchestrator | 是 | 是 | 完成需求标准化、分级、工单拆分、验证、报告 | PASS |
+| Hermes / gstack | writing-plans | 是/否 | 是/否 | 输出范围、非目标、验收标准 / 跳过原因 | PASS/SKIPPED |
+| Hermes / gstack | plan-eng-review | 是/否 | 是/跳过 | 风险审查 / 跳过原因 | PASS/SKIPPED |
+| ClaudeCode / Matt | tdd | 是/否 | 是/否 | RED / GREEN / exit code | PASS/PARTIAL/MISSING |
+| ClaudeCode / Matt | diagnose | 是/否 | 是/否 | hypothesis / test / finding / fix | PASS/PARTIAL/MISSING |
+| ClaudeCode / Matt | prototype | 是/否 | 是/否 | variants / chosen / reason | PASS/PARTIAL/MISSING |
+| Codex | plan review | 是/否 | 是/否 | PASS / 跳过原因 | PASS/SKIPPED/FAIL |
+| Codex | diff review | 是/否 | 是/否 | PASS / 跳过原因 | PASS/SKIPPED/FAIL |
+| 本地校验 | policy-check / doctor / ci-local | 是 | 是/否 | command + exit code | PASS/SKIPPED/FAIL |
+
+### 缺失证据
+
+- 缺失的 Matt skill evidence：
+- 缺失的 gstack evidence：
+- 跳过的 skill：
+- 跳过原因：
+- 对验收的影响：无 / 部分 / 阻塞
+
+If required evidence is missing, report must not say `acceptance complete: yes`.
+
 ## Skill Trace
 
 | layer | skill/tool | planned | used | evidence | verdict |

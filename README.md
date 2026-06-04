@@ -56,6 +56,7 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 - [如何触发](#如何触发)
 - [S/M/L 工作流概览](#sml-工作流概览)
 - [Skill Trace and Evidence](#skill-trace-and-evidence)
+- [中文阶段播报与技能使用证据](#中文阶段播报与技能使用证据)
 - [安全规则](#安全规则)
 - [GitHub 发布通道](#github-发布通道)
 - [简短提示词协议](#简短提示词协议)
@@ -116,6 +117,33 @@ ClaudeCode must provide Matt skill evidence, not just claim a skill was used. Fo
 `policy-check.sh` can validate missing Skill Trace or missing Matt skill evidence in run-state fixtures. If acceptance is complete while required Matt skill evidence is missing, policy-check fails.
 
 This kit enforces disclosure and evidence reporting. It does not guarantee hidden runtime invocation unless Hermes or ClaudeCode expose machine-readable runtime traces.
+
+---
+
+## 中文阶段播报与技能使用证据
+
+Hermes 使用 `dev-pipeline-orchestrator` 时，必须优先用中文说明当前阶段和正在使用的能力。内部英文 phase 可以放在括号里作为机器 trace，但不能只显示 `Phase: planning` 或 `Phase: work_order_execution`。
+
+用户可见阶段包括：
+
+- 需求收集与头脑风暴
+- 简短需求标准化
+- 需求澄清与关键问题确认
+- 方案设计与计划编写
+- 工单拆分
+- ClaudeCode 工单执行
+- Hermes 验证
+- Codex 计划审查 / Codex 代码变更审查
+- 证据报告输出
+- Commit / GitHub 发布审批
+
+需求澄清时，Hermes 必须说明正在使用哪个 skill / 子流程、为什么必须问、如果用户不回答默认怎么判断，以及问完后会进入哪个阶段。
+
+计划阶段要说明是否使用 `writing-plans` 和 `gstack plan-eng-review`。工单阶段要说明 ClaudeCode 必须使用哪个 Matt skill，例如 `tdd`、`diagnose` 或 `prototype`，以及缺少对应 evidence 会如何影响验收。
+
+最终报告必须输出中文 `技能使用证据` 表格。缺少 required Matt skill evidence、gstack evidence 或 Codex gate evidence 时，不能标记完整验收。
+
+本 kit 不能证明隐藏 runtime 真实调用，但能要求 agent 披露 skill usage 并提供 evidence。
 
 ---
 

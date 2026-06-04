@@ -212,6 +212,84 @@ If a skill is planned but later skipped, Hermes must report:
 - reason;
 - whether this affects acceptance.
 
+## Chinese User-Facing Phase Narration
+
+Hermes must present all user-facing workflow stages in Chinese.
+
+Internal phase names may be retained in parentheses for machine trace, but the primary visible text must be Chinese.
+
+Use this phase mapping:
+
+| internal phase | Chinese user-facing phase |
+| -------------- | ------------------------- |
+| intake | 需求收集与头脑风暴 |
+| simple_prompt_intake | 简短需求标准化 |
+| clarification | 需求澄清与关键问题确认 |
+| planning | 方案设计与计划编写 |
+| plan_review | 计划审查 |
+| work_order_split | 工单拆分 |
+| work_order_execution | ClaudeCode 工单执行 |
+| verification | Hermes 验证 |
+| codex_plan_review | Codex 计划审查 |
+| codex_diff_review | Codex 代码变更审查 |
+| report | 证据报告输出 |
+| commit_approval | Commit 审批 |
+| publish_approval | GitHub 发布审批 |
+| backlog | 旧债与后续事项归档 |
+
+Hermes must not show only English labels such as:
+
+- `Phase: Simple Prompt Intake`
+- `Phase: planning`
+- `Phase: work_order_execution`
+
+Instead, Hermes should output:
+
+```text
+当前阶段：需求收集与头脑风暴（Simple Prompt Intake）
+正在使用：dev-pipeline-orchestrator / Simple Prompt Intake / writing-plans
+目的：把你的简短想法转成可执行的需求、范围、非目标和验收标准。
+```
+
+## Chinese Active Workflow Banner
+
+At the beginning of every task, Hermes must output a concise Chinese active workflow banner.
+
+Example:
+
+```text
+当前工作流：dev-pipeline-orchestrator
+运行模式：auto_run
+当前阶段：需求收集与头脑风暴
+正在使用的 Hermes 能力：
+- Simple Prompt Intake：把简短需求标准化
+- writing-plans：整理需求、范围、非目标和验收标准
+- gstack plan-eng-review：用于后续计划审查（如任务达到 M/L 级）
+
+计划调用的执行层：
+- ClaudeCode：按 Hermes 工单执行代码修改
+- Matt skill：tdd / diagnose / prototype（稍后按任务类型确定）
+
+Codex 使用策略：
+- S 级：可跳过，并说明原因
+- M 级：高风险时使用
+- L 级 / recovery：必须使用 plan review 和 diff review
+
+我现在先确认需求边界；只有会影响产品方向、架构、安全、发布或大幅返工的问题才会问你。
+```
+
+Requirements:
+
+- Use Chinese as the primary language.
+- Mention the active entry skill.
+- Mention current stage.
+- Mention planned Hermes/gstack skill usage.
+- Mention planned ClaudeCode/Matt skill usage.
+- Mention Codex usage decision.
+- Mention whether user clarification is needed.
+- Keep it concise for S-level tasks.
+- Use full detail for M/L/recovery/publish tasks.
+
 ## Intake Conversation Trace
 
 When user input is short, vague, or product-like, Hermes must visibly enter Simple Prompt Intake.
@@ -230,6 +308,44 @@ Hermes should ask at most 3 blocking questions.
 If no blocking question exists, Hermes should proceed and record assumptions.
 
 This should make the interaction feel like a guided brainstorming / planning skill, not a silent jump into execution.
+
+## Chinese Clarification Prompt Protocol
+
+When Hermes needs to ask the user questions, it must explain in Chinese:
+
+1. 当前阶段是什么；
+2. 正在使用什么 skill / 子流程；
+3. 为什么必须问；
+4. 如果用户不回答，Hermes 默认会怎么判断；
+5. 问完以后会进入哪个阶段。
+
+Example:
+
+```text
+当前阶段：需求澄清与关键问题确认
+正在使用：dev-pipeline-orchestrator / Simple Prompt Intake / writing-plans
+为什么现在要问：
+这个选择会影响后面的架构拆分和 ClaudeCode 工单范围。如果我直接假设，可能会做成错误方向。
+
+我只问 2 个会影响方向的问题：
+
+1. 这个功能是只做本地文件导出，还是要上传到云端？
+   - 默认判断：先做本地导出
+   - 影响：决定是否涉及 API、权限和存储
+
+2. 导出格式优先要 CSV、JSON 还是 PDF？
+   - 默认判断：CSV
+   - 影响：决定测试样例和文件生成逻辑
+
+你回答后，我会进入：方案设计与计划编写阶段。
+```
+
+Rules:
+
+- Ask at most 3 blocking questions.
+- Non-blocking assumptions should not become questions.
+- For small fixes, if no blocking question exists, proceed without asking.
+- If user says "你决定 / 直接做 / 不要问", proceed with safe defaults unless destructive/external/security/publish action is involved.
 
 ## Simple Prompt Intake Protocol
 
@@ -298,6 +414,69 @@ If there are more than 3 uncertainties, Hermes must:
 - record the rest as assumptions or backlog.
 
 If the user says "自己判断 / 你决定 / 直接做 / 不要问我", Hermes should proceed with safe defaults unless the action is destructive, external, or security-sensitive.
+
+## Chinese Planning Stage Disclosure
+
+When Hermes starts planning after clarification, it must say in Chinese:
+
+```text
+当前阶段：方案设计与计划编写
+正在使用：
+- writing-plans：把需求整理成范围、非目标、验收标准
+- gstack plan-eng-review：审查计划风险和工程边界（M/L 级或高风险时）
+- dev-pipeline-orchestrator：负责把计划拆成 ClaudeCode 工单
+
+本阶段产出：
+1. 需求理解
+2. 范围
+3. 非目标
+4. 验收标准
+5. 风险分级 S/M/L
+6. 工单拆分草案
+7. 是否需要 Codex 计划审查
+```
+
+If gstack is skipped, Hermes must say:
+
+```text
+gstack plan-eng-review：跳过
+原因：当前任务为 S 级小修，不需要完整计划审查。
+验收影响：无。
+```
+
+## Chinese Work Order Disclosure
+
+Before delegating to ClaudeCode, Hermes must explain in Chinese:
+
+```text
+当前阶段：ClaudeCode 工单执行
+我要把任务交给 ClaudeCode，但 ClaudeCode 只负责执行，不负责重新定义需求。
+
+本次工单要求：
+- ClaudeCode 必须使用 Matt skill：tdd
+- 为什么用 tdd：这是功能开发，需要先写测试再实现
+- 允许修改文件：
+  - ...
+- 禁止修改文件：
+  - ...
+- 必须运行验证命令：
+  - ...
+- 如果没有 RED/GREEN/exit code 证据，Hermes 不允许标记验收完成。
+```
+
+For diagnose:
+
+```text
+ClaudeCode 必须使用 Matt skill：diagnose
+为什么用 diagnose：这是 bug / 失败恢复任务，需要先提出假设、收集证据、定位原因，再修复。
+```
+
+For prototype:
+
+```text
+ClaudeCode 必须使用 Matt skill：prototype
+为什么用 prototype：当前 UI/交互方案不确定，需要比较方案后再实现。
+```
 
 ## Skill Usage Evidence Requirements
 

@@ -194,6 +194,37 @@
           "type": "string",
           "const": "dev-pipeline-orchestrator"
         },
+        "display_language": {
+          "type": "string",
+          "enum": ["zh-CN", "en-US"]
+        },
+        "current_phase_label": {
+          "type": "string"
+        },
+        "current_phase_internal": {
+          "type": "string"
+        },
+        "user_visible_skill_banner": {
+          "type": "boolean"
+        },
+        "clarification_trace": {
+          "type": "object",
+          "properties": {
+            "stage_label": {
+              "type": "string"
+            },
+            "skills_used": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "why_questions_are_needed": {
+              "type": "string"
+            },
+            "next_stage_label": {
+              "type": "string"
+            }
+          }
+        },
         "mode": {
           "type": "string",
           "enum": ["dry_run", "plan_only", "auto_run"]

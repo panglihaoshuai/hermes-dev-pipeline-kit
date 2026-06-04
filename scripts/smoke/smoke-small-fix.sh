@@ -56,6 +56,10 @@ cat > "$TMPFILE" <<'EOF'
     "final_decision": "ACCEPTED"
   },
   "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "Hermes 验证",
+    "current_phase_internal": "verification",
+    "user_visible_skill_banner": true,
     "entry_skill": "dev-pipeline-orchestrator",
     "mode": "auto_run",
     "phase": "verification",

@@ -207,6 +207,8 @@ Codex UNKNOWN → acceptance complete 必须为 false
 
 Hermes must disclose the active `dev-pipeline-orchestrator` workflow at task start and report the current phase, planned sub-skills, required ClaudeCode Matt skill, Codex gates, and planned policy/doctor checks.
 
+The user-facing disclosure must be in Chinese. English internal phase names may appear in parentheses, but the primary visible label must be Chinese.
+
 Final reports must include Skill Trace evidence:
 
 - gstack skills used require concrete evidence such as plan/risk/acceptance, hypothesis/evidence/conclusion, diff/issues/verdict, release readiness, or retro notes.
@@ -216,6 +218,8 @@ Final reports must include Skill Trace evidence:
 - missing evidence must include acceptance impact: none, partial, or blocking.
 
 If required Matt skill evidence is missing, verification must be PARTIAL or FAIL. If acceptance complete is true while required Matt skill evidence is missing, `policy-check.sh` must FAIL.
+
+If acceptance is complete, `skill_trace.display_language` must exist. If `display_language` is `zh-CN`, `skill_trace.current_phase_label` and `user_visible_skill_banner` are required. If clarification questions were asked, `clarification_trace.why_questions_are_needed` is required.
 
 This rule enforces disclosure and evidence. It does not claim to introspect hidden runtime invocation unless the runtime exposes trace data.
 

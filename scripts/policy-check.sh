@@ -316,6 +316,31 @@ if not isinstance(skill_trace, dict):
     print("false")
     sys.exit(0)
 
+display_language = skill_trace.get("display_language")
+if acceptance_complete and not non_empty(display_language):
+    print("true")
+    sys.exit(0)
+
+if display_language == "zh-CN":
+    if not non_empty(skill_trace.get("current_phase_label")):
+        print("true")
+        sys.exit(0)
+    if skill_trace.get("user_visible_skill_banner") is not True:
+        print("true")
+        sys.exit(0)
+
+clarification_questions = d.get("clarification_questions", [])
+if not clarification_questions:
+    clarification_questions = skill_trace.get("clarification_questions", [])
+if clarification_questions:
+    clarification_trace = skill_trace.get("clarification_trace")
+    if not isinstance(clarification_trace, dict):
+        print("true")
+        sys.exit(0)
+    if not non_empty(clarification_trace.get("why_questions_are_needed")):
+        print("true")
+        sys.exit(0)
+
 if acceptance_complete:
     missing_evidence = skill_trace.get("missing_evidence", [])
     if missing_evidence:

@@ -54,6 +54,32 @@ Required Matt skill: `<tdd | diagnose | prototype | to-issues | grill-me>`
 
 You must use this skill during execution. If unavailable, report concrete evidence. If you do not use it, this work order is FAIL unless Hermes accepts the unavailable evidence.
 
+## 中文工单说明 / Chinese Work Order Disclosure
+
+Hermes must show this summary to the user before delegation:
+
+```text
+当前阶段：ClaudeCode 工单执行
+我要把任务交给 ClaudeCode，但 ClaudeCode 只负责执行，不负责重新定义需求。
+
+本次工单要求：
+- ClaudeCode 必须使用 Matt skill：<tdd | diagnose | prototype | to-issues | grill-me>
+- 为什么使用这个 skill：<原因>
+- 允许修改文件：
+  - <path>
+- 禁止修改文件：
+  - <path>
+- 必须运行验证命令：
+  - <command>
+- 如果缺少对应 skill evidence，Hermes 不允许标记验收完成。
+```
+
+Skill reason examples:
+
+- `tdd`：这是功能开发，需要先写测试再实现。
+- `diagnose`：这是 bug / 失败恢复任务，需要先提出假设、收集证据、定位原因，再修复。
+- `prototype`：当前 UI/交互方案不确定，需要比较方案后再实现。
+
 ## Required Skill Trace
 
 - Required Matt skill:

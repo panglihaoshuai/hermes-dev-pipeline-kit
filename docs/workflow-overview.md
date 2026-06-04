@@ -28,6 +28,26 @@ Gate 0 ──► Gate 1 ──► Gate 2 ──► Gate 3 ──► Gate 3.5 ─
 
 **Hermes 的入口门禁。**
 
+### 中文阶段播报
+
+Hermes 与用户交互时必须优先使用中文阶段名。内部英文 phase 只能作为括号内 trace。
+
+示例：
+
+```text
+当前阶段：需求收集与头脑风暴（Simple Prompt Intake）
+正在使用：dev-pipeline-orchestrator / Simple Prompt Intake / writing-plans
+目的：把你的简短想法转成可执行的需求、范围、非目标和验收标准。
+```
+
+不得只显示：
+
+```text
+Phase: Simple Prompt Intake
+Phase: planning
+Phase: work_order_execution
+```
+
 ### Active Skill Disclosure
 
 At task start, Hermes must show an active workflow banner for `dev-pipeline-orchestrator`.
@@ -44,6 +64,8 @@ The banner identifies:
 If the user prompt is short, vague, or product-like, Hermes visibly enters Simple Prompt Intake and reports the normalized brief, assumptions, non-blocking assumptions, blocking questions if any, and the default decision if the user says "you decide".
 
 Hermes must not later claim a skill was used unless the final report includes evidence. Planned-but-skipped skills require a skipped reason and acceptance impact.
+
+If Hermes asks questions, it must say in Chinese why the questions are blocking, what default it would choose if the user does not answer, and which phase follows after the answer. Non-blocking assumptions should be recorded, not turned into questions.
 
 ### 输入
 用户的自然语言请求，可能是完整描述，也可能是简短的一句话。
@@ -161,6 +183,16 @@ npm run lint              # Lint
 - Required Matt skill（tdd / diagnose / prototype / to-issues / grill-me）
 - validation commands（验证命令）
 - timeout checkpoint format（超时检查点格式）
+
+Hermes must also disclose the work order in Chinese before delegation:
+
+```text
+当前阶段：ClaudeCode 工单执行
+ClaudeCode 只负责执行，不负责重新定义需求。
+ClaudeCode 必须使用 Matt skill：tdd / diagnose / prototype
+为什么使用：...
+缺少对应 skill evidence 时，Hermes 不允许完整验收。
+```
 
 ### 约束
 - 每个 WO 触摸的核心文件少于 3 个（除非明确论证）
