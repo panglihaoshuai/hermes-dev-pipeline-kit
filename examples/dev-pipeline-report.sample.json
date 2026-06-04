@@ -47,11 +47,82 @@
     "ambiguity_level": "low",
     "product_direction_confidence": "high"
   },
+  "skill_trace": {
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [
+      {
+        "name": "gstack plan-eng-review",
+        "planned": false,
+        "used": false,
+        "evidence": "",
+        "verdict": "SKIPPED",
+        "skipped_reason": "S-level health endpoint did not require gstack plan review.",
+        "acceptance_impact": "none"
+      }
+    ],
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "evidence": {
+          "red": "health route test failed before implementation",
+          "green": "health route test passed after implementation",
+          "commands": ["npm test -- --testPathPattern=health"],
+          "exit_codes": [0]
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "codex_gates": [
+      {
+        "name": "plan review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      },
+      {
+        "name": "diff review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "doctor_ci_local": {
+      "planned": true,
+      "used": true,
+      "commands": [
+        {
+          "command": "bash scripts/ci-local.sh",
+          "exit_code": 0
+        }
+      ]
+    },
+    "missing_evidence": [],
+    "skipped_skills": ["gstack plan-eng-review", "Codex plan review", "Codex diff review"],
+    "skipped_reason": "S-level task; gates optional under policy.",
+    "acceptance_impact": "none"
+  },
   "work_orders": [
     {
       "id": "WO-001",
       "owner": "claude_code",
       "required_skill": "node_api_development",
+      "required_matt_skill": "tdd",
+      "skill_evidence": {
+        "skill": "tdd",
+        "red": "health route test failed before implementation",
+        "green": "health route test passed after implementation",
+        "commands": ["npm test -- --testPathPattern=health"],
+        "exit_codes": [0]
+      },
       "files": ["src/routes/health.ts"],
       "retry_count": 0,
       "status": "completed",

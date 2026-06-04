@@ -203,7 +203,25 @@ Codex UNKNOWN → acceptance complete 必须为 false
 
 ---
 
-## 9. Timeout 不等于完成
+## 9. Skill Trace and Evidence
+
+Hermes must disclose the active `dev-pipeline-orchestrator` workflow at task start and report the current phase, planned sub-skills, required ClaudeCode Matt skill, Codex gates, and planned policy/doctor checks.
+
+Final reports must include Skill Trace evidence:
+
+- gstack skills used require concrete evidence such as plan/risk/acceptance, hypothesis/evidence/conclusion, diff/issues/verdict, release readiness, or retro notes.
+- gstack skills skipped require a skipped reason.
+- ClaudeCode Matt skills require matching evidence, not a bare "used skill" claim.
+- Codex gates required by policy must be used and return PASS or allowed PASS_WITH_REQUIRED_CHANGES.
+- missing evidence must include acceptance impact: none, partial, or blocking.
+
+If required Matt skill evidence is missing, verification must be PARTIAL or FAIL. If acceptance complete is true while required Matt skill evidence is missing, `policy-check.sh` must FAIL.
+
+This rule enforces disclosure and evidence. It does not claim to introspect hidden runtime invocation unless the runtime exposes trace data.
+
+---
+
+## 10. Timeout 不等于完成
 
 ### delegate_task 超时（600s）
 当 delegate_task 超时：
@@ -221,7 +239,7 @@ timeout checkpoint: [已完成/未完成] [已完成部分] [剩余部分]
 
 ---
 
-## 10. TDD Evidence 不可伪造
+## 11. TDD Evidence 不可伪造
 
 ### 严格 TDD 证据格式
 ```
@@ -248,7 +266,7 @@ REFACTOR:
 
 ---
 
-## 11. 不发明命令
+## 12. 不发明命令
 
 ### 规则
 - test command: 从 package.json scripts 推断，不发明
@@ -259,7 +277,7 @@ REFACTOR:
 
 ---
 
-## 12. 不自我验收
+## 13. 不自我验收
 
 ### 规则
 - Hermes 不得做实质编码然后自我验收

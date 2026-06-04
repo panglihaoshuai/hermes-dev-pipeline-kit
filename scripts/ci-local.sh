@@ -103,7 +103,9 @@ main() {
 
   section "Policy positive fixtures"
   bash scripts/policy-check.sh --run-state examples/run-state.sample.json
+  bash scripts/policy-check.sh --report examples/dev-pipeline-report.sample.json
   bash scripts/policy-check.sh --run-state examples/policy/good-generated-file-with-evidence.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-skill-trace.json
 
   section "Policy negative fixtures"
   expect_fail "bad-forbidden-file" \
@@ -112,6 +114,8 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-acceptance-without-codex.json
   expect_fail "bad-generated-file" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-generated-file.json
+  expect_fail "bad-missing-matt-skill-evidence" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-missing-matt-skill-evidence.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh

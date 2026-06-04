@@ -89,6 +89,37 @@ TDD 不是自执行的。即使 WO 里写了 "Required Matt skill: tdd"，Claude
 
 ---
 
+## 3.1 Skill Trace 缺失或证据不完整
+
+### 症状
+`policy-check.sh` 输出：
+```
+FAIL  skill-trace-evidence
+```
+
+### 常见原因
+- `acceptance.complete` 是 `true`，但 run-state 没有 `skill_trace`
+- Work order 要求 `required_matt_skill`，但没有对应 `skill_evidence`
+- `skill_trace.claudecode_skills` 里 `reported=false` 或 `verdict=MISSING`
+- gstack skill 标记为 used，但没有 evidence
+- required Codex gate 没有 used 或 verdict 不是 PASS / PASS_WITH_REQUIRED_CHANGES
+
+### 解决
+1. 如果任务还没验收完成，把 `acceptance.complete` 设为 `false`，并记录当前 gate。
+2. 如果 ClaudeCode 确实用了 Matt skill，补充对应证据：
+   - `tdd`: RED/GREEN evidence + validation exit code
+   - `diagnose`: hypothesis/test/finding/fix
+   - `prototype`: variants/chosen/reason
+   - `to-issues`: issue breakdown/acceptance criteria/priority
+   - `grill-me`: challenge questions/decisions changed or confirmed
+3. 如果 skill 被跳过，填写 skipped reason 和 acceptance impact。
+4. 如果证据缺失且无法补齐，最终决策应为 PARTIAL 或 BLOCKED，而不是 ACCEPTED。
+
+### 边界
+Skill Trace 是披露和证据合约，不证明隐藏 runtime invocation。除非 Hermes 或 ClaudeCode 暴露机器可读 trace，否则只能验证报告中的证据是否完整一致。
+
+---
+
 ## 4. jest-dom Matcher 类型错误
 
 ### 症状

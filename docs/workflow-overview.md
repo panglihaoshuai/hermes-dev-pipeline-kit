@@ -28,6 +28,23 @@ Gate 0 ──► Gate 1 ──► Gate 2 ──► Gate 3 ──► Gate 3.5 ─
 
 **Hermes 的入口门禁。**
 
+### Active Skill Disclosure
+
+At task start, Hermes must show an active workflow banner for `dev-pipeline-orchestrator`.
+
+The banner identifies:
+- mode: `dry_run`, `plan_only`, or `auto_run`;
+- current phase;
+- planned Hermes/gstack skills;
+- required ClaudeCode Matt skill;
+- Codex usage: disabled, optional, or required;
+- planned `policy-check.sh`, `doctor.sh`, and `ci-local.sh` usage;
+- whether user clarification is needed.
+
+If the user prompt is short, vague, or product-like, Hermes visibly enters Simple Prompt Intake and reports the normalized brief, assumptions, non-blocking assumptions, blocking questions if any, and the default decision if the user says "you decide".
+
+Hermes must not later claim a skill was used unless the final report includes evidence. Planned-but-skipped skills require a skipped reason and acceptance impact.
+
 ### 输入
 用户的自然语言请求，可能是完整描述，也可能是简短的一句话。
 
@@ -224,9 +241,16 @@ ClaudeCode 必须输出：
 - risks（风险）
 - Required Matt skill used: yes/no
 - if not used, why（为什么没用）
+- Matt skill evidence matching the required skill:
+  - `tdd`: RED/GREEN evidence and validation exit code
+  - `diagnose`: hypothesis, test, finding, fix recommendation or applied fix
+  - `prototype`: variants considered, chosen variant, reason
+  - `to-issues`: issue breakdown, acceptance criteria, priority
+  - `grill-me`: challenge questions and decisions changed or confirmed
 
 ### 关键规则
 - 如果 Required skill 没用且没有证据证明不可用，WO 直接 FAIL
+- 如果缺少必需 Matt skill evidence，verification 必须是 PARTIAL 或 FAIL，不能是 PASS
 - **不得信任 ClaudeCode 的自述**——Gate 6 会用 git diff 验证
 
 ---

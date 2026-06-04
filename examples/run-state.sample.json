@@ -70,6 +70,53 @@
     "complete": true,
     "final_decision": "ACCEPTED"
   },
+  "skill_trace": {
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [
+      {
+        "name": "gstack plan-eng-review",
+        "planned": false,
+        "used": false,
+        "evidence": "",
+        "verdict": "SKIPPED",
+        "skipped_reason": "S-level small fix did not require gstack plan review."
+      }
+    ],
+    "claudecode_skills": [],
+    "codex_gates": [
+      {
+        "name": "plan review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      },
+      {
+        "name": "diff review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "doctor_ci_local": {
+      "planned": true,
+      "used": true,
+      "commands": [
+        {
+          "command": "bash scripts/ci-local.sh",
+          "exit_code": 0
+        }
+      ]
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
   "approval_gates": {
     "commit_approved": true,
     "push_approved": false,

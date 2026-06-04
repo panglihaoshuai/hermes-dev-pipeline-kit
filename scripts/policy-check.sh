@@ -29,7 +29,7 @@ record() {
 
 show_results() {
   echo ""
-  echo "--- Run-State Checks ---"
+  echo "--- Policy Checks ---"
   for r in "${RESULTS[@]}"; do echo "$r"; done
   local total=$(( PASS_COUNT + FAIL_COUNT ))
   echo ""
@@ -232,6 +232,172 @@ print("true")
 PY
 }
 
+jskill_trace_violation() {
+  # Returns 'true' when skill trace/evidence policy is violated.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+MATT_SKILLS = {"tdd", "diagnose", "prototype", "to-issues", "grill-me"}
+PASS_VERDICTS = {"PASS", "PASS_WITH_REQUIRED_CHANGES", "SKIPPED"}
+
+
+def non_empty(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+
+def evidence_complete(skill, evidence):
+    if not isinstance(evidence, dict):
+        return False
+
+    if skill == "tdd":
+        return (
+            non_empty(evidence.get("red"))
+            and non_empty(evidence.get("green"))
+            and non_empty(evidence.get("commands"))
+            and non_empty(evidence.get("exit_codes"))
+        )
+    if skill == "diagnose":
+        return (
+            non_empty(evidence.get("hypothesis"))
+            and non_empty(evidence.get("test"))
+            and non_empty(evidence.get("finding"))
+            and (
+                non_empty(evidence.get("fix_recommendation"))
+                or non_empty(evidence.get("applied_fix"))
+            )
+        )
+    if skill == "prototype":
+        return (
+            non_empty(evidence.get("variants_considered"))
+            and non_empty(evidence.get("chosen_variant"))
+            and non_empty(evidence.get("reason"))
+        )
+    if skill == "to-issues":
+        return (
+            non_empty(evidence.get("issue_breakdown"))
+            and non_empty(evidence.get("acceptance_criteria"))
+            and non_empty(evidence.get("priority"))
+        )
+    if skill == "grill-me":
+        return (
+            non_empty(evidence.get("challenge_questions"))
+            and (
+                non_empty(evidence.get("decisions_changed"))
+                or non_empty(evidence.get("decisions_confirmed"))
+            )
+        )
+    return non_empty(evidence)
+
+
+acceptance_complete = bool(
+    d.get("acceptance", {}).get("complete")
+    or d.get("acceptance_complete")
+)
+skill_trace = d.get("skill_trace")
+
+# Backward compatibility: old or partial run-states may omit skill_trace only
+# while acceptance is not complete.
+if acceptance_complete and not isinstance(skill_trace, dict):
+    print("true")
+    sys.exit(0)
+
+if not isinstance(skill_trace, dict):
+    print("false")
+    sys.exit(0)
+
+if acceptance_complete:
+    missing_evidence = skill_trace.get("missing_evidence", [])
+    if missing_evidence:
+        print("true")
+        sys.exit(0)
+    if skill_trace.get("acceptance_impact") in {"partial", "blocking"}:
+        print("true")
+        sys.exit(0)
+
+required_matt = set()
+for work_order in d.get("work_orders", []):
+    if not isinstance(work_order, dict):
+        continue
+    skill = work_order.get("required_matt_skill")
+    if skill in MATT_SKILLS:
+        required_matt.add(skill)
+    # Older work orders may only use required_skill for Matt skill routing.
+    skill = work_order.get("required_skill")
+    owner = str(work_order.get("owner", "")).lower()
+    if skill in MATT_SKILLS and "claude" in owner:
+        required_matt.add(skill)
+
+for item in skill_trace.get("claudecode_skills", []):
+    if not isinstance(item, dict):
+        continue
+    if item.get("required") is True and item.get("name") in MATT_SKILLS:
+        required_matt.add(item["name"])
+
+for skill in required_matt:
+    trace_items = [
+        item for item in skill_trace.get("claudecode_skills", [])
+        if isinstance(item, dict) and item.get("name") == skill
+    ]
+    trace_ok = any(
+        item.get("reported") is True
+        and item.get("verdict") not in {"MISSING", "PARTIAL", "FAIL"}
+        and evidence_complete(skill, item.get("evidence"))
+        for item in trace_items
+    )
+
+    work_order_ok = any(
+        isinstance(wo, dict)
+        and wo.get("required_matt_skill") == skill
+        and evidence_complete(skill, wo.get("skill_evidence"))
+        for wo in d.get("work_orders", [])
+    )
+
+    if not (trace_ok or work_order_ok):
+        print("true")
+        sys.exit(0)
+
+for item in skill_trace.get("codex_gates", []):
+    if not isinstance(item, dict):
+        continue
+    if item.get("required") is True:
+        if item.get("used") is not True:
+            print("true")
+            sys.exit(0)
+        if item.get("verdict") not in {"PASS", "PASS_WITH_REQUIRED_CHANGES"}:
+            print("true")
+            sys.exit(0)
+
+for item in skill_trace.get("hermes_skills", []):
+    if not isinstance(item, dict):
+        continue
+    if item.get("used") is True:
+        if not non_empty(item.get("evidence")):
+            print("true")
+            sys.exit(0)
+        if item.get("verdict") not in PASS_VERDICTS:
+            print("true")
+            sys.exit(0)
+    elif item.get("planned") is True:
+        reason = item.get("skipped_reason") or item.get("reason")
+        if not non_empty(reason):
+            print("true")
+            sys.exit(0)
+
+print("false")
+PY
+}
+
 # ── run-state checks ────────────────────────────────────────────────────────
 
 check_run_state() {
@@ -312,6 +478,29 @@ check_run_state() {
     record "generated-file-without-evidence" "FAIL"
   else
     record "generated-file-without-evidence" "PASS"
+  fi
+
+  # 9. skill_trace must support acceptance and required skill evidence.
+  local skill_trace_violation
+  skill_trace_violation=$(jskill_trace_violation "$f")
+  if [[ "$skill_trace_violation" == "true" ]]; then
+    record "skill-trace-evidence" "FAIL"
+  else
+    record "skill-trace-evidence" "PASS"
+  fi
+}
+
+# ── report checks ───────────────────────────────────────────────────────────
+
+check_report() {
+  local f="$1"
+
+  local skill_trace_violation
+  skill_trace_violation=$(jskill_trace_violation "$f")
+  if [[ "$skill_trace_violation" == "true" ]]; then
+    record "skill-trace-evidence" "FAIL"
+  else
+    record "skill-trace-evidence" "PASS"
   fi
 }
 
@@ -399,6 +588,7 @@ Validates run-state objects and repo directories against policy rules.
 
 Modes:
   --run-state <file>   Validate a run-state JSON file
+  --report <file>      Validate a dev-pipeline-report JSON file
   --repo <dir>         Scan a repo directory for policy violations
   --help               Show this help message
 
@@ -428,6 +618,19 @@ main() {
       fi
       banner
       check_run_state "$2"
+      show_results
+      if (( FAIL_COUNT > 0 )); then
+        exit 1
+      fi
+      exit 0
+      ;;
+    --report)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --report requires a file argument" >&2
+        exit 1
+      fi
+      banner
+      check_report "$2"
       show_results
       if (( FAIL_COUNT > 0 )); then
         exit 1

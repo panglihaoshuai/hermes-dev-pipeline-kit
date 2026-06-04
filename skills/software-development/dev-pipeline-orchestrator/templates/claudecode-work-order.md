@@ -54,6 +54,14 @@ Required Matt skill: `<tdd | diagnose | prototype | to-issues | grill-me>`
 
 You must use this skill during execution. If unavailable, report concrete evidence. If you do not use it, this work order is FAIL unless Hermes accepts the unavailable evidence.
 
+## Required Skill Trace
+
+- Required Matt skill:
+- Why this skill:
+- Expected evidence:
+- What counts as missing evidence:
+- Whether missing evidence blocks acceptance:
+
 ## Required Skill Evidence
 
 - For `tdd`, output RED / GREEN / REFACTOR evidence.
@@ -61,6 +69,10 @@ You must use this skill during execution. If unavailable, report concrete eviden
 - For `prototype`, output variants considered / chosen variant / why.
 - For `to-issues`, output the issue slices and dependencies.
 - For `grill-me`, output the decision branches resolved.
+
+ClaudeCode must not merely say "used tdd". It must provide evidence matching the skill.
+
+If the required Matt skill evidence is missing, Hermes must return the work order as PARTIAL/FAIL unless explicitly waived with reason.
 
 ## ClaudeCode Plugin Routing
 
@@ -106,6 +118,15 @@ DONE / PARTIAL / BLOCKED / FAILED
 - required:
 - used:
 - evidence:
+
+## Skill Evidence
+
+- Skill used:
+- Skill evidence:
+- Commands run:
+- Exit codes:
+- Files touched:
+- Blocked / complete:
 
 ## Planned File Touches
 

@@ -73,6 +73,28 @@ Use this as the final report format for `dev-pipeline-orchestrator`. Do not clai
 
 - failed work order id:
 
+## Skill Trace
+
+| layer | skill/tool | planned | used | evidence | verdict |
+|---|---|---:|---:|---|---|
+| Hermes entry | dev-pipeline-orchestrator | yes | yes | intake/classification/work orders/report | PASS |
+| Hermes/gstack | plan-eng-review | yes/no | yes/no | plan/risk/acceptance evidence | PASS/PARTIAL/SKIPPED |
+| Hermes/gstack | investigate | yes/no | yes/no | hypothesis/evidence/conclusion | PASS/PARTIAL/SKIPPED |
+| Hermes/gstack | review | yes/no | yes/no | diff/issues/verdict | PASS/PARTIAL/SKIPPED |
+| Hermes/gstack | ship | yes/no | yes/no | release readiness/approval state | PASS/PARTIAL/SKIPPED |
+| ClaudeCode/Matt | tdd | yes/no | yes/no | RED/GREEN/exit code | PASS/PARTIAL/MISSING |
+| ClaudeCode/Matt | diagnose | yes/no | yes/no | hypothesis/test/finding/fix | PASS/PARTIAL/MISSING |
+| ClaudeCode/Matt | prototype | yes/no | yes/no | variants/chosen/reason | PASS/PARTIAL/MISSING |
+| Codex | plan review | yes/no | yes/no | verdict | PASS/SKIPPED/FAIL |
+| Codex | diff review | yes/no | yes/no | verdict | PASS/SKIPPED/FAIL |
+| policy-check | policy-check.sh | yes/no | yes/no | command + exit code | PASS/SKIPPED/FAIL |
+| doctor/ci-local | doctor.sh / ci-local.sh | yes/no | yes/no | command + exit code | PASS/SKIPPED/FAIL |
+
+- missing skill evidence:
+- skipped skills:
+- skipped reason:
+- acceptance impact: none / partial / blocking
+
 ## Verification Evidence
 
 | command | exit code | key output | pass/fail |

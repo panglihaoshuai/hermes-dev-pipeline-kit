@@ -89,6 +89,16 @@
             "type": "string",
             "description": "Skill required to execute this work order."
           },
+          "required_matt_skill": {
+            "type": "string",
+            "description": "Matt skill ClaudeCode was required to use, if any.",
+            "enum": ["tdd", "diagnose", "prototype", "to-issues", "grill-me"]
+          },
+          "skill_evidence": {
+            "type": "object",
+            "description": "Structured evidence that the required Matt skill was actually used.",
+            "additionalProperties": true
+          },
           "status": {
             "type": "string",
             "description": "Current status of the work order.",
@@ -229,6 +239,183 @@
           "type": "string",
           "description": "Final acceptance decision.",
           "enum": ["ACCEPTED", "NOT_ACCEPTED", "PARTIAL", "BLOCKED"]
+        }
+      }
+    },
+    "skill_trace": {
+      "type": "object",
+      "description": "Disclosure and evidence for active Hermes, ClaudeCode/Matt, Codex, policy, and verification skill/tool usage. Required by policy when acceptance.complete is true.",
+      "required": [
+        "entry_skill",
+        "mode",
+        "phase",
+        "hermes_skills",
+        "claudecode_skills",
+        "codex_gates",
+        "policy_check",
+        "missing_evidence",
+        "acceptance_impact"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entry_skill": {
+          "type": "string",
+          "description": "Pipeline entry skill.",
+          "const": "dev-pipeline-orchestrator"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["dry_run", "plan_only", "auto_run"]
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "intake",
+            "planning",
+            "work order execution",
+            "verification",
+            "Codex review",
+            "publish",
+            "commit approval"
+          ]
+        },
+        "hermes_skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "planned", "used", "evidence", "verdict"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "planned": {
+                "type": "boolean"
+              },
+              "used": {
+                "type": "boolean"
+              },
+              "evidence": {
+                "type": "string"
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PARTIAL", "SKIPPED", "MISSING", "FAIL"]
+              },
+              "skipped_reason": {
+                "type": "string"
+              },
+              "acceptance_impact": {
+                "type": "string",
+                "enum": ["none", "partial", "blocking"]
+              }
+            }
+          }
+        },
+        "claudecode_skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "required", "reported", "evidence", "verdict"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": ["tdd", "diagnose", "prototype", "to-issues", "grill-me"]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "reported": {
+                "type": "boolean"
+              },
+              "evidence": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PARTIAL", "MISSING", "FAIL", "SKIPPED"]
+              }
+            }
+          }
+        },
+        "codex_gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "required", "used", "verdict"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "used": {
+                "type": "boolean"
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PASS_WITH_REQUIRED_CHANGES", "SKIPPED", "FAIL", "UNKNOWN"]
+              }
+            }
+          }
+        },
+        "policy_check": {
+          "type": "object",
+          "required": ["planned", "used", "exit_code"],
+          "additionalProperties": false,
+          "properties": {
+            "planned": {
+              "type": "boolean"
+            },
+            "used": {
+              "type": "boolean"
+            },
+            "exit_code": {
+              "type": ["integer", "null"]
+            }
+          }
+        },
+        "doctor_ci_local": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "planned": {
+              "type": "boolean"
+            },
+            "used": {
+              "type": "boolean"
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["command", "exit_code"],
+                "additionalProperties": false,
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "exit_code": {
+                    "type": ["integer", "null"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "acceptance_impact": {
+          "type": "string",
+          "enum": ["none", "partial", "blocking"]
         }
       }
     },

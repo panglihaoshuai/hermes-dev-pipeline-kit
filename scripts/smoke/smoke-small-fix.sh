@@ -55,6 +55,37 @@ cat > "$TMPFILE" <<'EOF'
     "complete": true,
     "final_decision": "ACCEPTED"
   },
+  "skill_trace": {
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [
+      {
+        "name": "gstack plan-eng-review",
+        "planned": false,
+        "used": false,
+        "evidence": "",
+        "verdict": "SKIPPED",
+        "skipped_reason": "S-level smoke fixture does not require gstack plan review."
+      }
+    ],
+    "claudecode_skills": [],
+    "codex_gates": [
+      {
+        "name": "diff review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
   "approval_gates": {
     "commit_approved": true,
     "push_approved": false,

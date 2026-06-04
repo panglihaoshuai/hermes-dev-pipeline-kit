@@ -1,0 +1,132 @@
+{
+  "run_id": "2026-06-04T09:00:00Z",
+  "project": "my-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 9",
+  "classification": {
+    "scale": "M",
+    "reasons": [
+      "Multi-file feature",
+      "Requires ClaudeCode implementation",
+      "Requires Codex diff review"
+    ],
+    "risk_level": "medium"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "claude_code",
+      "required_skill": "tdd",
+      "required_matt_skill": "tdd",
+      "status": "completed",
+      "files": ["src/health.ts", "tests/health.test.ts"],
+      "retries": 0,
+      "skill_evidence": {
+        "skill": "tdd",
+        "red": "tests/health.test.ts failed before implementation",
+        "green": "tests/health.test.ts passed after implementation",
+        "commands": ["npm test -- tests/health.test.ts"],
+        "exit_codes": [0]
+      }
+    }
+  ],
+  "allowed_files": [
+    "src/health.ts",
+    "tests/health.test.ts"
+  ],
+  "forbidden_files": [
+    ".env",
+    ".env.local",
+    "secrets.json"
+  ],
+  "modified_files": [
+    "src/health.ts",
+    "tests/health.test.ts"
+  ],
+  "command_evidence": [
+    {
+      "command": "npm test -- tests/health.test.ts",
+      "exit_code": 0,
+      "key_output": "Tests: 2 passed, 2 total",
+      "pass_fail": "PASS"
+    },
+    {
+      "command": "git diff --check HEAD",
+      "exit_code": 0,
+      "key_output": "No whitespace errors",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/health.ts\nA\ttests/health.test.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "skill_trace": {
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [
+      {
+        "name": "gstack plan-eng-review",
+        "planned": true,
+        "used": true,
+        "evidence": "plan summary, risk review, acceptance criteria",
+        "verdict": "PASS"
+      }
+    ],
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "evidence": {
+          "red": "tests/health.test.ts failed before implementation",
+          "green": "tests/health.test.ts passed after implementation",
+          "commands": ["npm test -- tests/health.test.ts"],
+          "exit_codes": [0]
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "codex_gates": [
+      {
+        "name": "plan review",
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      },
+      {
+        "name": "diff review",
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "approval_gates": {
+    "commit_approved": false,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

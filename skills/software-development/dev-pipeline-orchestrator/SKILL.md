@@ -165,6 +165,72 @@ User says any of these — auto-classify and start:
 - Any development task without explicit scale
 - Short, informal, or incomplete development requests (see Simple Prompt Intake Protocol)
 
+## Active Skill Disclosure Protocol
+
+At the start of every development task, Hermes must output a concise active workflow banner.
+
+The banner must include:
+
+- entry skill: `dev-pipeline-orchestrator`
+- mode: `dry_run` / `plan_only` / `auto_run`
+- current phase:
+  - intake
+  - planning
+  - work order execution
+  - verification
+  - Codex review
+  - publish
+  - commit approval
+- Hermes sub-skills planned:
+  - gstack plan-eng-review
+  - gstack investigate
+  - gstack review
+  - gstack ship
+  - gstack retro
+  - writing-plans / plan, if used
+- ClaudeCode required skill planned:
+  - tdd
+  - diagnose
+  - prototype
+  - to-issues
+  - grill-me
+- Codex usage:
+  - disabled / optional / required
+  - plan review yes/no
+  - diff review yes/no
+- policy-check usage:
+  - planned / not required
+- doctor / ci-local usage:
+  - planned / not required
+- user clarification needed: yes/no
+
+Hermes must not claim a sub-skill was used unless it can provide evidence in the final report.
+
+If a skill is planned but later skipped, Hermes must report:
+
+- skipped skill;
+- reason;
+- whether this affects acceptance.
+
+## Intake Conversation Trace
+
+When user input is short, vague, or product-like, Hermes must visibly enter Simple Prompt Intake.
+
+Hermes should say:
+
+- "I am using Simple Prompt Intake under dev-pipeline-orchestrator."
+- normalized task brief;
+- assumptions;
+- non-blocking assumptions;
+- blocking questions, if any;
+- default decision if user says "you decide".
+
+Hermes should ask at most 3 blocking questions.
+
+If no blocking question exists, Hermes should proceed and record assumptions.
+
+This should make the interaction feel like a guided brainstorming / planning skill, not a silent jump into execution.
+
 ## Simple Prompt Intake Protocol
 
 Hermes must assume that user prompts may be short, incomplete, informal, or underspecified.
@@ -232,6 +298,84 @@ If there are more than 3 uncertainties, Hermes must:
 - record the rest as assumptions or backlog.
 
 If the user says "自己判断 / 你决定 / 直接做 / 不要问我", Hermes should proceed with safe defaults unless the action is destructive, external, or security-sensitive.
+
+## Skill Usage Evidence Requirements
+
+Final report must include a `Skill Trace` section.
+
+Required fields:
+
+- entry skill used;
+- mode;
+- Hermes sub-skills planned;
+- Hermes sub-skills used;
+- Hermes sub-skills skipped with reason;
+- ClaudeCode Matt skills required;
+- ClaudeCode Matt skills reported;
+- skill evidence status:
+  - complete
+  - partial
+  - missing
+- Codex gates used;
+- Codex gates skipped with reason;
+- policy-check usage;
+- doctor / ci-local usage;
+- acceptance impact.
+
+Evidence rules for ClaudeCode Matt skills:
+
+1. `tdd` requires:
+   - RED evidence or reason skipped;
+   - GREEN evidence;
+   - validation command exit code.
+2. `diagnose` requires:
+   - hypothesis;
+   - test performed;
+   - finding;
+   - fix recommendation or applied fix.
+3. `prototype` requires:
+   - variants considered;
+   - chosen variant;
+   - reason.
+4. `to-issues` requires:
+   - issue breakdown;
+   - acceptance criteria;
+   - priority.
+5. `grill-me` requires:
+   - challenge questions;
+   - decisions changed or confirmed.
+
+If required Matt skill evidence is missing, Hermes must mark verification as PARTIAL or FAIL, not PASS.
+
+If acceptance complete is true while required Matt skill evidence is missing, policy-check must FAIL.
+
+## Hermes / gstack Evidence Requirements
+
+When Hermes uses or claims gstack skills, it must provide evidence:
+
+- `plan-eng-review`:
+  - plan summary;
+  - risk review;
+  - acceptance criteria.
+- `investigate`:
+  - hypothesis;
+  - evidence gathered;
+  - conclusion.
+- `review`:
+  - diff reviewed;
+  - issues found;
+  - verdict.
+- `ship`:
+  - release readiness;
+  - commit/push/PR approval state.
+- `retro`:
+  - what worked;
+  - what failed;
+  - follow-up backlog.
+
+If gstack skill was not available or not used, Hermes must report skipped with reason.
+
+Do not overclaim internal invocation. The kit can require skill usage disclosure and evidence, but cannot prove hidden runtime invocation without external trace support.
 
 ## Default Assumption Table
 

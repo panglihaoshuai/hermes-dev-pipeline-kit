@@ -50,6 +50,33 @@ This sample can be used to:
 - Test policy-check tooling against a known-good report.
 - Seed integration tests for consumers of the report.
 
+## Skill Trace and Evidence
+
+The report includes a `skill_trace` object and a human-readable `Skill Trace`
+table in the Markdown report.
+
+The trace discloses:
+
+- Hermes entry skill and active phase;
+- planned, used, and skipped Hermes/gstack skills;
+- ClaudeCode Matt skills required and reported;
+- Codex plan/diff review gates used or skipped;
+- policy-check and doctor/ci-local usage;
+- missing evidence and acceptance impact.
+
+ClaudeCode Matt skill evidence must match the required skill. `tdd` requires
+RED/GREEN evidence and validation exit codes. `diagnose` requires hypothesis,
+test, finding, and a fix recommendation or applied fix. `prototype`,
+`to-issues`, and `grill-me` have their own evidence fields in the schemas and
+templates.
+
+If required Matt skill evidence is missing, Hermes must not mark verification as
+PASS. If acceptance is complete while required Matt skill evidence is missing,
+`scripts/policy-check.sh` fails run-state validation.
+
+This is a disclosure and evidence contract. It does not prove hidden runtime
+invocation unless Hermes or ClaudeCode expose machine-readable runtime traces.
+
 ## How policy-check can validate reports
 
 A policy-check script or CI step can validate any pipeline report by:

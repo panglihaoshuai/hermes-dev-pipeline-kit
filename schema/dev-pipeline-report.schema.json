@@ -18,6 +18,7 @@
     "role_performance",
     "task_classification",
     "intake_quality",
+    "skill_trace",
     "work_orders",
     "verification_evidence",
     "diff_summary",
@@ -166,6 +167,14 @@
           "id": { "type": "string" },
           "owner": { "type": "string" },
           "required_skill": { "type": "string" },
+          "required_matt_skill": {
+            "type": "string",
+            "enum": ["tdd", "diagnose", "prototype", "to-issues", "grill-me"]
+          },
+          "skill_evidence": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "files": {
             "type": "array",
             "items": { "type": "string" }
@@ -176,6 +185,137 @@
         },
         "required": ["id", "owner", "required_skill", "files", "retry_count", "status", "evidence"]
       }
+    },
+    "skill_trace": {
+      "type": "object",
+      "description": "Skill/tool disclosure and evidence summary for the final pipeline report.",
+      "properties": {
+        "entry_skill": {
+          "type": "string",
+          "const": "dev-pipeline-orchestrator"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["dry_run", "plan_only", "auto_run"]
+        },
+        "phase": {
+          "type": "string"
+        },
+        "hermes_skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "planned": { "type": "boolean" },
+              "used": { "type": "boolean" },
+              "evidence": { "type": "string" },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PARTIAL", "SKIPPED", "MISSING", "FAIL"]
+              },
+              "skipped_reason": { "type": "string" },
+              "acceptance_impact": {
+                "type": "string",
+                "enum": ["none", "partial", "blocking"]
+              }
+            },
+            "required": ["name", "planned", "used", "evidence", "verdict"]
+          }
+        },
+        "claudecode_skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": ["tdd", "diagnose", "prototype", "to-issues", "grill-me"]
+              },
+              "required": { "type": "boolean" },
+              "reported": { "type": "boolean" },
+              "evidence": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PARTIAL", "MISSING", "FAIL", "SKIPPED"]
+              }
+            },
+            "required": ["name", "required", "reported", "evidence", "verdict"]
+          }
+        },
+        "codex_gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "required": { "type": "boolean" },
+              "used": { "type": "boolean" },
+              "verdict": {
+                "type": "string",
+                "enum": ["PASS", "PASS_WITH_REQUIRED_CHANGES", "SKIPPED", "FAIL", "UNKNOWN"]
+              }
+            },
+            "required": ["name", "required", "used", "verdict"]
+          }
+        },
+        "policy_check": {
+          "type": "object",
+          "properties": {
+            "planned": { "type": "boolean" },
+            "used": { "type": "boolean" },
+            "exit_code": { "type": ["integer", "null"] }
+          },
+          "required": ["planned", "used", "exit_code"]
+        },
+        "doctor_ci_local": {
+          "type": "object",
+          "properties": {
+            "planned": { "type": "boolean" },
+            "used": { "type": "boolean" },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "command": { "type": "string" },
+                  "exit_code": { "type": ["integer", "null"] }
+                },
+                "required": ["command", "exit_code"]
+              }
+            }
+          }
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "skipped_skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "skipped_reason": {
+          "type": "string"
+        },
+        "acceptance_impact": {
+          "type": "string",
+          "enum": ["none", "partial", "blocking"]
+        }
+      },
+      "required": [
+        "entry_skill",
+        "mode",
+        "phase",
+        "hermes_skills",
+        "claudecode_skills",
+        "codex_gates",
+        "policy_check",
+        "missing_evidence",
+        "acceptance_impact"
+      ]
     },
     "verification_evidence": {
       "type": "array",
