@@ -91,6 +91,21 @@ If `display_language` is `zh-CN`, `current_phase_label` is required by policy-ch
 
 The Markdown report must include a Chinese `技能使用证据` table explaining which Hermes/gstack skills, ClaudeCode Matt skills, Codex gates, and local validation tools were planned, used, skipped, and evidenced.
 
+## Owner Summary, Stage Updates, Responsibility Trace, and Approval Inbox
+
+The Markdown report must start with an owner-facing Chinese executive header before the detailed evidence sections. The header is for the user acting as workflow owner, not for replacing the underlying evidence.
+
+Required human-readable sections:
+
+- `负责人摘要`: current green/yellow/red status, current phase, completed work, blockers, next action, and commit/push/publish readiness.
+- `阶段更新`: user-visible phase transitions, including previous phase, next phase, reason, owner, and evidence.
+- `责任归因`: responsibility boundary for User, Hermes, ClaudeCode, Codex, external tools, and environment. Failures and blockers must name an owner and supporting evidence.
+- `待你审批`: centralized approval inbox for commit, push, PR, deploy, sensitive config edits, file overwrite, or any other user-gated action. If no approval is needed, the report must say so explicitly.
+
+The JSON report mirrors these sections with `owner_summary`, `stage_updates`, `responsibility_trace`, and `approval_inbox`. `scripts/policy-check.sh` validates that accepted reports include owner summary and responsibility trace, and that approval-waiting states include a non-empty approval inbox.
+
+This contract does not claim that the runtime always follows the protocol. It makes missing owner-facing summaries and missing approval disclosure visible to policy checks and reviewers.
+
 ## How policy-check can validate reports
 
 A policy-check script or CI step can validate any pipeline report by:

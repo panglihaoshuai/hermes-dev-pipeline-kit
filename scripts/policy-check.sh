@@ -423,6 +423,126 @@ print("false")
 PY
 }
 
+jowner_summary_violation() {
+  # Returns 'true' when owner summary / approval inbox policy is violated.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+
+def non_empty(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+
+acceptance_complete = bool(
+    d.get("acceptance", {}).get("complete")
+    or d.get("acceptance_complete")
+)
+if not acceptance_complete:
+    print("false")
+    sys.exit(0)
+
+owner_summary = d.get("owner_summary")
+if not isinstance(owner_summary, dict):
+    print("true")
+    sys.exit(0)
+
+required_owner_fields = [
+    "task",
+    "status_color",
+    "current_stage_label",
+    "progress",
+    "largest_risk",
+    "needs_user_decision",
+    "next_action",
+]
+if any(not non_empty(owner_summary.get(field)) for field in required_owner_fields):
+    print("true")
+    sys.exit(0)
+
+responsibility_trace = d.get("responsibility_trace")
+if not isinstance(responsibility_trace, list) or not responsibility_trace:
+    print("true")
+    sys.exit(0)
+
+approval_inbox = d.get("approval_inbox", [])
+needs_decision = owner_summary.get("needs_user_decision") is True
+progress = owner_summary.get("progress", {})
+approval_waiting = (
+    isinstance(progress, dict)
+    and str(progress.get("approval", "")).lower() in {"waiting", "等待审批"}
+)
+approval_gates = d.get("approval_gates", {})
+commit_waiting = (
+    acceptance_complete
+    and isinstance(approval_gates, dict)
+    and approval_gates.get("commit_approved") is False
+    and owner_summary.get("current_stage_label") in {"Commit 审批", "Commit / Push / PR 审批"}
+)
+
+if (needs_decision or approval_waiting or commit_waiting) and not non_empty(approval_inbox):
+    print("true")
+    sys.exit(0)
+
+status_color = str(owner_summary.get("status_color", "")).lower()
+green_status = status_color in {"green", "绿"}
+if green_status:
+    verification = d.get("verification", {})
+    if verification.get("tests_pass") is False:
+        print("true")
+        sys.exit(0)
+    for item in d.get("command_evidence", []):
+        if isinstance(item, dict) and item.get("pass_fail") == "FAIL":
+            print("true")
+            sys.exit(0)
+    skill_trace = d.get("skill_trace", {})
+    if isinstance(skill_trace, dict):
+        if non_empty(skill_trace.get("missing_evidence")):
+            print("true")
+            sys.exit(0)
+        if skill_trace.get("acceptance_impact") in {"partial", "blocking"}:
+            print("true")
+            sys.exit(0)
+
+failure_exists = False
+verification = d.get("verification", {})
+if verification.get("tests_pass") is False:
+    failure_exists = True
+for item in d.get("command_evidence", []):
+    if isinstance(item, dict) and item.get("pass_fail") == "FAIL":
+        failure_exists = True
+codex = d.get("codex", {})
+if codex.get("plan_review_verdict") == "FAIL" or codex.get("diff_review_verdict") == "FAIL":
+    failure_exists = True
+
+if failure_exists:
+    has_failure_owner = any(
+        isinstance(item, dict)
+        and (
+            item.get("blocking") is True
+            or str(item.get("status", "")).lower() in {"fail", "failed", "blocked", "失败", "阻塞"}
+            or non_empty(item.get("failure_owner"))
+        )
+        for item in responsibility_trace
+    )
+    if not has_failure_owner:
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
 # ── run-state checks ────────────────────────────────────────────────────────
 
 check_run_state() {
@@ -513,6 +633,15 @@ check_run_state() {
   else
     record "skill-trace-evidence" "PASS"
   fi
+
+  # 10. owner-facing summary, responsibility trace, and approval inbox.
+  local owner_summary_violation
+  owner_summary_violation=$(jowner_summary_violation "$f")
+  if [[ "$owner_summary_violation" == "true" ]]; then
+    record "owner-summary" "FAIL"
+  else
+    record "owner-summary" "PASS"
+  fi
 }
 
 # ── report checks ───────────────────────────────────────────────────────────
@@ -526,6 +655,14 @@ check_report() {
     record "skill-trace-evidence" "FAIL"
   else
     record "skill-trace-evidence" "PASS"
+  fi
+
+  local owner_summary_violation
+  owner_summary_violation=$(jowner_summary_violation "$f")
+  if [[ "$owner_summary_violation" == "true" ]]; then
+    record "owner-summary" "FAIL"
+  else
+    record "owner-summary" "PASS"
   fi
 }
 

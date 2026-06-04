@@ -225,7 +225,43 @@ This rule enforces disclosure and evidence. It does not claim to introspect hidd
 
 ---
 
-## 10. Timeout 不等于完成
+## 10. Owner Summary, Responsibility Trace, and Approval Inbox
+
+最终报告必须把用户作为负责人来服务，而不是只输出内部执行日志。
+
+### 负责人摘要
+`owner_summary` 必须说明：
+- 状态：green / yellow / red；
+- 当前阶段；
+- 已完成事项；
+- 阻塞项；
+- 下一步；
+- 是否可以 commit / push / publish。
+
+如果状态为 green，但测试、命令、Skill Trace 或 Codex gate 仍有阻塞失败，`policy-check.sh` 必须 FAIL。
+
+### 责任归因
+`responsibility_trace` 必须说明每个关键结论由谁负责：
+- User：审批、需求取舍、外部账号授权；
+- Hermes：流程调度、范围控制、报告与证据完整性；
+- ClaudeCode：工单实现、自检、命令证据；
+- Codex：计划审查、diff 审查、最终验收；
+- External / Environment：依赖服务、网络、CLI、权限、CI 等。
+
+如果存在 failure/blocker，责任归因必须包含对应 owner、证据和下一步。
+
+### 待审批事项
+当流程等待用户审批时，`approval_inbox` 必须非空，集中列出：
+- commit / push / PR / deploy；
+- 覆盖已有文件；
+- 修改敏感配置；
+- 任何超出当前授权范围的动作。
+
+没有审批事项时也必须明确记录为空或 `无`，不得让审批分散在报告各处。
+
+---
+
+## 11. Timeout 不等于完成
 
 ### delegate_task 超时（600s）
 当 delegate_task 超时：
@@ -243,7 +279,7 @@ timeout checkpoint: [已完成/未完成] [已完成部分] [剩余部分]
 
 ---
 
-## 11. TDD Evidence 不可伪造
+## 12. TDD Evidence 不可伪造
 
 ### 严格 TDD 证据格式
 ```

@@ -58,6 +58,43 @@
     "complete": true,
     "final_decision": "ACCEPTED"
   },
+  "owner_summary": {
+    "task": "官方命令重新生成 generated file",
+    "status_color": "green",
+    "current_stage_label": "Hermes 验证",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "not_required",
+      "approval": "not_required"
+    },
+    "largest_risk": "无阻塞风险。",
+    "needs_user_decision": false,
+    "next_action": "可停止或按用户批准提交。"
+  },
+  "stage_updates": [
+    {
+      "from": "ClaudeCode 工单执行",
+      "to": "Hermes 验证",
+      "tools_or_skills": ["dev-pipeline-orchestrator", "policy-check.sh"],
+      "goal": "确认 generated file 由官方命令生成",
+      "next_gate_condition": "policy-check PASS",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "generated file 证据",
+      "owner": "Hermes",
+      "status": "complete",
+      "evidence": "generation_command_evidence true",
+      "blocking": false
+    }
+  ],
+  "approval_inbox": [],
   "skill_trace": {
     "display_language": "zh-CN",
     "current_phase_label": "Hermes 验证",

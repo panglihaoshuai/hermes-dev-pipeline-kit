@@ -67,6 +67,19 @@ Hermes must not later claim a skill was used unless the final report includes ev
 
 If Hermes asks questions, it must say in Chinese why the questions are blocking, what default it would choose if the user does not answer, and which phase follows after the answer. Non-blocking assumptions should be recorded, not turned into questions.
 
+### Owner-Facing Stage Update
+
+每次进入新的主要 Gate 时，Hermes 必须给用户一个简短中文阶段更新：
+
+```text
+阶段更新：已完成 <上一阶段>，现在进入 <当前阶段>。
+负责人：Hermes / ClaudeCode / Codex / 用户 / 外部工具。
+为什么进入：<触发条件或证据>。
+下一步：<要执行或等待的动作>。
+```
+
+阶段更新是沟通协议，不改变 9-Gate 流程本身。
+
 ### 输入
 用户的自然语言请求，可能是完整描述，也可能是简短的一句话。
 
@@ -353,6 +366,10 @@ git diff --stat              # 改动统计
 
 调用 `software-development/dev-pipeline-report` skill，产出完整报告，包括：
 
+- 负责人摘要（绿 / 黄 / 红、当前阶段、下一步、阻塞项）
+- 阶段更新（关键 Gate 切换和证据）
+- 责任归因（用户 / Hermes / ClaudeCode / Codex / 外部工具 / 环境）
+- 待你审批（commit / push / PR / deploy / 覆盖文件 / 敏感配置）
 - Executive Status（执行状态总览）
 - Role Performance（各角色执行情况）
 - Task Classification（任务分类）
@@ -371,6 +388,8 @@ git diff --stat              # 改动统计
 - **没有报告 = pipeline 没有完成**
 - 只有 Codex PASS 才能设置 `acceptance complete: true`
 - 报告是唯一能证明 pipeline 跑过的 artifact
+- 如果 `acceptance complete: true`，报告必须有负责人摘要和责任归因
+- 如果等待用户审批，报告必须集中列出待审批事项
 
 ---
 

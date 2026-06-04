@@ -290,6 +290,199 @@ Requirements:
 - Keep it concise for S-level tasks.
 - Use full detail for M/L/recovery/publish tasks.
 
+## Chinese Owner Summary Protocol
+
+Hermes must provide a concise Chinese Owner Summary for the user as the final decision-maker.
+
+This summary is for the project owner / highest-level approver, not for engineers.
+
+It must appear:
+
+1. at the beginning of M/L/recovery/publish tasks;
+2. at every major gate transition;
+3. at the top of the final report;
+4. whenever user approval is required.
+
+The Owner Summary must answer:
+
+- 任务是什么？
+- 当前阶段是什么？
+- 当前状态是绿 / 黄 / 红？
+- 当前完成度如何？
+- Hermes 正在负责什么？
+- ClaudeCode 正在负责什么？
+- Codex 是否参与？
+- 当前最大风险是什么？
+- 现在是否需要用户审批？
+- 下一步是什么？
+
+Use this format:
+
+```markdown
+## 负责人摘要
+
+- 任务：...
+- 当前状态：绿 / 黄 / 红
+- 当前阶段：...
+- 完成度：
+  - 需求收集：未开始 / 进行中 / 完成
+  - 方案计划：未开始 / 进行中 / 完成
+  - 工单拆分：未开始 / 进行中 / 完成
+  - ClaudeCode 执行：未开始 / 进行中 / 完成
+  - Hermes 验证：未开始 / 进行中 / 完成
+  - Codex 审查：不需要 / 进行中 / 完成
+  - Commit / Push / PR 审批：不需要 / 等待审批
+- 使用情况：
+  - Hermes：...
+  - ClaudeCode：...
+  - Codex：...
+- 当前最大风险：...
+- 需要你决定：是 / 否
+- 下一步：...
+```
+
+Status color rules:
+
+- 绿：当前任务目标已满足，验证通过，没有阻塞风险；
+- 黄：任务可继续，但存在 baseline debt、缺少可选依赖、等待用户审批、或部分证据缺失；
+- 红：测试失败、policy-check 失败、缺少关键 skill evidence、触碰 forbidden files、涉及 secret、Codex FAIL、或需要用户决定才能继续。
+
+Hermes must not bury user approval items inside long engineering reports.
+
+## Chinese Stage Update Protocol
+
+Hermes must output a short Chinese stage update when moving between major gates.
+
+Required stage transition updates:
+
+1. 进入需求收集与头脑风暴；
+2. 需求澄清完成，进入方案设计；
+3. 方案设计完成，进入工单拆分；
+4. 工单拆分完成，进入 ClaudeCode 执行；
+5. ClaudeCode 返回结果，进入 Hermes 验证；
+6. Hermes 验证完成，进入 Codex 审查或跳过说明；
+7. Codex 审查完成，进入报告；
+8. 等待 commit / push / PR / publish 审批。
+
+Use this format:
+
+```markdown
+### 阶段更新
+
+- 上一阶段：...
+- 当前阶段：...
+- 正在使用的 skill / 工具：...
+- 本阶段目标：...
+- 进入下一阶段的条件：...
+- 是否需要你现在决策：是 / 否
+```
+
+For S-level small fixes, this may be compact:
+
+```markdown
+阶段更新：已完成需求理解，进入小修执行。当前使用 dev-pipeline-orchestrator，ClaudeCode 将按 diagnose/tdd 执行。无需你补充信息。
+```
+
+For M/L/recovery/publish tasks, use the full format.
+
+## Responsibility Trace
+
+Hermes must identify responsibility ownership for each task stage and failure.
+
+Responsibility categories:
+
+- 用户 / Owner：
+  - 目标提供；
+  - 关键产品方向决策；
+  - commit / push / PR / publish 审批；
+  - destructive / external / secret / dependency install approval.
+- Hermes：
+  - 需求标准化；
+  - 方案设计；
+  - S/M/L 分级；
+  - 工单拆分；
+  - allowed / forbidden files；
+  - 验证；
+  - 报告；
+  - scope creep 控制。
+- ClaudeCode：
+  - 代码实现；
+  - 测试编写；
+  - 命令执行；
+  - Matt skill evidence；
+  - 文件修改回执。
+- Codex：
+  - plan review；
+  - diff review；
+  - 高风险审查；
+  - release readiness review。
+- 项目历史债：
+  - baseline test/type errors；
+  - legacy generated file issue；
+  - unrelated technical debt。
+
+Final report must include:
+
+```markdown
+## 责任归因
+
+| 事项 | 责任方 | 状态 | 证据 | 是否阻塞 |
+|---|---|---|---|---|
+| 需求边界 | Hermes / 用户 | 完成 | normalized task brief | 否 |
+| 代码实现 | ClaudeCode | 完成 | files changed + commands | 否 |
+| 测试验证 | Hermes / ClaudeCode | 完成 | exit code | 否 |
+| Codex 审查 | Codex | 完成 / 跳过 | verdict / reason | 否 |
+| commit 审批 | 用户 | 等待 | approval gate | 是/否 |
+```
+
+If a task fails, Hermes must report the failure owner:
+
+```markdown
+失败责任归因：
+- 失败点：...
+- 责任层：Hermes / ClaudeCode / Codex / 用户 / 项目历史债
+- 原因：...
+- 修复方式：...
+```
+
+## Approval Inbox
+
+Whenever user approval is needed, Hermes must show a dedicated Chinese Approval Inbox.
+
+Format:
+
+```markdown
+## 待你审批
+
+| 编号 | 审批事项 | 为什么需要你批 | 默认建议 | 不批准的后果 |
+|---|---|---|---|---|
+| A1 | 是否 commit | 代码已验证，需要落库 | 批准 | 当前改动停留在 working tree |
+| A2 | 是否 push | 需要同步到 GitHub | 按需批准 | 远端不会更新 |
+| A3 | 是否创建 PR | 需要进入合并流程 | 视项目流程决定 | 无 PR |
+```
+
+Common approval items:
+
+- commit；
+- push；
+- PR；
+- repo creation；
+- public repo；
+- dependency install；
+- modifying `~/.claude/CLAUDE.md`；
+- destructive commands；
+- secret/environment changes；
+- accepting baseline debt；
+- deferring backlog items.
+
+Hermes must not mix approval requests into a long paragraph.
+
+If no approval is needed, state:
+
+```markdown
+待你审批：无。下一步会自动继续。
+```
+
 ## Intake Conversation Trace
 
 When user input is short, vague, or product-like, Hermes must visibly enter Simple Prompt Intake.

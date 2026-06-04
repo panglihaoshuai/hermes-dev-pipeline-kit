@@ -165,6 +165,56 @@ FAIL  skill-trace-evidence
 
 ---
 
+## 3.3 负责人摘要或审批事项缺失
+
+### 症状
+`policy-check.sh` 输出：
+```text
+FAIL  owner-summary
+```
+
+### 常见原因
+- `acceptance.complete=true`，但缺少 `owner_summary`
+- `acceptance.complete=true`，但缺少 `responsibility_trace`
+- 当前阶段等待 commit / push / PR / deploy 审批，但 `approval_inbox` 为空
+- `owner_summary.status=green`，但 tests、commands、Skill Trace 或 Codex gate 仍有阻塞失败
+- 存在 failure/blocker，但责任归因没有 owner 或 evidence
+
+### 解决
+补齐面向用户负责人的报告字段：
+
+```json
+{
+  "owner_summary": {
+    "status": "yellow",
+    "current_phase": "Commit 审批",
+    "completed": ["实现已验证"],
+    "blockers": ["等待用户批准 commit"],
+    "next_action": "等待用户审批",
+    "safe_to_commit": false,
+    "safe_to_push": false
+  },
+  "responsibility_trace": [
+    {
+      "owner": "User",
+      "responsibility": "批准 commit",
+      "evidence": "Gate 9 requires explicit approval"
+    }
+  ],
+  "approval_inbox": [
+    {
+      "action": "git commit",
+      "reason": "Gate 9 commit approval",
+      "required_by": "User"
+    }
+  ]
+}
+```
+
+如果确实没有审批事项，`approval_inbox` 可以为空，但报告必须明确写 `待你审批：无`。
+
+---
+
 ## 4. jest-dom Matcher 类型错误
 
 ### 症状

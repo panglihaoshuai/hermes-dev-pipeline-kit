@@ -47,6 +47,50 @@
     "ambiguity_level": "low",
     "product_direction_confidence": "high"
   },
+  "owner_summary": {
+    "task": "健康检查接口",
+    "status_color": "green",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "not_required",
+      "approval": "not_required"
+    },
+    "largest_risk": "无阻塞风险。",
+    "needs_user_decision": false,
+    "next_action": "输出最终报告。"
+  },
+  "stage_updates": [
+    {
+      "from": "Hermes 验证",
+      "to": "证据报告输出",
+      "tools_or_skills": ["dev-pipeline-orchestrator", "dev-pipeline-report"],
+      "goal": "向负责人汇总状态、证据、风险和审批事项",
+      "next_gate_condition": "报告完成",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "需求边界",
+      "owner": "Hermes",
+      "status": "complete",
+      "evidence": "normalized task brief",
+      "blocking": false
+    },
+    {
+      "item": "代码实现",
+      "owner": "ClaudeCode",
+      "status": "complete",
+      "evidence": "src/routes/health.ts",
+      "blocking": false
+    }
+  ],
+  "approval_inbox": [],
   "skill_trace": {
     "display_language": "zh-CN",
     "current_phase_label": "Hermes 验证",

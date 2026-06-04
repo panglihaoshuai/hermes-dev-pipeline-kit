@@ -66,6 +66,58 @@
     "complete": true,
     "final_decision": "ACCEPTED"
   },
+  "owner_summary": {
+    "task": "本地导出能力",
+    "status_color": "yellow",
+    "current_stage_label": "Commit 审批",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "complete",
+      "approval": "waiting"
+    },
+    "largest_risk": "等待用户批准 commit。",
+    "needs_user_decision": true,
+    "next_action": "等待用户批准 commit"
+  },
+  "stage_updates": [
+    {
+      "from": "Hermes 验证",
+      "to": "Commit 审批",
+      "tools_or_skills": ["dev-pipeline-orchestrator", "policy-check.sh"],
+      "goal": "请求用户决定是否提交",
+      "next_gate_condition": "用户批准 commit",
+      "needs_user_decision": true
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "代码实现",
+      "owner": "ClaudeCode",
+      "status": "complete",
+      "evidence": "files changed + tests",
+      "blocking": false
+    },
+    {
+      "item": "commit 审批",
+      "owner": "用户",
+      "status": "waiting",
+      "evidence": "approval gate",
+      "blocking": true
+    }
+  ],
+  "approval_inbox": [
+    {
+      "id": "A1",
+      "item": "是否 commit",
+      "why_approval_required": "验证通过，需要落库",
+      "recommendation": "批准",
+      "impact_if_declined": "改动停留在 working tree"
+    }
+  ],
   "skill_trace": {
     "display_language": "zh-CN",
     "current_phase_label": "Hermes 验证",

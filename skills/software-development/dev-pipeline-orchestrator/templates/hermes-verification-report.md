@@ -1,5 +1,23 @@
 # Hermes Verification Report
 
+## 负责人摘要
+
+- 任务：
+- 当前状态：绿 / 黄 / 红
+- 当前阶段：Hermes 验证
+- 当前最大风险：
+- 需要你决定：是 / 否
+- 下一步：
+
+## 阶段更新
+
+- 上一阶段：ClaudeCode 工单执行
+- 当前阶段：Hermes 验证
+- 正在使用的 skill / 工具：dev-pipeline-orchestrator / policy-check / test commands
+- 本阶段目标：验证当前 diff 是否满足验收标准
+- 进入下一阶段的条件：验证通过，或记录阻塞问题
+- 是否需要你现在决策：是 / 否
+
 ## Scope
 
 - project:

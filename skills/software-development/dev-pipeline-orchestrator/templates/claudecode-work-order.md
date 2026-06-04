@@ -19,6 +19,15 @@
 - Slice:
 - Retry count:
 
+## 责任边界 / Responsibility Boundary
+
+- 用户 / Owner：目标提供、关键产品方向决策、commit / push / PR / publish 审批。
+- Hermes：需求标准化、方案设计、S/M/L 分级、工单拆分、allowed / forbidden files、验证、报告。
+- ClaudeCode：代码实现、测试编写、命令执行、Matt skill evidence、文件修改回执。
+- Codex：plan review、diff review、高风险审查、release readiness review。
+
+ClaudeCode must not redefine the product goal or approval policy. Return BLOCKED if the work order lacks enough scope to execute safely.
+
 ## Planned File Touches
 
 | file | action | allowed? | reason |

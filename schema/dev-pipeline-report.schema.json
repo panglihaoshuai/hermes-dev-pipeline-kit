@@ -18,7 +18,10 @@
     "role_performance",
     "task_classification",
     "intake_quality",
+    "owner_summary",
     "skill_trace",
+    "responsibility_trace",
+    "approval_inbox",
     "work_orders",
     "verification_evidence",
     "diff_summary",
@@ -184,6 +187,92 @@
           "evidence": { "type": "string" }
         },
         "required": ["id", "owner", "required_skill", "files", "retry_count", "status", "evidence"]
+      }
+    },
+    "owner_summary": {
+      "type": "object",
+      "description": "Chinese owner-facing executive summary for the final approver.",
+      "properties": {
+        "task": { "type": "string" },
+        "status_color": {
+          "type": "string",
+          "enum": ["green", "yellow", "red", "绿", "黄", "红"]
+        },
+        "current_stage_label": { "type": "string" },
+        "progress": {
+          "type": "object",
+          "properties": {
+            "intake": { "type": "string" },
+            "planning": { "type": "string" },
+            "work_order_split": { "type": "string" },
+            "execution": { "type": "string" },
+            "verification": { "type": "string" },
+            "codex_review": { "type": "string" },
+            "approval": { "type": "string" }
+          }
+        },
+        "largest_risk": { "type": "string" },
+        "needs_user_decision": { "type": "boolean" },
+        "next_action": { "type": "string" }
+      },
+      "required": [
+        "task",
+        "status_color",
+        "current_stage_label",
+        "progress",
+        "largest_risk",
+        "needs_user_decision",
+        "next_action"
+      ]
+    },
+    "stage_updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "tools_or_skills": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "goal": { "type": "string" },
+          "next_gate_condition": { "type": "string" },
+          "needs_user_decision": { "type": "boolean" }
+        },
+        "required": ["from", "to", "tools_or_skills", "goal", "next_gate_condition", "needs_user_decision"]
+      }
+    },
+    "responsibility_trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": { "type": "string" },
+          "owner": {
+            "type": "string",
+            "enum": ["用户", "Owner", "Hermes", "ClaudeCode", "Codex", "项目历史债"]
+          },
+          "status": { "type": "string" },
+          "evidence": { "type": "string" },
+          "blocking": { "type": "boolean" },
+          "failure_owner": { "type": "string" }
+        },
+        "required": ["item", "owner", "status", "evidence", "blocking"]
+      }
+    },
+    "approval_inbox": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "item": { "type": "string" },
+          "why_approval_required": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "impact_if_declined": { "type": "string" }
+        },
+        "required": ["id", "item", "why_approval_required", "recommendation", "impact_if_declined"]
       }
     },
     "skill_trace": {

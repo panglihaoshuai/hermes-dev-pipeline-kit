@@ -55,6 +55,43 @@ cat > "$TMPFILE" <<'EOF'
     "complete": true,
     "final_decision": "ACCEPTED"
   },
+  "owner_summary": {
+    "task": "S-level small fix smoke",
+    "status_color": "green",
+    "current_stage_label": "Hermes 验证",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "not_required",
+      "approval": "not_required"
+    },
+    "largest_risk": "无阻塞风险。",
+    "needs_user_decision": false,
+    "next_action": "自动继续或停止。"
+  },
+  "stage_updates": [
+    {
+      "from": "ClaudeCode 工单执行",
+      "to": "Hermes 验证",
+      "tools_or_skills": ["dev-pipeline-orchestrator", "policy-check.sh"],
+      "goal": "验证 S-level 小修",
+      "next_gate_condition": "policy-check PASS",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "测试验证",
+      "owner": "Hermes",
+      "status": "complete",
+      "evidence": "npm test exit code 0",
+      "blocking": false
+    }
+  ],
+  "approval_inbox": [],
   "skill_trace": {
     "display_language": "zh-CN",
     "current_phase_label": "Hermes 验证",

@@ -119,6 +119,110 @@
         }
       }
     },
+    "owner_summary": {
+      "type": "object",
+      "description": "Chinese owner-facing executive summary for the project owner / final approver.",
+      "required": [
+        "task",
+        "status_color",
+        "current_stage_label",
+        "progress",
+        "largest_risk",
+        "needs_user_decision",
+        "next_action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "type": "string"
+        },
+        "status_color": {
+          "type": "string",
+          "enum": ["green", "yellow", "red", "绿", "黄", "红"]
+        },
+        "current_stage_label": {
+          "type": "string"
+        },
+        "progress": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "intake": { "type": "string" },
+            "planning": { "type": "string" },
+            "work_order_split": { "type": "string" },
+            "execution": { "type": "string" },
+            "verification": { "type": "string" },
+            "codex_review": { "type": "string" },
+            "approval": { "type": "string" }
+          }
+        },
+        "largest_risk": {
+          "type": "string"
+        },
+        "needs_user_decision": {
+          "type": "boolean"
+        },
+        "next_action": {
+          "type": "string"
+        }
+      }
+    },
+    "stage_updates": {
+      "type": "array",
+      "description": "Chinese stage transition updates shown to the owner.",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "tools_or_skills", "goal", "next_gate_condition", "needs_user_decision"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "tools_or_skills": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "goal": { "type": "string" },
+          "next_gate_condition": { "type": "string" },
+          "needs_user_decision": { "type": "boolean" }
+        }
+      }
+    },
+    "responsibility_trace": {
+      "type": "array",
+      "description": "Responsibility ownership for task stages, approvals, evidence, and failures.",
+      "items": {
+        "type": "object",
+        "required": ["item", "owner", "status", "evidence", "blocking"],
+        "additionalProperties": false,
+        "properties": {
+          "item": { "type": "string" },
+          "owner": {
+            "type": "string",
+            "enum": ["用户", "Owner", "Hermes", "ClaudeCode", "Codex", "项目历史债"]
+          },
+          "status": { "type": "string" },
+          "evidence": { "type": "string" },
+          "blocking": { "type": "boolean" },
+          "failure_owner": { "type": "string" }
+        }
+      }
+    },
+    "approval_inbox": {
+      "type": "array",
+      "description": "Concentrated owner approval items.",
+      "items": {
+        "type": "object",
+        "required": ["id", "item", "why_approval_required", "recommendation", "impact_if_declined"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "item": { "type": "string" },
+          "why_approval_required": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "impact_if_declined": { "type": "string" }
+        }
+      }
+    },
     "allowed_files": {
       "type": "array",
       "description": "Files this run is permitted to modify.",

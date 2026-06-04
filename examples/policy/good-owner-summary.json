@@ -1,15 +1,11 @@
 {
-  "run_id": "2026-06-04T09:00:00Z",
+  "run_id": "2026-06-04T11:00:00Z",
   "project": "my-app",
   "mode": "auto_run",
   "current_gate": "Gate 9",
   "classification": {
     "scale": "M",
-    "reasons": [
-      "Multi-file feature",
-      "Requires ClaudeCode implementation",
-      "Requires Codex diff review"
-    ],
+    "reasons": ["需要负责人摘要", "需要审批事项集中展示"],
     "risk_level": "medium"
   },
   "work_orders": [
@@ -19,41 +15,25 @@
       "required_skill": "tdd",
       "required_matt_skill": "tdd",
       "status": "completed",
-      "files": ["src/health.ts", "tests/health.test.ts"],
+      "files": ["src/status.ts", "tests/status.test.ts"],
       "retries": 0,
       "skill_evidence": {
         "skill": "tdd",
-        "red": "tests/health.test.ts failed before implementation",
-        "green": "tests/health.test.ts passed after implementation",
-        "commands": ["npm test -- tests/health.test.ts"],
+        "red": "tests/status.test.ts failed before implementation",
+        "green": "tests/status.test.ts passed after implementation",
+        "commands": ["npm test -- tests/status.test.ts"],
         "exit_codes": [0]
       }
     }
   ],
-  "allowed_files": [
-    "src/health.ts",
-    "tests/health.test.ts"
-  ],
-  "forbidden_files": [
-    ".env",
-    ".env.local",
-    "secrets.json"
-  ],
-  "modified_files": [
-    "src/health.ts",
-    "tests/health.test.ts"
-  ],
+  "allowed_files": ["src/status.ts", "tests/status.test.ts"],
+  "forbidden_files": [".env", "secrets.json"],
+  "modified_files": ["src/status.ts", "tests/status.test.ts"],
   "command_evidence": [
     {
-      "command": "npm test -- tests/health.test.ts",
+      "command": "npm test -- tests/status.test.ts",
       "exit_code": 0,
-      "key_output": "Tests: 2 passed, 2 total",
-      "pass_fail": "PASS"
-    },
-    {
-      "command": "git diff --check HEAD",
-      "exit_code": 0,
-      "key_output": "No whitespace errors",
+      "key_output": "Tests: 3 passed, 3 total",
       "pass_fail": "PASS"
     }
   ],
@@ -63,17 +43,17 @@
     "disabled_by_user": false
   },
   "verification": {
-    "git_diff_name_status": "M\tsrc/health.ts\nA\ttests/health.test.ts",
+    "git_diff_name_status": "A\tsrc/status.ts\nA\ttests/status.test.ts",
     "git_diff_check_exit": 0,
     "tests_pass": true,
-    "typecheck_exit": null
+    "typecheck_exit": 0
   },
   "acceptance": {
     "complete": true,
     "final_decision": "ACCEPTED"
   },
   "owner_summary": {
-    "task": "健康检查功能",
+    "task": "增加状态接口",
     "status_color": "yellow",
     "current_stage_label": "Commit 审批",
     "progress": {
@@ -85,7 +65,7 @@
       "codex_review": "complete",
       "approval": "waiting"
     },
-    "largest_risk": "等待用户批准 commit。",
+    "largest_risk": "等待用户批准 commit，改动尚未落库。",
     "needs_user_decision": true,
     "next_action": "等待用户批准 commit"
   },
@@ -94,7 +74,7 @@
       "from": "Hermes 验证",
       "to": "Commit 审批",
       "tools_or_skills": ["dev-pipeline-orchestrator", "policy-check.sh"],
-      "goal": "请求用户决定是否提交",
+      "goal": "将已验证改动提交到 Git",
       "next_gate_condition": "用户批准 commit",
       "needs_user_decision": true
     }
@@ -132,36 +112,22 @@
     "entry_skill": "dev-pipeline-orchestrator",
     "mode": "auto_run",
     "phase": "verification",
-    "hermes_skills": [
-      {
-        "name": "gstack plan-eng-review",
-        "planned": true,
-        "used": true,
-        "evidence": "plan summary, risk review, acceptance criteria",
-        "verdict": "PASS"
-      }
-    ],
+    "hermes_skills": [],
     "claudecode_skills": [
       {
         "name": "tdd",
         "required": true,
         "reported": true,
         "evidence": {
-          "red": "tests/health.test.ts failed before implementation",
-          "green": "tests/health.test.ts passed after implementation",
-          "commands": ["npm test -- tests/health.test.ts"],
+          "red": "tests/status.test.ts failed before implementation",
+          "green": "tests/status.test.ts passed after implementation",
+          "commands": ["npm test -- tests/status.test.ts"],
           "exit_codes": [0]
         },
         "verdict": "PASS"
       }
     ],
     "codex_gates": [
-      {
-        "name": "plan review",
-        "required": true,
-        "used": true,
-        "verdict": "PASS"
-      },
       {
         "name": "diff review",
         "required": true,

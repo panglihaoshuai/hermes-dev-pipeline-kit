@@ -15,6 +15,54 @@ metadata:
 
 Use this as the final report format for `dev-pipeline-orchestrator`. Do not claim acceptance unless Codex review is PASS.
 
+# Dev Pipeline Evidence Report
+
+## 负责人摘要
+
+- 任务：
+- 当前状态：绿 / 黄 / 红
+- 当前阶段：
+- 完成度：
+- 使用情况：
+  - Hermes：
+  - ClaudeCode：
+  - Codex：
+- 关键证据：
+  - 测试：
+  - policy-check：
+  - doctor / ci-local：
+  - Codex：
+- 最大风险：
+- 需要你决定：
+- 下一步：
+
+## 阶段更新
+
+- 上一阶段：
+- 当前阶段：
+- 正在使用的 skill / 工具：
+- 本阶段目标：
+- 进入下一阶段的条件：
+- 是否需要你现在决策：是 / 否
+
+## 责任归因
+
+| 事项 | 责任方 | 状态 | 证据 | 是否阻塞 |
+|---|---|---|---|---|
+| 需求边界 | Hermes / 用户 | 完成 | normalized task brief | 否 |
+| 代码实现 | ClaudeCode | 完成 / 跳过 | files changed + commands | 否 |
+| 测试验证 | Hermes / ClaudeCode | 完成 | exit code | 否 |
+| Codex 审查 | Codex | 完成 / 跳过 | verdict / reason | 否 |
+| commit 审批 | 用户 | 等待 / 不需要 | approval gate | 是/否 |
+
+## 待你审批
+
+| 编号 | 审批事项 | 为什么需要你批 | 默认建议 | 不批准的后果 |
+|---|---|---|---|---|
+| A1 | 是否 commit | 代码已验证，需要落库 | 批准 | 当前改动停留在 working tree |
+
+If no approval is needed, state: `待你审批：无。下一步会自动继续。`
+
 ## Executive Status
 
 - pipeline mode:
