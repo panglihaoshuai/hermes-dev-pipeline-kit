@@ -1216,6 +1216,140 @@ Any one condition makes the task L:
 
 Flow: plan -> gstack/obra -> Codex plan review -> ClaudeCode slices -> Hermes verification -> Codex diff review -> final report -> commit/PR.
 
+## Mandatory Scale Classifier
+
+Hermes MUST NOT classify the following tasks as S:
+
+- tools / apps / systems / CLIs / projects / trackers / managers / services / workflows
+- tasks expected to touch 3+ source files
+- multi-module / multi-layer structures
+- tasks containing storage / file persistence
+- tasks requiring README + tests + source files together
+- vague product requirements like "build a tool / system / skeleton / manager"
+- tasks requiring project structure design
+- publish / install / release / recovery / generated-file / security tasks
+- tasks requiring multiple work orders for safe review
+
+Default scale guidelines:
+
+- **S**: Single file or tiny change, no architecture, no persistence, no publishing, no multi-module, verifiable with one command
+- **M**: Small feature / local CLI / 2-5 files / has tests / has limited persistence
+- **L**: Vague systems / multi-module / recovery / publish / security/API/store/UI/generated-file / tasks requiring Codex gates
+
+Decision rules:
+- Ambiguous between S and M → choose M
+- Ambiguous between M and L:
+  - Vague tasks → choose L
+  - Well-defined tasks → may choose M
+
+## Mandatory Delegation Policy for M/L
+
+- **S-level**: Hermes may self-execute
+- **M-level**: MUST delegate to ClaudeCode
+- **L-level**: MUST delegate to ClaudeCode
+
+Waiver rules:
+- If Hermes self-executes M/L, must record a waiver
+- Waiver limits acceptance to PARTIAL maximum, unless user explicitly requested no delegation
+- M/L without ClaudeCode delegation AND without waiver → acceptance MUST be FAIL
+
+Work order requirements for M/L:
+- Each work order MUST specify required Matt skill
+- Each work order MUST specify expected evidence format
+- Each work order MUST list allowed and forbidden files
+
+## Matt Skill Evidence Gate
+
+### tdd evidence requirements
+- RED phase: test file written, command, exit code (must be non-zero), expected failure YES
+- GREEN phase: implementation file written, command, exit code (must be 0), expected pass YES
+- REFACTOR phase: yes/no
+- If RED skipped, must provide reason
+
+### diagnose evidence requirements
+- hypothesis
+- diagnostic check performed
+- finding
+- fix result or recommendation
+
+### prototype evidence requirements
+- variants considered
+- chosen variant
+- reason for choice
+- validation result
+
+Enforcement:
+- M/L tasks missing Matt evidence → MUST NOT PASS
+- acceptance.complete=true with missing Matt evidence → policy-check MUST FAIL
+
+## Full Report Gate
+
+L / recovery / publish / release / generated-file / security/API/store/UI / multi-module tasks MUST include ALL of:
+
+1. 负责人摘要 (Owner Summary)
+2. 阶段更新 (Stage Update)
+3. 中文 Skill Trace / 技能使用证据 (Skill Usage Evidence)
+4. 责任归因 (Responsibility Trace)
+5. 待你审批 (Approval Inbox)
+6. 验证证据 (Verification Evidence)
+7. Codex / gstack 审查与跳过说明 (Review status with skip reasons)
+8. 风险与旧债 (Risks and Backlog)
+9. 下一步 (Next Steps)
+
+Enforcement:
+- Full report missing any critical section → MUST NOT green
+- Full report missing any critical section → MUST NOT acceptance complete
+
+## Verification Exit Code Gate
+
+If claiming verification passed, MUST have:
+- command name
+- exit code
+- pass/fail summary
+
+Enforcement:
+- M/L tests_pass=true but missing command exit code → acceptance.complete=true → policy-check MUST FAIL
+- S-level: warning but not blocking
+
+## Vague M/L Intake Gate
+
+Vague M/L tasks (vague_task=true) MUST complete intake + planning before execution:
+
+Required intake outputs:
+- normalized task brief
+- assumptions
+- non-goals
+- acceptance criteria
+- risk classification
+- planned work orders
+
+Required planning outputs:
+- gstack plan-eng-review used OR skip reason stated
+- Codex plan review: required / deferred / skipped with reason
+
+If Codex unavailable:
+- MUST write: `Codex review deferred because Codex quota unavailable`
+- MUST NOT fabricate Codex PASS
+
+Enforcement:
+- vague_task=true AND classification=M/L but missing intake outputs → policy-check MUST FAIL
+
+## Codex Unavailable Handling
+
+When Codex quota is unavailable or user explicitly disables Codex:
+
+1. Record reason: `Codex review deferred because Codex quota unavailable` or `Codex disabled by user request`
+2. Do NOT fabricate Codex PASS verdict
+3. Do NOT claim acceptance complete if Codex was required but not run
+4. Mark Codex sections as "deferred" or "skipped" with reason in report
+
+Policy-check behavior:
+- Codex required AND (quota unavailable OR disabled) AND deferred_reason present → allowed (not FAIL)
+- Codex required AND (quota unavailable OR disabled) AND no deferred_reason → FAIL
+- Codex verdict=PASS but no actual Codex evidence → FAIL (fabricated verdict)
+
+This ensures transparency when Codex cannot run, without blocking the entire pipeline.
+
 ## Skill Routing Table
 
 | scenario | Hermes must use | ClaudeCode must use | Codex gate |

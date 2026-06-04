@@ -184,5 +184,11 @@
     "repo_create_approved": false
   },
   "baseline_debt": [],
+  "claudecode_delegation": {
+    "delegated": true
+  },
+  "verification_exit_codes": [
+    {"command": "npm test", "exit_code": 0, "pass": true}
+  ],
   "follow_up_backlog": []
 }

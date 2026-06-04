@@ -498,6 +498,42 @@ git diff --stat              # 改动统计
 - project config
 - multi-agent workflow
 - unclear product behavior
+
+---
+
+## Runtime Enforcement (v2)
+
+The pipeline enforces 7 new policy checks:
+
+### 1. Scale Classification Guard
+- M/L tasks cannot be downgraded to S
+- Multi-module, persistence, or system-level tasks must be M or L
+
+### 2. M/L Delegation Requirement
+- M/L tasks MUST delegate to ClaudeCode
+- Self-execution requires explicit waiver
+- Without delegation+waiver, acceptance FAILS
+
+### 3. Matt Skill Evidence Gate
+- Required Matt skill (tdd/diagnose/prototype) must have evidence
+- Missing evidence blocks acceptance.complete=true
+
+### 4. Full Report Sections Gate
+- L/recovery/publish tasks require ALL 9 critical report sections
+- Missing any section blocks green status
+
+### 5. Verification Exit Code Gate
+- M/L tests_pass=true requires command + exit code evidence
+- Missing exit code blocks acceptance
+
+### 6. Vague M/L Intake Gate
+- Vague M/L tasks must complete intake (normalized brief, assumptions, non-goals, acceptance criteria)
+- Missing intake blocks execution
+
+### 7. Codex Unavailable Handling
+- Codex can be deferred if quota unavailable
+- Must record deferred reason
+- Cannot fabricate Codex PASS
 - previous failed attempt / recovery task
 
 **完整流程**：plan → Codex plan review → ClaudeCode → Hermes 验证 → Codex diff review → report → commit approval。

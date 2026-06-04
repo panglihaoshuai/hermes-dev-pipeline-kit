@@ -531,6 +531,41 @@
         "follow_up_required_now": { "type": "boolean" }
       },
       "required": ["safe_to_stop", "safe_to_commit", "safe_to_push_pr", "follow_up_required_now"]
+    },
+    "report_scale_enforcement": {
+      "type": "object",
+      "description": "Full report section enforcement",
+      "properties": {
+        "required_sections": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "present_sections": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "missing_sections": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "all_present": { "type": "boolean" }
+      }
+    },
+    "verification_exit_code_evidence": {
+      "type": "array",
+      "description": "Exit code evidence for verification commands",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "pass": { "type": "boolean" }
+        }
+      }
+    },
+    "codex_deferred_reason": {
+      "type": "string",
+      "description": "Reason Codex was deferred (e.g., quota unavailable)"
     }
   }
 }

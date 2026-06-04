@@ -465,3 +465,35 @@ GitHub Publish Lane 的 Gate E 发现缺少 README.md / CLAUDE.md / AGENTS.md / 
 1. 运行 `bash scripts/smoke/smoke-<name>.sh` 查看具体输出
 2. 检查 policy-check.sh 是否正常工作
 3. 检查 examples/ 下的 fixture 文件是否完整
+
+---
+
+## New Enforcement Failures
+
+### scale-classification FAIL
+**Symptom**: Task classified as S but has multi-module/persistence
+**Fix**: Reclassify as M or L
+
+### ml-delegation FAIL
+**Symptom**: M/L task without ClaudeCode delegation
+**Fix**: Either delegate to ClaudeCode or record waiver
+
+### matt-evidence FAIL
+**Symptom**: acceptance.complete=true but no Matt skill evidence
+**Fix**: Add evidence (RED/GREEN for tdd, hypothesis/finding for diagnose)
+
+### full-report-sections FAIL
+**Symptom**: L-level report missing sections
+**Fix**: Add all 9 required sections
+
+### verification-exit-code FAIL
+**Symptom**: tests_pass=true but no exit code
+**Fix**: Add command + exit code to verification_exit_codes
+
+### vague-intake FAIL
+**Symptom**: Vague M/L task missing intake
+**Fix**: Add normalized_task_brief, assumptions, non_goals, acceptance_criteria
+
+### codex-deferred FAIL
+**Symptom**: Codex deferred but no reason
+**Fix**: Add deferred reason (e.g., "quota unavailable")

@@ -173,6 +173,20 @@ with open("examples/dev-pipeline-report.sample.json") as f:
 jsonschema.validate(report, schema)
 ```
 
+## Enforcement Contract
+
+The following checks are mandatory for all pipeline runs:
+
+| Check | S | M | L |
+|-------|---|---|---|
+| scale-classification | - | warn | block |
+| ml-delegation | - | block | block |
+| matt-evidence | - | block | block |
+| full-report-sections | - | - | block |
+| verification-exit-code | warn | block | block |
+| vague-intake | - | block | block |
+| codex-deferred | - | warn | warn |
+
 ## Not mandatory yet
 
 The JSON contract is introduced in v0.2 as an opt-in enhancement. Existing

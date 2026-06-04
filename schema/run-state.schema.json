@@ -657,6 +657,60 @@
           }
         }
       }
+    },
+    "mandatory_scale_classifier": {
+      "type": "object",
+      "description": "Scale classification enforcement",
+      "properties": {
+        "applied": { "type": "boolean" },
+        "original_classification": { "type": "string", "enum": ["S", "M", "L"] },
+        "corrected_classification": { "type": "string", "enum": ["S", "M", "L"] },
+        "upgrade_reason": { "type": "string" }
+      }
+    },
+    "claudecode_delegation": {
+      "type": "object",
+      "description": "M/L delegation enforcement",
+      "properties": {
+        "delegated": { "type": "boolean" },
+        "waiver": { "type": "boolean" },
+        "waiver_reason": { "type": "string" }
+      }
+    },
+    "matt_evidence_gate": {
+      "type": "object",
+      "description": "Matt skill evidence enforcement",
+      "properties": {
+        "required_skill": { "type": "string" },
+        "evidence_present": { "type": "boolean" },
+        "evidence_type": { "type": "string", "enum": ["tdd", "diagnose", "prototype"] },
+        "blocking": { "type": "boolean" }
+      }
+    },
+    "codex_deferred": {
+      "type": "object",
+      "description": "Codex unavailable handling",
+      "properties": {
+        "deferred": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "required": { "type": "boolean" }
+      }
+    },
+    "vague_task": {
+      "type": "boolean",
+      "description": "Whether task is vague and requires intake"
+    },
+    "verification_exit_codes": {
+      "type": "array",
+      "description": "Exit codes from verification commands",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": { "type": "string" },
+          "exit_code": { "type": "integer" },
+          "pass": { "type": "boolean" }
+        }
+      }
     }
   }
 }

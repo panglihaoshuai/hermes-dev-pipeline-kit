@@ -1,0 +1,216 @@
+{
+  "mode": "auto_run",
+  "classification": {
+    "scale": "L",
+    "reason": "6+ files, multi-module"
+  },
+  "claudecode_delegation": {
+    "delegated": true
+  },
+  "matt_evidence_gate": {
+    "required_skill": "tdd",
+    "evidence_present": true,
+    "evidence_type": "tdd",
+    "blocking": false
+  },
+  "report_scale_enforcement": {
+    "report_scale": "full",
+    "required_sections": [
+      "\u8d1f\u8d23\u4eba\u6458\u8981",
+      "\u9636\u6bb5\u66f4\u65b0",
+      "\u6280\u80fd\u4f7f\u7528\u8bc1\u636e",
+      "\u8d23\u4efb\u5f52\u56e0",
+      "\u5f85\u4f60\u5ba1\u6279",
+      "\u9a8c\u8bc1\u8bc1\u636e",
+      "Codex\u5ba1\u67e5",
+      "\u98ce\u9669\u4e0e\u65e7\u503a",
+      "\u4e0b\u4e00\u6b65"
+    ],
+    "present_sections": [
+      "\u8d1f\u8d23\u4eba\u6458\u8981",
+      "\u9636\u6bb5\u66f4\u65b0",
+      "\u6280\u80fd\u4f7f\u7528\u8bc1\u636e",
+      "\u8d23\u4efb\u5f52\u56e0",
+      "\u5f85\u4f60\u5ba1\u6279",
+      "\u9a8c\u8bc1\u8bc1\u636e",
+      "Codex\u5ba1\u67e5",
+      "\u98ce\u9669\u4e0e\u65e7\u503a",
+      "\u4e0b\u4e00\u6b65"
+    ],
+    "missing_sections": [],
+    "all_present": true
+  },
+  "acceptance": {
+    "complete": true
+  },
+  "verification": {
+    "tests_pass": true
+  },
+  "verification_exit_codes": [
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "pass": true
+    },
+    {
+      "command": "npm run build",
+      "exit_code": 0,
+      "pass": true
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS"
+  },
+  "work_orders": [
+    {
+      "id": "WO-1",
+      "required_matt_skill": "tdd",
+      "status": "completed"
+    },
+    {
+      "id": "WO-2",
+      "required_matt_skill": "diagnose",
+      "status": "completed"
+    }
+  ],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "\u5b8c\u6210",
+    "user_visible_skill_banner": true,
+    "clarification_trace": {
+      "why_questions_are_needed": "\u9700\u6c42\u6807\u51c6\u5316"
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none",
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "verdict": "PASS",
+        "evidence": {
+          "red": "test failed",
+          "green": "test passed",
+          "commands": [
+            "npm test",
+            "npm run build"
+          ],
+          "exit_codes": [
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "name": "diagnose",
+        "required": true,
+        "reported": true,
+        "verdict": "PASS",
+        "evidence": {
+          "hypothesis": "CLI tool has incorrect module resolution",
+          "test": "npm test && npm run build",
+          "finding": "Missing module path configuration in package.json",
+          "fix_recommendation": "Add correct module paths to package.json",
+          "commands": [
+            "npm test",
+            "npm run build"
+          ],
+          "exit_codes": [
+            0,
+            0
+          ]
+        }
+      }
+    ],
+    "codex_gates": [
+      {
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      }
+    ]
+  },
+  "stage_updates": [
+    {
+      "phase": "intake",
+      "label": "\u9700\u6c42\u6536\u96c6\u4e0e\u5934\u8111\u98ce\u66b4",
+      "status": "done"
+    },
+    {
+      "phase": "planning",
+      "label": "\u65b9\u6848\u8bbe\u8ba1\u4e0e\u8ba1\u5212\u7f16\u5199",
+      "status": "done"
+    },
+    {
+      "phase": "work_orders",
+      "label": "\u5de5\u5355\u6267\u884c\u4e0e\u9a8c\u8bc1",
+      "status": "done"
+    },
+    {
+      "phase": "verification",
+      "label": "Hermes \u9a8c\u8bc1",
+      "status": "done"
+    },
+    {
+      "phase": "codex_review",
+      "label": "Codex \u5ba1\u67e5",
+      "status": "done"
+    },
+    {
+      "phase": "approval",
+      "label": "Commit \u5ba1\u6279",
+      "status": "waiting"
+    }
+  ],
+  "owner_summary": {
+    "task": "build CLI tool",
+    "status_color": "green",
+    "current_stage_label": "Commit \u5ba1\u6279",
+    "progress": {
+      "intake": "done",
+      "planning": "done",
+      "work_orders": "done",
+      "verification": "done",
+      "codex_review": "done",
+      "approval": "waiting"
+    },
+    "largest_risk": "\u7b49\u5f85\u7528\u6237\u6279\u51c6 commit",
+    "needs_user_decision": true,
+    "next_action": "commit and push",
+    "display_language": "zh-CN"
+  },
+  "responsibility_trace": [
+    {
+      "item": "architecture",
+      "owner": "Hermes",
+      "status": "done"
+    },
+    {
+      "item": "implementation",
+      "owner": "ClaudeCode",
+      "status": "done"
+    },
+    {
+      "item": "review",
+      "owner": "Codex",
+      "status": "done"
+    }
+  ],
+  "approval_inbox": [
+    {
+      "id": "A1",
+      "item": "commit",
+      "reason": "all checks passed",
+      "default": "approve",
+      "consequence": "changes stay in working tree"
+    },
+    {
+      "id": "A2",
+      "item": "push",
+      "reason": "ready for review",
+      "default": "approve",
+      "consequence": "changes stay local"
+    }
+  ]
+}

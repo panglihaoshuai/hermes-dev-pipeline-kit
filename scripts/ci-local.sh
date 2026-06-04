@@ -111,6 +111,8 @@ main() {
   bash scripts/policy-check.sh --run-state examples/policy/good-compact-s-report.json
   bash scripts/policy-check.sh --run-state examples/policy/good-compact-structured-report.json
   bash scripts/policy-check.sh --run-state examples/policy/good-full-l-report.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-m-standard-with-claudecode.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-l-full-report.json
 
   section "Policy negative fixtures"
   expect_fail "bad-forbidden-file" \
@@ -131,6 +133,14 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-failure-without-responsibility.json
   expect_fail "bad-compact-checklist-only" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-compact-checklist-only.json
+  expect_fail "bad-ml-downgraded-to-s" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-ml-downgraded-to-s.json
+  expect_fail "bad-missing-claudecode-for-ml" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-missing-claudecode-for-ml.json
+  expect_fail "bad-full-report-missing-sections" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-full-report-missing-sections.json
+  expect_fail "bad-verification-without-exit-code" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-verification-without-exit-code.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh

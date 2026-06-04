@@ -376,6 +376,20 @@ Gate 0: 意图识别 + 分类
 
 详见 [docs/safety-rules.md](docs/safety-rules.md)。
 
+### Runtime Enforcement (v2)
+
+v2 adds 7 automated policy checks enforced by `policy-check.sh`:
+
+- **Scale Classification Guard** — M/L tasks cannot be downgraded to S
+- **M/L Delegation Requirement** — M/L tasks must delegate to ClaudeCode (or record waiver)
+- **Matt Skill Evidence Gate** — required Matt skill evidence must be present
+- **Full Report Sections Gate** — L/recovery/publish tasks require all 9 report sections
+- **Verification Exit Code Gate** — M/L tests_pass=true requires exit code evidence
+- **Vague M/L Intake Gate** — vague M/L tasks must complete intake before execution
+- **Codex Unavailable Handling** — Codex can be deferred with reason, cannot fabricate PASS
+
+See [docs/workflow-overview.md](docs/workflow-overview.md) for full details and [docs/report-contract.md](docs/report-contract.md) for the enforcement contract table.
+
 ---
 
 ## GitHub 发布通道

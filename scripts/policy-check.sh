@@ -62,10 +62,13 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p)
         else:
-            obj = obj[p]
+            obj = None
     return obj
 v = g(d, '$expr')
 if isinstance(v, (dict, list)):
@@ -73,7 +76,7 @@ if isinstance(v, (dict, list)):
 elif isinstance(v, bool):
     print('true' if v else 'false')
 elif v is None:
-    print('null')
+    print('')
 else:
     print(v)
 "
@@ -88,12 +91,15 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p)
         else:
-            obj = obj[p]
+            obj = None
     return obj
-print(len(g(d, '$expr')))
+print(len(g(d, '$expr') or []))
 "
 }
 
@@ -107,12 +113,18 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p)
         else:
-            obj = obj[p]
-    return obj
+            obj = None
+        if obj is None:
+            return []
+    return obj if isinstance(obj, list) else []
 arr = g(d, '$expr')
+if not isinstance(arr, list): arr = []
 print('true' if '$value' in arr else 'false')
 "
 }
@@ -127,11 +139,14 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p, [])
         else:
-            obj = obj[p]
-    return obj
+            return []
+    return obj if isinstance(obj, list) else []
 a = set(g(d, '$expr1'))
 b = set(g(d, '$expr2'))
 print('true' if a & b else 'false')
@@ -148,12 +163,18 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p)
         else:
-            obj = obj[p]
-    return obj
+            obj = None
+        if obj is None:
+            return []
+    return obj if isinstance(obj, list) else []
 arr = g(d, '$array_expr')
+if not isinstance(arr, list): arr = []
 found = any(item.get('$field') == '$value' for item in arr if isinstance(item, dict))
 print('true' if found else 'false')
 "
@@ -169,17 +190,40 @@ with open('$file') as f:
 def g(obj, path):
     for p in path.split('.'):
         if not p: continue
-        if isinstance(obj, list):
-            obj = obj[int(p)]
+        if isinstance(obj, list) and p.isdigit():
+            idx = int(p)
+            obj = obj[idx] if idx < len(obj) else None
+        elif isinstance(obj, dict):
+            obj = obj.get(p)
         else:
-            obj = obj[p]
-    return obj
+            obj = None
+        if obj is None:
+            return []
+    return obj if isinstance(obj, list) else []
 arr = g(d, '$array_expr')
+if not isinstance(arr, list): arr = []
 found = any(item.get('$field') != '$value' and item.get('pass_fail') == 'PASS' for item in arr if isinstance(item, dict))
 # More precise: check exit_code != 0 AND pass_fail == 'PASS'
 found = any(item.get('exit_code', 0) != 0 and item.get('pass_fail') == 'PASS' for item in arr if isinstance(item, dict))
 print('true' if found else 'false')
   "
+}
+
+jcheck_any_field_eq() {
+  local f="$1" array="$2" field="$3" value="$4"
+  python3 -c "
+import json, sys
+with open('$f') as fh:
+    data = json.load(fh)
+items = data.get('$array', [])
+for item in items:
+    v = item.get('$field')
+    # Handle both string and boolean comparisons
+    if v == '$value' or (isinstance(v, bool) and str(v).lower() == '$value'.lower()):
+        print('true')
+        sys.exit(0)
+print('false')
+" 2>/dev/null || echo "false"
 }
 
 jgenerated_file_without_evidence() {
@@ -747,13 +791,14 @@ check_run_state() {
   local f="$1"
 
   # 1. acceptance.complete && codex.diff_review_verdict != PASS && !disabled_by_user && scale != S
+  # Allow NOT_REQUIRED when Codex is not needed for the task
   local acc_complete diff_verdict disabled scale
-  acc_complete=$(jget "$f" "acceptance.complete")
-  diff_verdict=$(jget "$f" "codex.diff_review_verdict")
-  disabled=$(jget "$f" "codex.disabled_by_user")
-  scale=$(jget "$f" "classification.scale")
+  acc_complete=$(jget "$f" "acceptance.complete" 2>/dev/null || echo "false")
+  diff_verdict=$(jget "$f" "codex.diff_review_verdict" 2>/dev/null || echo "")
+  disabled=$(jget "$f" "codex.disabled_by_user" 2>/dev/null || echo "false")
+  scale=$(jget "$f" "classification.scale" 2>/dev/null || echo "")
 
-  if [[ "$acc_complete" == "true" && "$diff_verdict" != "PASS" && "$disabled" != "true" && "$scale" != "S" ]]; then
+  if [[ "$acc_complete" == "true" && "$diff_verdict" != "PASS" && "$diff_verdict" != "NOT_REQUIRED" && "$disabled" != "true" && "$scale" != "S" ]]; then
     record "acceptance-codex-consistency" "FAIL"
   else
     record "acceptance-codex-consistency" "PASS"
@@ -770,7 +815,7 @@ check_run_state() {
 
   # 3. codex.plan_review_verdict is FAIL or UNKNOWN
   local plan_verdict
-  plan_verdict=$(jget "$f" "codex.plan_review_verdict")
+  plan_verdict=$(jget "$f" "codex.plan_review_verdict" 2>/dev/null || echo "")
   if [[ "$plan_verdict" == "FAIL" || "$plan_verdict" == "UNKNOWN" ]]; then
     record "plan-review-verdict" "FAIL"
   else
@@ -778,8 +823,8 @@ check_run_state() {
   fi
 
   # 4. scale=L AND plan_review_verdict=NOT_REQUIRED
-  scale=$(jget "$f" "classification.scale")
-  plan_verdict=$(jget "$f" "codex.plan_review_verdict")
+  scale=$(jget "$f" "classification.scale" 2>/dev/null || echo "")
+  plan_verdict=$(jget "$f" "codex.plan_review_verdict" 2>/dev/null || echo "")
   if [[ "$scale" == "L" && "$plan_verdict" == "NOT_REQUIRED" ]]; then
     record "large-task-plan-review" "FAIL"
   else
@@ -797,8 +842,8 @@ check_run_state() {
 
   # 6. commit_approved but tests_pass == false
   local commit_approved tests_pass
-  commit_approved=$(jget "$f" "approval_gates.commit_approved")
-  tests_pass=$(jget "$f" "verification.tests_pass")
+  commit_approved=$(jget "$f" "approval_gates.commit_approved" 2>/dev/null || echo "false")
+  tests_pass=$(jget "$f" "verification.tests_pass" 2>/dev/null || echo "false")
   if [[ "$commit_approved" == "true" && "$tests_pass" == "false" ]]; then
     record "commit-without-tests" "FAIL"
   else
@@ -807,7 +852,7 @@ check_run_state() {
 
   # 7. mode must be dry_run/plan_only/auto_run
   local mode
-  mode=$(jget "$f" "mode")
+  mode=$(jget "$f" "mode" 2>/dev/null || echo "")
   if [[ "$mode" != "dry_run" && "$mode" != "plan_only" && "$mode" != "auto_run" ]]; then
     record "valid-mode" "FAIL"
   else
@@ -845,6 +890,86 @@ check_run_state() {
   local report_scale_status
   report_scale_status=$(jreport_scale_status "$f")
   record "report-scale" "$report_scale_status"
+
+  # 12. scale-classification: multi-module/system/tool/persistence but classification=S
+  local scale_val modules_count has_persistence scale_violation=0
+  scale_val=$(jget "$f" "classification.scale" 2>/dev/null || echo "")
+  modules_count=$(jget "$f" "classification.modules_count" 2>/dev/null || echo "0")
+  has_persistence=$(jget "$f" "classification.has_persistence" 2>/dev/null || echo "false")
+  if [[ "$scale_val" == "S" ]]; then
+    if [[ "$modules_count" =~ ^[0-9]+$ ]] && [[ "$modules_count" -gt 2 ]]; then
+      scale_violation=1
+    fi
+    if [[ "$has_persistence" == "true" ]]; then
+      scale_violation=1
+    fi
+  fi
+  if [[ "$scale_violation" -eq 1 ]]; then
+    record "scale-classification" "FAIL"
+  else
+    record "scale-classification" "PASS"
+  fi
+
+  # 13. ml-delegation: M/L must have ClaudeCode delegation or waiver
+  local ml_delegated ml_waiver
+  ml_delegated=$(jget "$f" "claudecode_delegation.delegated" 2>/dev/null || echo "false")
+  ml_waiver=$(jget "$f" "claudecode_delegation.waiver" 2>/dev/null || echo "false")
+  if [[ ("$scale_val" == "M" || "$scale_val" == "L") && "$ml_delegated" != "true" && "$ml_waiver" != "true" ]]; then
+    record "ml-delegation" "FAIL"
+  else
+    record "ml-delegation" "PASS"
+  fi
+
+  # 14. matt-evidence: required Matt skill must have evidence if acceptance.complete=true
+  local matt_evidence_present matt_required
+  matt_evidence_present=$(jget "$f" "matt_evidence_gate.evidence_present" 2>/dev/null || echo "false")
+  matt_required=$(jget "$f" "matt_evidence_gate.required_skill" 2>/dev/null || echo "")
+  if [[ "$acc_complete" == "true" && -n "$matt_required" && "$matt_evidence_present" != "true" ]]; then
+    record "matt-evidence" "FAIL"
+  else
+    record "matt-evidence" "PASS"
+  fi
+
+  # 15. full-report-sections: full report must have all critical sections
+  local report_scale_val all_present
+  report_scale_val=$(jget "$f" "report_scale_enforcement.report_scale" 2>/dev/null || echo "")
+  all_present=$(jget "$f" "report_scale_enforcement.all_present" 2>/dev/null || echo "true")
+  if [[ "$report_scale_val" == "full" && "$all_present" != "true" ]]; then
+    record "full-report-sections" "FAIL"
+  else
+    record "full-report-sections" "PASS"
+  fi
+
+  # 16. verification-exit-code: M/L tests_pass=true requires exit code evidence
+  local tests_pass_val has_exit_codes
+  tests_pass_val=$(jget "$f" "verification.tests_pass" 2>/dev/null || echo "false")
+  has_exit_codes=$(jcheck_any_field_eq "$f" "verification_exit_codes" "pass" "true")
+  if [[ ("$scale_val" == "M" || "$scale_val" == "L") && "$tests_pass_val" == "true" && "$has_exit_codes" != "true" ]]; then
+    record "verification-exit-code" "FAIL"
+  else
+    record "verification-exit-code" "PASS"
+  fi
+
+  # 17. vague-intake: vague M/L tasks must have intake outputs
+  local vague_task_val has_normalized_brief
+  vague_task_val=$(jget "$f" "vague_task" 2>/dev/null || echo "false")
+  has_normalized_brief=$(jget "$f" "intake_quality.normalized_task_brief" 2>/dev/null || echo "")
+  if [[ "$vague_task_val" == "true" && ("$scale_val" == "M" || "$scale_val" == "L") && -z "$has_normalized_brief" ]]; then
+    record "vague-intake" "FAIL"
+  else
+    record "vague-intake" "PASS"
+  fi
+
+  # 18. codex-deferred: if Codex required but deferred, must have reason
+  local codex_required codex_deferred codex_reason
+  codex_required=$(jget "$f" "codex_deferred.required" 2>/dev/null || echo "false")
+  codex_deferred=$(jget "$f" "codex_deferred.deferred" 2>/dev/null || echo "false")
+  codex_reason=$(jget "$f" "codex_deferred.reason" 2>/dev/null || echo "")
+  if [[ "$codex_required" == "true" && "$codex_deferred" == "true" && -z "$codex_reason" ]]; then
+    record "codex-deferred" "FAIL"
+  else
+    record "codex-deferred" "PASS"
+  fi
 }
 
 # ── report checks ───────────────────────────────────────────────────────────

@@ -1,0 +1,111 @@
+{
+  "mode": "auto_run",
+  "classification": {
+    "scale": "L",
+    "reason": "6+ files"
+  },
+  "claudecode_delegation": {
+    "delegated": true
+  },
+  "report_scale_enforcement": {
+    "report_scale": "full",
+    "required_sections": ["负责人摘要", "阶段更新", "技能使用证据", "责任归因", "待你审批", "验证证据", "Codex审查", "风险与旧债", "下一步"],
+    "present_sections": ["负责人摘要", "阶段更新"],
+    "missing_sections": ["技能使用证据", "责任归因", "待你审批", "验证证据", "Codex审查", "风险与旧债", "下一步"],
+    "all_present": false
+  },
+  "acceptance": {
+    "complete": true
+  },
+  "verification": {
+    "tests_pass": true,
+    "commands": [
+      {"command": "npm test", "exit_code": 0, "pass": true}
+    ]
+  },
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS"
+  },
+  "work_orders": [
+    {
+      "id": "WO-1",
+      "required_matt_skill": "tdd",
+      "status": "completed"
+    }
+  ],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "完成",
+    "user_visible_skill_banner": true,
+    "clarification_trace": {
+      "why_questions_are_needed": "需求标准化"
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none",
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "verdict": "PASS",
+        "evidence": {
+          "red": "test failed",
+          "green": "test passed",
+          "commands": ["npm test"],
+          "exit_codes": [0]
+        }
+      }
+    ],
+    "codex_gates": [
+      {
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      }
+    ]
+  },
+  "stage_updates": [
+    {
+      "phase": "intake",
+      "label": "需求收集与头脑风暴",
+      "status": "done"
+    },
+    {
+      "phase": "planning",
+      "label": "方案设计与计划编写",
+      "status": "done"
+    },
+    {
+      "phase": "work_orders",
+      "label": "工单执行与验证",
+      "status": "done"
+    },
+    {
+      "phase": "verification",
+      "label": "Hermes 验证",
+      "status": "done"
+    }
+  ],
+  "owner_summary": {
+    "task": "build tool",
+    "status_color": "green",
+    "current_stage_label": "完成",
+    "progress": {
+      "intake": "done",
+      "planning": "done",
+      "work_orders": "done",
+      "verification": "done",
+      "codex_review": "done",
+      "approval": "done"
+    },
+    "largest_risk": "无",
+    "needs_user_decision": false,
+    "next_action": "none",
+    "display_language": "zh-CN"
+  },
+  "responsibility_trace": [
+    {"item": "implementation", "owner": "ClaudeCode", "status": "done"}
+  ],
+  "approval_inbox": []
+}
