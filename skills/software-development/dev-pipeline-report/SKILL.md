@@ -15,7 +15,19 @@ metadata:
 
 Use this as the final report format for `dev-pipeline-orchestrator`. Do not claim acceptance unless Codex review is PASS.
 
+## Chinese Report Scale Policy
+
+Choose report verbosity before writing the final report:
+
+- `compact`: S-level small fixes. First screen only needs task, green/yellow/red status, current stage, largest risk, whether the Owner must decide, and next action. Use a Skill Trace summary. Skip full Stage Update, Responsibility Trace, and Approval Inbox unless transition, failure, blocker, or approval exists.
+- `standard`: M-level feature work. Include Owner Summary, major Stage Updates, Skill Trace table, verification evidence summary, and Responsibility Trace / Approval Inbox when risk, repair, failure, or approval exists.
+- `full`: L-level, recovery, generated-file, security, API/store/UI, GitHub publish, or release tasks. Include full Owner Summary, every major Stage Update, full Skill Trace, Responsibility Trace, Approval Inbox, Codex plan/diff review, policy-check / doctor / ci-local evidence, and backlog / baseline debt classification.
+
+Failure/blocker always requires Responsibility Trace. Commit / push / PR / publish / dependency install / destructive action / global config change always requires Approval Inbox.
+
 # Dev Pipeline Evidence Report
+
+<!-- report_scale: compact | standard | full -->
 
 ## 负责人摘要
 
@@ -62,6 +74,71 @@ Use this as the final report format for `dev-pipeline-orchestrator`. Do not clai
 | A1 | 是否 commit | 代码已验证，需要落库 | 批准 | 当前改动停留在 working tree |
 
 If no approval is needed, state: `待你审批：无。下一步会自动继续。`
+
+## Report Scale Examples
+
+### Compact S-level example
+
+```markdown
+## 负责人摘要
+
+- 任务：修复按钮文案
+- 当前状态：绿
+- 当前阶段：证据报告输出
+- 最大风险：无阻塞风险
+- 是否需要你决定：否
+- 下一步：停止，或等待你批准 commit
+
+技能使用证据：dev-pipeline-orchestrator + targeted validation，S 级无需完整表格。
+待你审批：无。
+```
+
+### Standard M-level example
+
+```markdown
+## 负责人摘要
+
+- 任务：新增设置项
+- 当前状态：黄
+- 当前阶段：Commit 审批
+- 最大风险：等待用户批准 commit
+- 是否需要你决定：是
+- 下一步：等待是否 commit
+
+## 阶段更新
+列出主要 Gate 切换。
+
+## 中文 Skill Trace / 技能使用证据
+输出表格。
+
+## 待你审批
+集中列出 commit 审批。
+```
+
+### Full L/recovery/publish example
+
+```markdown
+## 负责人摘要
+输出完整进度、证据、风险和下一步。
+
+## 阶段更新
+列出每个主要 Gate。
+
+## 中文 Skill Trace / 技能使用证据
+输出完整表格。
+
+## 责任归因
+列出 Hermes / ClaudeCode / Codex / 用户 / 项目历史债。
+
+## 待你审批
+集中列出 commit / push / PR / publish / install / global config 事项。
+
+## Codex Review
+输出 plan/diff verdict。
+
+## Verification Evidence
+输出 policy-check / doctor / ci-local 证据。
+```
 
 ## Executive Status
 

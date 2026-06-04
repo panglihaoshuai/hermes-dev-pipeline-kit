@@ -5,6 +5,7 @@ set -euo pipefail
 
 PASS_COUNT=0
 FAIL_COUNT=0
+WARN_COUNT=0
 RESULTS=()
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -21,6 +22,8 @@ record() {
   local name="$1" status="$2"
   if [[ "$status" == PASS* ]]; then
     (( PASS_COUNT++ )) || true
+  elif [[ "$status" == WARN* ]]; then
+    (( WARN_COUNT++ )) || true
   else
     (( FAIL_COUNT++ )) || true
   fi
@@ -31,10 +34,13 @@ show_results() {
   echo ""
   echo "--- Policy Checks ---"
   for r in "${RESULTS[@]}"; do echo "$r"; done
-  local total=$(( PASS_COUNT + FAIL_COUNT ))
+  local total=$(( PASS_COUNT + FAIL_COUNT + WARN_COUNT ))
   echo ""
   echo "--- Results ---"
   echo "  PASS: $PASS_COUNT / $total"
+  if (( WARN_COUNT > 0 )); then
+    echo "  WARN: $WARN_COUNT"
+  fi
   if (( FAIL_COUNT == 0 )); then
     echo "  Overall: PASS"
   else
@@ -470,12 +476,8 @@ if any(not non_empty(owner_summary.get(field)) for field in required_owner_field
     print("true")
     sys.exit(0)
 
-responsibility_trace = d.get("responsibility_trace")
-if not isinstance(responsibility_trace, list) or not responsibility_trace:
-    print("true")
-    sys.exit(0)
-
 approval_inbox = d.get("approval_inbox", [])
+responsibility_trace = d.get("responsibility_trace", [])
 needs_decision = owner_summary.get("needs_user_decision") is True
 progress = owner_summary.get("progress", {})
 approval_waiting = (
@@ -526,6 +528,9 @@ if codex.get("plan_review_verdict") == "FAIL" or codex.get("diff_review_verdict"
     failure_exists = True
 
 if failure_exists:
+    if not isinstance(responsibility_trace, list) or not responsibility_trace:
+        print("true")
+        sys.exit(0)
     has_failure_owner = any(
         isinstance(item, dict)
         and (
@@ -539,7 +544,179 @@ if failure_exists:
         print("true")
         sys.exit(0)
 
+report_scale = d.get("report_scale")
+classification = d.get("classification") or d.get("task_classification") or {}
+scale = classification.get("scale")
+if d.get("responsibility_trace_required") or report_scale == "full" or scale == "L":
+    if not isinstance(responsibility_trace, list) or not responsibility_trace:
+        print("true")
+        sys.exit(0)
+
 print("false")
+PY
+}
+
+jreport_scale_status() {
+  # Returns PASS, WARN, or FAIL for Chinese Report Scale Policy.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+
+def non_empty(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+
+def lower_text(value):
+    if isinstance(value, (list, tuple)):
+        return " ".join(lower_text(v) for v in value)
+    if isinstance(value, dict):
+        return " ".join(lower_text(v) for v in value.values())
+    return str(value or "").lower()
+
+
+classification = d.get("classification") or d.get("task_classification") or {}
+scale = classification.get("scale")
+reasons_text = lower_text(classification.get("reasons", []))
+current_gate = lower_text(d.get("current_gate", ""))
+mode = lower_text(d.get("mode") or d.get("pipeline_mode") or "")
+report_scale = d.get("report_scale")
+acceptance_complete = bool(d.get("acceptance", {}).get("complete") or d.get("acceptance_complete"))
+stopped_reason = lower_text(d.get("stopped_reason", ""))
+
+# A run-state that is correctly paused at an approval gate is not a final
+# evidence report yet, so do not force full report metadata at this point.
+if not acceptance_complete and "approval required" in stopped_reason:
+    print("PASS")
+    sys.exit(0)
+
+# Backward-compatible default for older samples. New samples should set this
+# explicitly; policy still validates scale mismatches when the field is present.
+if not report_scale:
+    report_scale = "full" if scale == "L" else "standard" if scale == "M" else "compact"
+
+full_keywords = (
+    "recovery",
+    "publish",
+    "release",
+    "generated-file",
+    "generated file",
+    "security",
+    "api/store/ui",
+    "api + store",
+    "store + ui",
+)
+full_required = (
+    scale == "L"
+    or any(k in reasons_text for k in full_keywords)
+    or "publish" in current_gate
+    or "publish" in mode
+)
+
+failure_exists = False
+verification = d.get("verification", {})
+if verification.get("tests_pass") is False:
+    failure_exists = True
+for key in ("command_evidence", "verification_evidence"):
+    for item in d.get(key, []):
+        if isinstance(item, dict) and item.get("pass_fail") == "FAIL":
+            failure_exists = True
+codex = d.get("codex") or d.get("codex_review") or {}
+if codex.get("plan_review_verdict") in {"FAIL", "UNKNOWN"}:
+    failure_exists = True
+if codex.get("diff_review_verdict") in {"FAIL", "UNKNOWN"}:
+    failure_exists = True
+if d.get("acceptance", {}).get("final_decision") in {"NOT_ACCEPTED", "PARTIAL", "BLOCKED"}:
+    failure_exists = True
+if d.get("final_decision") in {"NOT_ACCEPTED", "PARTIAL", "BLOCKED"}:
+    failure_exists = True
+
+approval_required = False
+owner_summary = d.get("owner_summary", {})
+if isinstance(owner_summary, dict) and owner_summary.get("needs_user_decision") is True:
+    approval_required = True
+approval_gates = d.get("approval_gates", {})
+if isinstance(approval_gates, dict) and any(k in current_gate for k in ("commit", "push", "pr", "publish", "approval", "审批")):
+    if approval_gates.get("commit_approved") is False or approval_gates.get("push_approved") is False or approval_gates.get("pr_approved") is False:
+        approval_required = True
+if d.get("user_action_required") is True:
+    approval_required = True
+approval_keywords = (
+    "commit",
+    "push",
+    "pr",
+    "publish",
+    "deploy",
+    "install",
+    "dependency",
+    "global config",
+    "全局配置",
+    "安装依赖",
+)
+if any(k in reasons_text or k in current_gate for k in approval_keywords):
+    approval_required = True
+
+responsibility_required = bool(
+    d.get("responsibility_trace_required")
+    or failure_exists
+    or full_required
+)
+approval_inbox_required = bool(d.get("approval_inbox_required") or approval_required)
+stage_update_required = bool(d.get("stage_update_required") or scale in {"M", "L"} or full_required)
+owner_summary_required = bool(d.get("owner_summary_required") or d.get("acceptance", {}).get("complete") or d.get("acceptance_complete"))
+
+if report_scale not in {"compact", "standard", "full"}:
+    print("FAIL")
+    sys.exit(0)
+if scale == "S" and report_scale == "full" and not failure_exists and not approval_required:
+    print("WARN")
+    sys.exit(0)
+if full_required and report_scale == "compact":
+    print("FAIL")
+    sys.exit(0)
+if owner_summary_required and not isinstance(d.get("owner_summary"), dict):
+    print("FAIL")
+    sys.exit(0)
+if stage_update_required and not non_empty(d.get("stage_updates")):
+    print("FAIL")
+    sys.exit(0)
+if responsibility_required and not non_empty(d.get("responsibility_trace")):
+    print("FAIL")
+    sys.exit(0)
+if approval_inbox_required and not non_empty(d.get("approval_inbox")):
+    print("FAIL")
+    sys.exit(0)
+
+green_status = str(owner_summary.get("status_color", "")).lower() in {"green", "绿"}
+if green_status:
+    if verification.get("tests_pass") is False:
+        print("FAIL")
+        sys.exit(0)
+    for key in ("command_evidence", "verification_evidence"):
+        for item in d.get(key, []):
+            if isinstance(item, dict) and item.get("pass_fail") == "FAIL":
+                print("FAIL")
+                sys.exit(0)
+    skill_trace = d.get("skill_trace", {})
+    if isinstance(skill_trace, dict):
+        if non_empty(skill_trace.get("missing_evidence")):
+            print("FAIL")
+            sys.exit(0)
+        if skill_trace.get("acceptance_impact") in {"partial", "blocking"}:
+            print("FAIL")
+            sys.exit(0)
+
+print("PASS")
 PY
 }
 
@@ -642,6 +819,11 @@ check_run_state() {
   else
     record "owner-summary" "PASS"
   fi
+
+  # 11. report verbosity must match task scale and risk.
+  local report_scale_status
+  report_scale_status=$(jreport_scale_status "$f")
+  record "report-scale" "$report_scale_status"
 }
 
 # ── report checks ───────────────────────────────────────────────────────────
@@ -664,6 +846,10 @@ check_report() {
   else
     record "owner-summary" "PASS"
   fi
+
+  local report_scale_status
+  report_scale_status=$(jreport_scale_status "$f")
+  record "report-scale" "$report_scale_status"
 }
 
 # ── repo checks ─────────────────────────────────────────────────────────────

@@ -2,6 +2,23 @@
 
 # Dev Pipeline Evidence Report
 
+<!--
+Chinese Report Scale Policy:
+- report_scale: compact for S-level small fixes.
+- report_scale: standard for M-level feature work.
+- report_scale: full for L-level / recovery / publish / generated-file / security / API-store-UI / release tasks.
+- Failure/blocker always requires Responsibility Trace.
+- Commit / push / PR / publish / dependency install / destructive action / global config change always requires Approval Inbox.
+-->
+
+## Report Scale
+
+- report_scale: compact / standard / full
+- owner_summary_required: true / false
+- stage_update_required: true / false
+- responsibility_trace_required: true / false
+- approval_inbox_required: true / false
+
 ## 负责人摘要
 
 - 任务：
@@ -54,6 +71,71 @@
 | A1 | 是否 commit | 代码已验证，需要落库 | 批准 | 当前改动停留在 working tree |
 
 If no approval is needed, state: `待你审批：无。下一步会自动继续。`
+
+## Compact / Standard / Full Examples
+
+### Compact S-level
+
+```markdown
+## 负责人摘要
+
+- 任务：小修目标
+- 当前状态：绿 / 黄 / 红
+- 当前阶段：证据报告输出
+- 最大风险：...
+- 是否需要你决定：否
+- 下一步：...
+
+技能使用证据：简述使用 dev-pipeline-orchestrator、验证命令和结论。
+待你审批：无。
+```
+
+### Standard M-level
+
+```markdown
+## 负责人摘要
+列出任务、状态、当前阶段、最大风险、是否需要用户决定、下一步。
+
+## 阶段更新
+只列主要 Gate 切换。
+
+## 中文 Skill Trace / 技能使用证据
+输出表格。
+
+## 责任归因
+仅当有风险、修复、失败或阻塞时输出。
+
+## 待你审批
+仅当需要 commit / push / PR / install / global config 等审批时输出。
+```
+
+### Full L-level / recovery / publish
+
+```markdown
+## 负责人摘要
+输出完整进度、证据、风险和下一步。
+
+## 阶段更新
+列出每个主要 Gate。
+
+## 中文 Skill Trace / 技能使用证据
+输出完整表格。
+
+## 责任归因
+必须输出。
+
+## 待你审批
+必须输出；无事项也写“无”。
+
+## Codex Review
+输出 plan/diff review。
+
+## Verification Evidence
+输出 policy-check / doctor / ci-local。
+
+## Follow-up Backlog
+输出 backlog / baseline debt 分类。
+```
 
 ## Executive Status
 

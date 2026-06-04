@@ -215,6 +215,43 @@ FAIL  owner-summary
 
 ---
 
+## 3.4 汇报尺度不匹配
+
+### 症状
+`policy-check.sh` 输出：
+```text
+FAIL  report-scale
+```
+
+或：
+```text
+WARN  report-scale
+```
+
+### 常见原因
+- S 级小修使用了 `report_scale=full`，但没有失败或审批事项，导致过度汇报 warning
+- L / recovery / publish 使用了 `report_scale=compact`
+- 失败 / 阻塞时缺少 `responsibility_trace`
+- 需要 commit / push / PR / publish / 安装依赖 / 修改全局配置时缺少 `approval_inbox`
+- `owner_summary.status_color=green`，但测试、命令、Skill Trace 或 Codex evidence 仍失败
+
+### 解决
+按任务规模设置：
+
+```json
+{
+  "report_scale": "compact",
+  "owner_summary_required": true,
+  "stage_update_required": false,
+  "responsibility_trace_required": false,
+  "approval_inbox_required": false
+}
+```
+
+S 级默认 `compact`，M 级默认 `standard`，L / recovery / publish 默认 `full`。如果有失败或阻塞，把 `responsibility_trace_required` 设为 `true` 并补齐失败点、责任方、原因、修复建议和是否阻塞。如果有审批事项，把 `approval_inbox_required` 设为 `true` 并集中列出审批项。
+
+---
+
 ## 4. jest-dom Matcher 类型错误
 
 ### 症状

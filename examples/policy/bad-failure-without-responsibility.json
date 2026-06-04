@@ -1,0 +1,98 @@
+{
+  "run_id": "bad-failure-without-responsibility",
+  "project": "sample-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 6",
+  "classification": {
+    "scale": "M",
+    "reasons": ["Feature work with failing verification"],
+    "risk_level": "medium"
+  },
+  "work_orders": [],
+  "allowed_files": ["src/feature.ts"],
+  "forbidden_files": [".env"],
+  "modified_files": ["src/feature.ts"],
+  "command_evidence": [
+    {
+      "command": "npm test -- feature",
+      "exit_code": 1,
+      "key_output": "1 test failed",
+      "pass_fail": "FAIL"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": true
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/feature.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": false,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "BLOCKED"
+  },
+  "report_scale": "standard",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "失败归因测试",
+    "status_color": "red",
+    "current_stage_label": "Hermes 验证",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "failed",
+      "codex_review": "not_required",
+      "approval": "not_required"
+    },
+    "largest_risk": "测试失败但缺少责任归因。",
+    "needs_user_decision": false,
+    "next_action": "应补充 Responsibility Trace。"
+  },
+  "stage_updates": [
+    {
+      "from": "ClaudeCode 工单执行",
+      "to": "Hermes 验证",
+      "tools_or_skills": ["policy-check.sh"],
+      "goal": "验证失败",
+      "next_gate_condition": "补充失败归因",
+      "needs_user_decision": false
+    }
+  ],
+  "approval_inbox": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "Hermes 验证",
+    "current_phase_internal": "verification",
+    "user_visible_skill_banner": true,
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [],
+    "claudecode_skills": [],
+    "codex_gates": [],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 1
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "approval_gates": {
+    "commit_approved": false,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

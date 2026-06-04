@@ -87,6 +87,11 @@
     "needs_user_decision": false,
     "next_action": "可停止或按用户批准提交。"
   },
+  "report_scale": "compact",
+  "owner_summary_required": true,
+  "stage_update_required": false,
+  "responsibility_trace_required": false,
+  "approval_inbox_required": false,
   "stage_updates": [
     {
       "from": "ClaudeCode 工单执行",

@@ -80,6 +80,18 @@ If Hermes asks questions, it must say in Chinese why the questions are blocking,
 
 阶段更新是沟通协议，不改变 9-Gate 流程本身。
 
+### Chinese Report Scale Policy
+
+Hermes 在 Gate 0 分类后同时确定最终报告尺度：
+
+| 分类 | report_scale | 第一屏策略 |
+|---|---|---|
+| S | compact | 只给 Owner Summary 必要字段，避免小修官僚化 |
+| M | standard | 给 Owner Summary、主要阶段更新、Skill Trace 和验证摘要 |
+| L / recovery / publish | full | 给完整报告，包括责任归因、审批、Codex、policy/doctor/ci-local、backlog |
+
+失败 / 阻塞会强制要求责任归因。commit / push / PR / publish / 安装依赖 / 破坏性动作 / 修改全局配置会强制要求 `待你审批`。
+
 ### 输入
 用户的自然语言请求，可能是完整描述，也可能是简短的一句话。
 
@@ -366,10 +378,11 @@ git diff --stat              # 改动统计
 
 调用 `software-development/dev-pipeline-report` skill，产出完整报告，包括：
 
+- report_scale（compact / standard / full）
 - 负责人摘要（绿 / 黄 / 红、当前阶段、下一步、阻塞项）
 - 阶段更新（关键 Gate 切换和证据）
-- 责任归因（用户 / Hermes / ClaudeCode / Codex / 外部工具 / 环境）
-- 待你审批（commit / push / PR / deploy / 覆盖文件 / 敏感配置）
+- 责任归因（full 或失败 / 阻塞时必需）
+- 待你审批（commit / push / PR / deploy / 安装依赖 / 全局配置等需要审批时必需）
 - Executive Status（执行状态总览）
 - Role Performance（各角色执行情况）
 - Task Classification（任务分类）
@@ -388,7 +401,8 @@ git diff --stat              # 改动统计
 - **没有报告 = pipeline 没有完成**
 - 只有 Codex PASS 才能设置 `acceptance complete: true`
 - 报告是唯一能证明 pipeline 跑过的 artifact
-- 如果 `acceptance complete: true`，报告必须有负责人摘要和责任归因
+- 如果 `acceptance complete: true`，报告必须有负责人摘要
+- 如果失败 / 阻塞 / full report，报告必须有责任归因
 - 如果等待用户审批，报告必须集中列出待审批事项
 
 ---

@@ -108,6 +108,8 @@ main() {
   bash scripts/policy-check.sh --run-state examples/policy/good-skill-trace.json
   bash scripts/policy-check.sh --run-state examples/policy/good-chinese-skill-trace.json
   bash scripts/policy-check.sh --run-state examples/policy/good-owner-summary.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-compact-s-report.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-full-l-report.json
 
   section "Policy negative fixtures"
   expect_fail "bad-forbidden-file" \
@@ -122,6 +124,10 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-missing-chinese-phase-label.json
   expect_fail "bad-missing-approval-inbox" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-missing-approval-inbox.json
+  expect_fail "bad-l-compact-report" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-l-compact-report.json
+  expect_fail "bad-failure-without-responsibility" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-failure-without-responsibility.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh

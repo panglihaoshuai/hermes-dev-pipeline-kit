@@ -1,0 +1,178 @@
+{
+  "run_id": "good-full-l-report",
+  "project": "sample-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 8",
+  "classification": {
+    "scale": "L",
+    "reasons": ["API/store/UI feature slice", "Codex plan and diff review required"],
+    "risk_level": "high"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "claude_code",
+      "required_skill": "feature_development",
+      "required_matt_skill": "tdd",
+      "skill_evidence": {
+        "red": "feature test failed before implementation",
+        "green": "feature test passed after implementation",
+        "commands": ["npm test -- feature"],
+        "exit_codes": [0]
+      },
+      "status": "completed",
+      "files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
+  "forbidden_files": [".env"],
+  "modified_files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
+  "command_evidence": [
+    {
+      "command": "npm test -- feature",
+      "exit_code": 0,
+      "key_output": "8 tests passed",
+      "pass_fail": "PASS"
+    },
+    {
+      "command": "npm run typecheck",
+      "exit_code": 0,
+      "key_output": "No type errors",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/api/feature.ts\nM\tsrc/store/feature.ts\nM\tsrc/ui/Feature.tsx",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": 0
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "report_scale": "full",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "大型功能切片",
+    "status_color": "green",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "pass",
+      "approval": "not_required"
+    },
+    "largest_risk": "API/store/UI 联动已通过 Codex diff review。",
+    "needs_user_decision": false,
+    "next_action": "输出 full report。"
+  },
+  "stage_updates": [
+    {
+      "from": "方案设计与计划编写",
+      "to": "Codex 计划审查",
+      "tools_or_skills": ["dev-pipeline-orchestrator", "Codex plan review"],
+      "goal": "验证 L 级计划风险",
+      "next_gate_condition": "Codex plan PASS",
+      "needs_user_decision": false
+    },
+    {
+      "from": "Hermes 验证",
+      "to": "Codex 代码变更审查",
+      "tools_or_skills": ["Codex diff review"],
+      "goal": "验证最终 diff",
+      "next_gate_condition": "Codex diff PASS",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "计划审查",
+      "owner": "Codex",
+      "status": "complete",
+      "evidence": "plan_review_verdict PASS",
+      "blocking": false
+    },
+    {
+      "item": "代码实现",
+      "owner": "ClaudeCode",
+      "status": "complete",
+      "evidence": "Matt tdd evidence present",
+      "blocking": false
+    }
+  ],
+  "approval_inbox": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "证据报告输出",
+    "current_phase_internal": "reporting",
+    "user_visible_skill_banner": true,
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [
+      {
+        "name": "gstack plan-eng-review",
+        "planned": true,
+        "used": true,
+        "evidence": "plan/risk/acceptance reviewed",
+        "verdict": "PASS"
+      }
+    ],
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "evidence": {
+          "red": "feature test failed before implementation",
+          "green": "feature test passed after implementation",
+          "commands": ["npm test -- feature"],
+          "exit_codes": [0]
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "codex_gates": [
+      {
+        "name": "plan review",
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      },
+      {
+        "name": "diff review",
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

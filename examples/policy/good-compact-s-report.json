@@ -1,0 +1,104 @@
+{
+  "run_id": "good-compact-s-report",
+  "project": "sample-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 8",
+  "classification": {
+    "scale": "S",
+    "reasons": ["Single file small fix", "No user decision required"],
+    "risk_level": "low"
+  },
+  "work_orders": [
+    {
+      "id": "wo-001",
+      "owner": "hermes",
+      "required_skill": "small_fix",
+      "status": "completed",
+      "files": ["src/format.ts"],
+      "retries": 0
+    }
+  ],
+  "allowed_files": ["src/format.ts"],
+  "forbidden_files": [".env"],
+  "modified_files": ["src/format.ts"],
+  "command_evidence": [
+    {
+      "command": "npm test -- format",
+      "exit_code": 0,
+      "key_output": "1 test passed",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/format.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "report_scale": "compact",
+  "owner_summary_required": true,
+  "stage_update_required": false,
+  "responsibility_trace_required": false,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "格式化小修",
+    "status_color": "green",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "complete",
+      "planning": "skipped",
+      "work_order_split": "skipped",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "not_required",
+      "approval": "not_required"
+    },
+    "largest_risk": "无阻塞风险。",
+    "needs_user_decision": false,
+    "next_action": "输出 compact report。"
+  },
+  "approval_inbox": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "证据报告输出",
+    "current_phase_internal": "reporting",
+    "user_visible_skill_banner": true,
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [],
+    "claudecode_skills": [],
+    "codex_gates": [
+      {
+        "name": "diff review",
+        "required": false,
+        "used": false,
+        "verdict": "SKIPPED"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

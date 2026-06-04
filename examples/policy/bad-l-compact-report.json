@@ -1,0 +1,114 @@
+{
+  "run_id": "bad-l-compact-report",
+  "project": "sample-app",
+  "mode": "auto_run",
+  "current_gate": "Gate 8",
+  "classification": {
+    "scale": "L",
+    "reasons": ["API/store/UI feature slice"],
+    "risk_level": "high"
+  },
+  "work_orders": [],
+  "allowed_files": ["src/api/feature.ts"],
+  "forbidden_files": [".env"],
+  "modified_files": ["src/api/feature.ts"],
+  "command_evidence": [
+    {
+      "command": "npm test -- feature",
+      "exit_code": 0,
+      "key_output": "Tests passed",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "PASS",
+    "diff_review_verdict": "PASS",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/api/feature.ts",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": 0
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "report_scale": "compact",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "大型功能切片",
+    "status_color": "green",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "complete",
+      "planning": "complete",
+      "work_order_split": "complete",
+      "execution": "complete",
+      "verification": "complete",
+      "codex_review": "pass",
+      "approval": "not_required"
+    },
+    "largest_risk": "L 级任务不应使用 compact report。",
+    "needs_user_decision": false,
+    "next_action": "应改为 full report。"
+  },
+  "stage_updates": [
+    {
+      "from": "Hermes 验证",
+      "to": "证据报告输出",
+      "tools_or_skills": ["dev-pipeline-report"],
+      "goal": "输出报告",
+      "next_gate_condition": "报告完成",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "报告尺度",
+      "owner": "Hermes",
+      "status": "complete",
+      "evidence": "bad fixture intentionally uses compact",
+      "blocking": false
+    }
+  ],
+  "approval_inbox": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "证据报告输出",
+    "current_phase_internal": "reporting",
+    "user_visible_skill_banner": true,
+    "entry_skill": "dev-pipeline-orchestrator",
+    "mode": "auto_run",
+    "phase": "verification",
+    "hermes_skills": [],
+    "claudecode_skills": [],
+    "codex_gates": [
+      {
+        "name": "diff review",
+        "required": true,
+        "used": true,
+        "verdict": "PASS"
+      }
+    ],
+    "policy_check": {
+      "planned": true,
+      "used": true,
+      "exit_code": 0
+    },
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "approval_gates": {
+    "commit_approved": true,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "baseline_debt": [],
+  "follow_up_backlog": []
+}

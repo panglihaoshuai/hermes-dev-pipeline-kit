@@ -102,7 +102,25 @@ Required human-readable sections:
 - `责任归因`: responsibility boundary for User, Hermes, ClaudeCode, Codex, external tools, and environment. Failures and blockers must name an owner and supporting evidence.
 - `待你审批`: centralized approval inbox for commit, push, PR, deploy, sensitive config edits, file overwrite, or any other user-gated action. If no approval is needed, the report must say so explicitly.
 
-The JSON report mirrors these sections with `owner_summary`, `stage_updates`, `responsibility_trace`, and `approval_inbox`. `scripts/policy-check.sh` validates that accepted reports include owner summary and responsibility trace, and that approval-waiting states include a non-empty approval inbox.
+The JSON report mirrors these sections with `owner_summary`, `stage_updates`, `responsibility_trace`, and `approval_inbox`. `scripts/policy-check.sh` validates that accepted reports include owner summary, failure/blocker states include responsibility trace, full reports include responsibility trace, and approval-waiting states include a non-empty approval inbox.
+
+## Chinese Report Scale Policy
+
+Reports must include scale metadata:
+
+- `report_scale`: `compact`, `standard`, or `full`;
+- `owner_summary_required`: whether the first-screen Owner Summary is required;
+- `stage_update_required`: whether stage transition narration is required;
+- `responsibility_trace_required`: whether responsibility trace is required;
+- `approval_inbox_required`: whether approval items must be centralized.
+
+Scale mapping:
+
+- S-level small fixes use `compact`;
+- M-level feature work uses `standard`;
+- L-level, recovery, generated-file, security, API/store/UI, GitHub publish, or release work uses `full`.
+
+If an S-level task uses `full` without failure or approval, policy-check may warn for over-reporting. If L/recovery/publish uses `compact`, policy-check fails. If any task fails or blocks, responsibility trace is mandatory. If commit / push / PR / publish / dependency install / destructive action / global config change is needed, approval inbox is mandatory.
 
 This contract does not claim that the runtime always follows the protocol. It makes missing owner-facing summaries and missing approval disclosure visible to policy checks and reviewers.
 

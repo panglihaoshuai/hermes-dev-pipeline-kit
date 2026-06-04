@@ -18,6 +18,11 @@
     "role_performance",
     "task_classification",
     "intake_quality",
+    "report_scale",
+    "owner_summary_required",
+    "stage_update_required",
+    "responsibility_trace_required",
+    "approval_inbox_required",
     "owner_summary",
     "skill_trace",
     "responsibility_trace",
@@ -160,6 +165,27 @@
         "ambiguity_level",
         "product_direction_confidence"
       ]
+    },
+    "report_scale": {
+      "type": "string",
+      "description": "Chinese Report Scale Policy verbosity level for the owner-facing final report.",
+      "enum": ["compact", "standard", "full"]
+    },
+    "owner_summary_required": {
+      "type": "boolean",
+      "description": "Whether the owner-facing first-screen summary is required."
+    },
+    "stage_update_required": {
+      "type": "boolean",
+      "description": "Whether stage update narration is required for this task scale or state."
+    },
+    "responsibility_trace_required": {
+      "type": "boolean",
+      "description": "Whether responsibility trace is required because of scale, risk, failure, or blocker state."
+    },
+    "approval_inbox_required": {
+      "type": "boolean",
+      "description": "Whether approval items must be centralized in the approval inbox."
     },
     "work_orders": {
       "type": "array",

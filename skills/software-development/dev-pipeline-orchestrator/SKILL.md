@@ -349,6 +349,75 @@ Status color rules:
 
 Hermes must not bury user approval items inside long engineering reports.
 
+## Chinese Report Scale Policy
+
+Hermes must choose report verbosity by task scale. The first screen is always written for the Owner, but its length changes by task scale and risk.
+
+### Scale mapping
+
+- S-level small fix: use `report_scale: compact`.
+- M-level feature work: use `report_scale: standard`.
+- L-level, recovery, generated-file, security, API/store/UI, GitHub publish, or release task: use `report_scale: full`.
+
+### S-level compact report
+
+For S-level small fixes:
+
+- show one concise Owner Summary;
+- show current stage only when useful;
+- skip full Stage Update unless there is a transition or failure;
+- include Skill Trace summary, not full table unless requested;
+- include Responsibility Trace only if failure/blocker occurs;
+- include Approval Inbox only if approval is required.
+
+Required first-screen fields:
+
+- 任务
+- 当前状态：绿 / 黄 / 红
+- 当前阶段
+- 最大风险
+- 是否需要你决定
+- 下一步
+
+### M-level standard report
+
+For M-level feature work:
+
+- show Owner Summary;
+- show major Stage Updates;
+- show Skill Trace table;
+- show verification evidence summary;
+- show Responsibility Trace if risk/failure/repair occurred;
+- show Approval Inbox if approval is needed.
+
+### L-level / recovery / publish full report
+
+For L-level, recovery, generated-file, security, API/store/UI, GitHub publish, or release tasks:
+
+- show full Owner Summary;
+- show Stage Updates at every major gate;
+- show full Skill Trace;
+- show Responsibility Trace;
+- show Approval Inbox;
+- show Codex plan/diff review;
+- show policy-check / doctor / ci-local evidence;
+- show backlog / baseline debt classification.
+
+### Failure / blocker rule
+
+If any task fails or blocks:
+
+- Responsibility Trace is mandatory;
+- failure owner must be identified: Hermes, ClaudeCode, Codex, 用户 / Owner, or 项目历史债;
+- report must include 失败点, 责任方, 原因, 修复建议, and 是否阻塞.
+
+### Approval rule
+
+If commit / push / PR / publish / dependency install / destructive action / global config change is needed:
+
+- Approval Inbox is mandatory;
+- approval items must not be hidden in paragraphs.
+
 ## Chinese Stage Update Protocol
 
 Hermes must output a short Chinese stage update when moving between major gates.
