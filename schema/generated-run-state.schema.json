@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/generated-run-state.schema.json",
+  "title": "Generated Run State",
+  "description": "v0.3 generated run-state. Requires provenance and harness-owned state_source.",
+  "allOf": [
+    { "$ref": "run-state.schema.json" },
+    {
+      "type": "object",
+      "required": ["state_source", "provenance", "raw_evidence", "command_log_summary"],
+      "properties": {
+        "state_source": { "const": "generated" },
+        "provenance": {
+          "type": "object",
+          "required": ["generated_by", "generated_at", "generator_version", "source_files"],
+          "properties": {
+            "generated_by": { "type": "string", "minLength": 1 },
+            "generated_at": { "type": "string", "minLength": 1 },
+            "generator_version": { "type": "string", "minLength": 1 },
+            "source_files": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "raw_evidence": { "type": "object" },
+        "command_log_summary": { "type": "object" }
+      }
+    }
+  ]
+}

@@ -24,6 +24,58 @@ Gate 0 ──► Gate 1 ──► Gate 2 ──► Gate 3 ──► Gate 3.5 ─
 
 ---
 
+## v0.3 Executable Evidence Harness
+
+v0.3 changes the state ownership model:
+
+```text
+Hermes / ClaudeCode submit raw evidence
+scripts/record-command.sh records command facts
+scripts/generate-run-state.sh derives generated/run-state.json
+scripts/policy-check.sh validates generated run-state
+scripts/final-report.sh generates the owner report
+```
+
+### Evidence Ownership Rule
+
+- Agent may submit evidence.
+- Harness owns state generation.
+- Agent must not hand-write final M/L run-state.
+- Generated run-state must include provenance.
+
+### Run Directory
+
+```text
+.hermes-runs/<run-id>/
+  task.md
+  run-manifest.json
+  classification.json
+  work-orders/
+    WO-1.json
+  raw/
+    claudecode-result.json
+    command-log.jsonl
+    files-touched.txt
+    stdout/
+    stderr/
+  generated/
+    run-state.json
+    final-report.md
+```
+
+### Policy Fixture vs Runtime Evidence
+
+Hand-written JSON under `examples/policy/` is policy fixture validation. It is not runtime behavior evidence.
+
+True runtime behavior validation requires:
+
+- `raw/command-log.jsonl` emitted by `scripts/record-command.sh`;
+- `raw/claudecode-result.json` following `schema/claudecode-result.schema.json`;
+- `generated/run-state.json` emitted by `scripts/generate-run-state.sh`;
+- provenance source files linking generated state back to raw evidence.
+
+---
+
 ## Gate 0: Intake + Classification
 
 **Hermes 的入口门禁。**
@@ -498,6 +550,29 @@ git diff --stat              # 改动统计
 - project config
 - multi-agent workflow
 - unclear product behavior
+
+---
+
+## Runtime Evidence Consistency (v3)
+
+### TDD RED/GREEN Evidence
+- M/L tasks with required Matt skill=tdd must have RED phase evidence
+- If RED is missing, must provide red_not_applicable_reason
+- evidence_present=true forbidden without RED evidence
+
+### Acceptance-Evidence Consistency
+- blocking=true + evidence_present=false → acceptance.complete must be false
+- status_color must be yellow or red when evidence is blocking
+
+### Codex Deferred Consistency
+- codex_deferred.deferred=true + required=true:
+  - Do NOT require codex.diff_review_verdict
+  - Do NOT write Codex PASS
+  - status_color must NOT be green
+
+### Self-Improvement Side Effect Guard
+- Runtime tasks must not create skills, modify memory, or write global config
+- Unless user explicitly approves
 
 ---
 

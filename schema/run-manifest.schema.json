@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/run-manifest.schema.json",
+  "title": "Run Manifest",
+  "description": "Harness-owned manifest for a local dev-pipeline run.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "created_at",
+    "task_type",
+    "requested_mode",
+    "project",
+    "harness_version",
+    "run_dir"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "task_type": {
+      "type": "string",
+      "enum": ["feature", "bugfix", "refactor", "integration", "deployment", "smoke", "audit"]
+    },
+    "requested_mode": {
+      "type": "string",
+      "enum": ["dry_run", "plan_only", "auto_run"]
+    },
+    "project": { "type": "string", "minLength": 1 },
+    "harness_version": { "type": "string", "minLength": 1 },
+    "run_dir": { "type": "string", "minLength": 1 }
+  }
+}

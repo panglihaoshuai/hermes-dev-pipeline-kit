@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/command-log.schema.json",
+  "title": "Command Log Record",
+  "description": "One JSONL record emitted by scripts/record-command.sh.",
+  "type": "object",
+  "required": [
+    "seq",
+    "step_id",
+    "phase",
+    "command",
+    "cwd",
+    "started_at",
+    "ended_at",
+    "exit_code",
+    "stdout_path",
+    "stderr_path"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "seq": { "type": "integer", "minimum": 1 },
+    "step_id": { "type": "string", "minLength": 1 },
+    "phase": { "type": "string" },
+    "command": { "type": "string", "minLength": 1 },
+    "cwd": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "minLength": 1 },
+    "ended_at": { "type": "string", "minLength": 1 },
+    "exit_code": { "type": "integer" },
+    "stdout_path": { "type": "string", "minLength": 1 },
+    "stderr_path": { "type": "string", "minLength": 1 }
+  }
+}

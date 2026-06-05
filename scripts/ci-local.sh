@@ -113,6 +113,10 @@ main() {
   bash scripts/policy-check.sh --run-state examples/policy/good-full-l-report.json
   bash scripts/policy-check.sh --run-state examples/policy/good-m-standard-with-claudecode.json
   bash scripts/policy-check.sh --run-state examples/policy/good-l-full-report.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-codex-deferred-partial.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-tdd-red-green-evidence.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-generated-run-state-with-provenance.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-tdd-command-log-red-green.json
 
   section "Policy negative fixtures"
   expect_fail "bad-forbidden-file" \
@@ -141,16 +145,33 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-full-report-missing-sections.json
   expect_fail "bad-verification-without-exit-code" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-verification-without-exit-code.json
+  expect_fail "bad-acceptance-complete-with-missing-matt-evidence" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-acceptance-complete-with-missing-matt-evidence.json
+  expect_fail "bad-self-improvement-side-effect" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-self-improvement-side-effect.json
+  expect_fail "bad-synthetic-run-state-without-provenance" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-synthetic-run-state-without-provenance.json
+  expect_fail "bad-claudecode-writes-acceptance" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-claudecode-writes-acceptance.json
+  expect_fail "bad-tdd-text-only-no-command-log" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-tdd-text-only-no-command-log.json
+  expect_fail "bad-codex-pass-while-deferred" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-codex-pass-while-deferred.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh
   bash scripts/smoke/smoke-forbidden-file.sh
   bash scripts/smoke/smoke-codex-required.sh
   bash scripts/smoke/smoke-publish-lane-stop.sh
+  bash scripts/smoke/smoke-generated-run-state.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json
   json_check schema/dev-pipeline-report.schema.json
+  json_check schema/run-manifest.schema.json
+  json_check schema/command-log.schema.json
+  json_check schema/claudecode-result.schema.json
+  json_check schema/generated-run-state.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

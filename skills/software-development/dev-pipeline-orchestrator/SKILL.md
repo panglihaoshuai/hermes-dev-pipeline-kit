@@ -1,7 +1,7 @@
 ---
 name: dev-pipeline-orchestrator
 description: "Use when Hermes is asked to develop, fix, refactor, review, integrate, prepare deployment, recover failed code work, or orchestrate ClaudeCode/Codex across a software task."
-version: 1.0.0
+version: 1.1.0
 author: Codex
 license: MIT
 platforms: [linux, macos, windows]
@@ -24,6 +24,23 @@ metadata:
 This is Hermes' development task entrypoint. Use it for feature development, bug fixing, refactor, integration, deployment prep, test repair, code review recovery, and multi-agent orchestration.
 
 Hermes is the orchestrator, verifier, and evidence collector. ClaudeCode is the execution worker. Codex is the review and acceptance gate.
+
+## Evidence Ownership Rule (v0.3)
+
+Agent may submit evidence. Harness owns state generation.
+
+- Hermes / ClaudeCode may write raw evidence, work-order result contracts, notes, and artifacts.
+- Hermes / ClaudeCode must not hand-write final M/L `run-state.json`.
+- `generated/run-state.json` must be produced by `scripts/generate-run-state.sh`.
+- Generated run-state must include `provenance.generated_by`, `provenance.generated_at`, `provenance.generator_version`, and `provenance.source_files`.
+- `policy-check.sh` validates generated run-state, not free-form self-report.
+- `final-report.sh` generates the owner-facing report from generated run-state.
+
+No Synthetic Run-State Rule:
+
+- A hand-authored "expected good" run-state is allowed only as a policy fixture.
+- It does not count as true runtime behavior evidence.
+- True runtime evidence requires a run directory with `raw/command-log.jsonl` and provenance.
 
 ## Hermes Delegation Protocol
 
@@ -1282,6 +1299,38 @@ Enforcement:
 - M/L tasks missing Matt evidence → MUST NOT PASS
 - acceptance.complete=true with missing Matt evidence → policy-check MUST FAIL
 
+### TDD RED/GREEN Evidence Enforcement
+
+When required Matt skill is `tdd`, ClaudeCode work orders MUST explicitly require:
+1. Create tests first
+2. Run tests and record RED failure (or explain why RED is not applicable)
+3. Implement
+4. Run tests and record GREEN
+5. Output commands and exit codes
+
+If RED evidence is missing and no `red_not_applicable_reason` is provided, `evidence_present` MUST be `false`.
+
+Forbidden: `evidence_present: true` when RED phase is missing without reason.
+
+### Acceptance-Evidence Consistency
+
+If `matt_evidence_gate.blocking=true` and `matt_evidence_gate.evidence_present=false`:
+- `acceptance.complete` MUST be `false`
+- `owner_summary.status_color` MUST be `yellow` or `red`
+- `skill_trace.acceptance_impact` MUST be `partial` or `blocking`
+
+Forbidden: `acceptance.complete=true` when evidence is blocking and missing.
+
+### Codex Deferred Consistency
+
+If `codex_deferred.deferred=true` and `codex_deferred.required=true`:
+- Do NOT require `codex.diff_review_verdict`
+- Do NOT write Codex PASS
+- `acceptance.complete` MAY be `true` but `owner_summary.status_color` MUST NOT be `green`
+- MUST mark: `Codex review deferred because quota unavailable`
+
+Forbidden: Codex PASS verdict when Codex is deferred.
+
 ## Full Report Gate
 
 L / recovery / publish / release / generated-file / security/API/store/UI / multi-module tasks MUST include ALL of:
@@ -1349,6 +1398,17 @@ Policy-check behavior:
 - Codex verdict=PASS but no actual Codex evidence → FAIL (fabricated verdict)
 
 This ensures transparency when Codex cannot run, without blocking the entire pipeline.
+
+## Self-Improvement Side Effect Guard
+
+During runtime tasks, smoke tests, retests, or calibration tests:
+- Do NOT create new skills
+- Do NOT modify memory
+- Do NOT write global configuration
+
+Unless user explicitly approves.
+
+If self-improvement is triggered, write to backlog only. Do NOT execute.
 
 ## Skill Routing Table
 
@@ -1762,6 +1822,32 @@ When a retry IS needed (WO-1 timed out with 0 files created), use a tighter prom
 7. **`delegate_task` timeout at 600s — work may still have completed.** When delegate_task returns "timed out after 600.0s", the subagent may have actually finished writing files and running tests before the timeout killed the process. Always check for created files (`ls -la <expected file>`) and run the validation command (`npx vitest run <test file>`) even after a timeout. If the file exists and tests pass, treat it as DONE, not FAILED. This happened twice in one session (WO-1 timed out with 0 files → retry succeeded in 245s; WO-2 timed out but file was completed and 12 tests passed). If file doesn't exist after timeout, retry with a tighter, more focused prompt — the original prompt was likely too long/complex for the timeout window.
 
 8. **ClaudeCode will use jest-dom matchers in projects that don't use them.** When writing test files, ClaudeCode defaults to `@testing-library/jest-dom` matchers (`toBeInTheDocument`, `toHaveTextContent`, `toBeVisible`, `toHaveClass`). These cause tsc type errors if the project's tsconfig doesn't include `@testing-library/jest-dom` types, even though they work at runtime via vitest-setup.ts. This produced 27 tsc errors in one session. Mitigation: in the work order, explicitly instruct ClaudeCode to check existing test files for project conventions BEFORE writing tests. If no existing test uses jest-dom matchers, the new test must not either. Use basic vitest `expect` assertions instead. Example replacements: `expect(el).toBeInTheDocument()` → `expect(el).toBeTruthy()`, `expect(el).toHaveTextContent("x")` → `expect(el?.textContent).toContain("x")`.
+
+## Pitfall 11: Policy-Check Schema Evolution Requires Fixture Co-Evolution
+
+When adding new policy checks to `policy-check.sh`, ALL existing fixtures (both `good-*` and `bad-*`) must be updated to include the new fields the checks expect. New checks access fields like `claudecode_delegation.delegated`, `verification_exit_codes[].pass`, `matt_evidence_gate.required_skill`. Existing fixtures without these fields cause false FAILs on previously-passing fixtures, breaking ci-local.sh.
+
+**Fix pattern**: After adding new checks, run policy-check against EVERY good-* fixture. For each FAIL, add the missing field with a safe default. Re-run ci-local.sh to confirm. See `references/policy-check-evolution-pitfalls.md` for the complete field list and co-evolution rule.
+
+## Pitfall 12: jget() None → "null" String Bug
+
+Python `print(None)` outputs the string `"null"`, not empty string. In bash, `[[ -n "null" ]]` evaluates to true, causing checks on missing fields to incorrectly FAIL. Fix: change `elif v is None: print('null')` to `elif v is None: print('')` in jget(). This affects ALL jget() calls with `2>/dev/null || echo ""` guards.
+
+## Pitfall 13: Boolean vs String Comparison in Policy Helpers
+
+JSON `true` is Python `True` (bool), but shell comparison `item.get('pass') == 'true'` compares bool to string → always False. Fix: add `isinstance(v, bool) and str(v).lower() == '$value'.lower()` to jcheck_any_field_eq. Pattern: any helper comparing JSON values to shell args must handle both `"true"` (string) and `true` (boolean).
+
+## Pitfall 14: Evidence Format Must Match Skill Type
+
+`evidence_complete()` expects different fields per skill: tdd (red/green/commands/exit_codes), diagnose (hypothesis/test/finding/fix_recommendation), prototype (variants_considered/chosen_variant/reason), to-issues (issue_breakdown/acceptance_criteria/priority), grill-me (challenge_questions/decisions_changed). Using wrong field names (e.g., diagnostic_check instead of test, fix_result instead of fix_recommendation) causes skill-trace-evidence FAIL.
+
+## Pitfall 15: Codex NOT_REQUIRED Must Be Treated as PASS
+
+`acceptance-codex-consistency` must allow `diff_review_verdict == "NOT_REQUIRED"` for M-level tasks where Codex is optional. Original check only allowed "PASS", causing good M-level fixtures to FAIL. General rule: any check gating on Codex verdict must allow "NOT_REQUIRED" as valid.
+
+## Pitfall 16: Python Dict Access in Bash Helpers Must Use .get()
+
+Python `obj[key]` throws KeyError on missing keys. ALL helper functions (jget, jlen, jarray_contains, jcheck_intersection, jcheck_any_field, jcheck_any_field_ne) must use `.get(key, [])` with bounds checking for list access. Missing this causes silent crashes on fixtures that don't have all fields.
 
 ## Required Artifacts
 

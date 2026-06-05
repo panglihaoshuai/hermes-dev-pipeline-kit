@@ -22,6 +22,22 @@ Markdown report. This JSON document conforms to a formal schema and is intended 
 The Markdown report remains the **primary** format for human review. The JSON
 contract is supplementary and **not mandatory yet**.
 
+### v0.3 — Executable evidence harness
+
+Starting in v0.3, M/L runtime evidence should be generated from a run directory,
+not hand-written by the executing agent.
+
+Evidence ownership:
+
+- Agent submits raw evidence and result contracts.
+- Harness generates `generated/run-state.json`.
+- `policy-check.sh` validates generated run-state.
+- `final-report.sh` generates the owner-facing Markdown report from run-state.
+
+Policy fixtures under `examples/policy/` are still useful unit tests, but they
+must be reported as policy fixture validation, not true runtime behavior
+validation.
+
 ## Schema
 
 The JSON report schema is located at:
@@ -186,6 +202,15 @@ The following checks are mandatory for all pipeline runs:
 | verification-exit-code | warn | block | block |
 | vague-intake | - | block | block |
 | codex-deferred | - | warn | warn |
+
+## Evidence Consistency Contract
+
+| Check | S | M | L |
+|-------|---|---|---|
+| evidence-blocking-acceptance | - | block | block |
+| codex-deferred-consistency | - | warn | block |
+| self-improvement-side-effect | block | block | block |
+| tdd-red-evidence | - | block | block |
 
 ## Not mandatory yet
 

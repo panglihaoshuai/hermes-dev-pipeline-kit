@@ -13,24 +13,8 @@
     "evidence_type": "tdd",
     "blocking": false
   },
-  "report_scale_enforcement": {
-    "report_scale": "standard",
-    "required_sections": [
-      "负责人摘要",
-      "阶段更新",
-      "技能使用证据",
-      "责任归因",
-      "待你审批"
-    ],
-    "present_sections": [
-      "负责人摘要",
-      "阶段更新",
-      "技能使用证据",
-      "责任归因",
-      "待你审批"
-    ],
-    "missing_sections": [],
-    "all_present": true
+  "codex": {
+    "diff_review_verdict": "NOT_REQUIRED"
   },
   "acceptance": {
     "complete": true
@@ -45,24 +29,18 @@
       "pass": true
     }
   ],
-  "codex": {
-    "plan_review_verdict": "NOT_REQUIRED",
-    "diff_review_verdict": "NOT_REQUIRED"
-  },
   "work_orders": [
     {
       "id": "WO-1",
       "required_matt_skill": "tdd",
       "status": "completed",
       "skill_evidence": {
-        "red": "node test.js exit 1",
+        "red": "test failed: add(1,2) returned undefined",
         "green": "node test.js exit 0",
         "commands": [
-          "node test.js",
           "node test.js"
         ],
         "exit_codes": [
-          1,
           0
         ]
       }
@@ -84,8 +62,8 @@
         "reported": true,
         "verdict": "PASS",
         "evidence": {
-          "red": "test failed",
-          "green": "test passed",
+          "red": "test failed: add(1,2) returned undefined",
+          "green": "node test.js exit 0",
           "commands": [
             "node test.js"
           ],
@@ -95,58 +73,37 @@
         }
       }
     ],
-    "codex_gates": [
-      {
-        "required": false,
-        "used": false,
-        "verdict": "SKIPPED"
-      }
-    ]
+    "codex_gates": []
   },
-  "stage_updates": [
-    {
-      "phase": "intake",
-      "label": "需求收集与头脑风暴",
-      "status": "done"
-    },
-    {
-      "phase": "planning",
-      "label": "方案设计与计划编写",
-      "status": "done"
-    },
-    {
-      "phase": "work_orders",
-      "label": "工单执行与验证",
-      "status": "done"
-    },
-    {
-      "phase": "verification",
-      "label": "Hermes 验证",
-      "status": "done"
-    },
-    {
-      "phase": "approval",
-      "label": "Commit 审批",
-      "status": "waiting"
-    }
-  ],
   "owner_summary": {
+    "display_language": "zh-CN",
     "task": "add calculator module",
     "status_color": "green",
-    "current_stage_label": "Commit 审批",
+    "current_stage_label": "完成",
     "progress": {
       "intake": "done",
       "planning": "done",
       "work_orders": "done",
       "verification": "done",
       "codex_review": "done",
-      "approval": "waiting"
+      "approval": "done"
     },
-    "largest_risk": "等待用户批准 commit",
-    "needs_user_decision": true,
-    "next_action": "commit",
-    "display_language": "zh-CN"
+    "largest_risk": "无",
+    "needs_user_decision": false,
+    "next_action": "commit"
   },
+  "stage_updates": [
+    {
+      "phase": "intake",
+      "label": "需求收集",
+      "status": "done"
+    },
+    {
+      "phase": "planning",
+      "label": "方案设计",
+      "status": "done"
+    }
+  ],
   "responsibility_trace": [
     {
       "item": "implementation",
@@ -159,15 +116,7 @@
       "status": "done"
     }
   ],
-  "approval_inbox": [
-    {
-      "id": "A1",
-      "item": "commit",
-      "reason": "code verified",
-      "default": "approve",
-      "consequence": "changes stay in working tree"
-    }
-  ],
+  "approval_inbox": [],
   "state_source": "generated",
   "provenance": {
     "generated_by": "scripts/generate-run-state.sh",

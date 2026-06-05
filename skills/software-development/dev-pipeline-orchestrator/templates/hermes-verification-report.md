@@ -129,3 +129,17 @@ Choose one:
 - proceed with baseline debt (current diff verified, unrelated issues recorded as backlog)
 
 Hermes must not mark `acceptance complete` here.
+
+## v0.3 Harness Evidence Boundary
+
+- Hermes may collect raw evidence and inspect `raw/claudecode-result.json`.
+- Hermes must not hand-write final M/L `generated/run-state.json`.
+- Run `scripts/generate-run-state.sh <run-dir>` to derive state from raw evidence.
+- Run `scripts/policy-check.sh --run-state <run-dir>/generated/run-state.json`.
+- Run `scripts/final-report.sh <run-dir>/generated/run-state.json`.
+
+## Evidence Consistency Checks
+
+- [ ] If matt_evidence_gate.blocking=true and evidence_present=false → acceptance.complete must be false
+- [ ] If codex_deferred.deferred=true → no Codex PASS verdict
+- [ ] If required_matt_skill=tdd → RED evidence present or red_not_applicable_reason provided

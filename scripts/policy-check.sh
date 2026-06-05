@@ -282,6 +282,168 @@ print("true")
 PY
 }
 
+jprovenance_violation() {
+  # M/L generated run-states must be harness-generated and provenance-backed.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+scale = (d.get("classification") or {}).get("scale")
+if scale not in {"M", "L"}:
+    print("false")
+    sys.exit(0)
+
+if d.get("state_source") != "generated":
+    print("true")
+    sys.exit(0)
+
+prov = d.get("provenance")
+if not isinstance(prov, dict):
+    print("true")
+    sys.exit(0)
+
+required = ["generated_by", "generated_at", "generator_version", "source_files"]
+if any(not prov.get(key) for key in required):
+    print("true")
+    sys.exit(0)
+
+if prov.get("generated_by") != "scripts/generate-run-state.sh":
+    print("true")
+    sys.exit(0)
+
+sources = set(prov.get("source_files") or [])
+if "run-manifest.json" not in sources or "raw/command-log.jsonl" not in sources:
+    print("true")
+    sys.exit(0)
+
+print("false")
+PY
+}
+
+jclaudecode_result_contract_violation() {
+  # ClaudeCode may submit raw evidence but must not write final acceptance.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+raw = d.get("raw_evidence") or {}
+if raw.get("claudecode_result_contains_acceptance") is True:
+    print("true")
+    sys.exit(0)
+
+embedded = d.get("claudecode_result")
+if isinstance(embedded, dict) and "acceptance" in embedded:
+    print("true")
+    sys.exit(0)
+
+print("false")
+PY
+}
+
+jtdd_command_log_violation() {
+  # M/L TDD evidence must come from command_log_summary, not text-only fields.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+scale = (d.get("classification") or {}).get("scale")
+if scale not in {"M", "L"}:
+    print("false")
+    sys.exit(0)
+
+required_tdd = False
+if (d.get("matt_evidence_gate") or {}).get("required_skill") == "tdd":
+    required_tdd = True
+for wo in d.get("work_orders") or []:
+    if isinstance(wo, dict) and wo.get("required_matt_skill") == "tdd":
+        required_tdd = True
+for item in (d.get("skill_trace") or {}).get("claudecode_skills", []):
+    if isinstance(item, dict) and item.get("name") == "tdd" and item.get("required") is True:
+        required_tdd = True
+
+if not required_tdd:
+    print("false")
+    sys.exit(0)
+
+summary = d.get("command_log_summary")
+if not isinstance(summary, dict):
+    print("true")
+    sys.exit(0)
+
+sources = set((d.get("provenance") or {}).get("source_files") or [])
+if summary.get("source") != "raw/command-log.jsonl" or "raw/command-log.jsonl" not in sources:
+    print("true")
+    sys.exit(0)
+
+red_reason = ""
+for wo in d.get("work_orders") or []:
+    ev = wo.get("skill_evidence") if isinstance(wo, dict) else {}
+    if isinstance(ev, dict) and ev.get("red_not_applicable_reason"):
+        red_reason = ev.get("red_not_applicable_reason")
+
+red_exit = summary.get("red_exit_code")
+green_exit = summary.get("green_exit_code")
+
+if red_reason:
+    if green_exit != 0:
+        print("true")
+        sys.exit(0)
+    print("false")
+    sys.exit(0)
+
+if not isinstance(red_exit, int) or red_exit == 0:
+    print("true")
+    sys.exit(0)
+if green_exit != 0:
+    print("true")
+    sys.exit(0)
+if summary.get("tdd_sequence_verified") is not True:
+    print("true")
+    sys.exit(0)
+
+print("false")
+PY
+}
+
+jcodex_deferred_pass_violation() {
+  # Codex cannot be PASS while the run says Codex was deferred.
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as f:
+    d = json.load(f)
+
+deferred = d.get("codex_deferred") or {}
+if not (deferred.get("required") is True and deferred.get("deferred") is True):
+    print("false")
+    sys.exit(0)
+
+codex = d.get("codex") or {}
+if codex.get("plan_review_verdict") in {"PASS", "PASS_WITH_REQUIRED_CHANGES"}:
+    print("true")
+    sys.exit(0)
+if codex.get("diff_review_verdict") in {"PASS", "PASS_WITH_REQUIRED_CHANGES"}:
+    print("true")
+    sys.exit(0)
+
+print("false")
+PY
+}
+
 jskill_trace_violation() {
   # Returns 'true' when skill trace/evidence policy is violated.
   local file="$1"
@@ -969,6 +1131,102 @@ check_run_state() {
     record "codex-deferred" "FAIL"
   else
     record "codex-deferred" "PASS"
+  fi
+
+  # 19. evidence-blocking-acceptance: matt_evidence_gate.blocking=true + evidence_present=false → acceptance.complete must be false
+  local matt_blocking matt_present acc_complete_val
+  matt_blocking=$(jget "$f" "matt_evidence_gate.blocking" 2>/dev/null || echo "false")
+  matt_present=$(jget "$f" "matt_evidence_gate.evidence_present" 2>/dev/null || echo "false")
+  acc_complete_val=$(jget "$f" "acceptance.complete" 2>/dev/null || echo "false")
+  if [[ "$matt_blocking" == "true" && "$matt_present" != "true" && "$acc_complete_val" == "true" ]]; then
+    record "evidence-blocking-acceptance" "FAIL"
+  else
+    record "evidence-blocking-acceptance" "PASS"
+  fi
+
+  # 20. codex-deferred-consistency: codex_deferred.deferred=true + required=true → acceptance.complete=true + status_color=green is forbidden
+  local codex_def_req codex_def_val status_color
+  codex_def_req=$(jget "$f" "codex_deferred.required" 2>/dev/null || echo "false")
+  codex_def_val=$(jget "$f" "codex_deferred.deferred" 2>/dev/null || echo "false")
+  status_color=$(jget "$f" "owner_summary.status_color" 2>/dev/null || echo "")
+  if [[ "$codex_def_req" == "true" && "$codex_def_val" == "true" && "$acc_complete_val" == "true" && "$status_color" == "green" ]]; then
+    record "codex-deferred-consistency" "FAIL"
+  else
+    record "codex-deferred-consistency" "PASS"
+  fi
+
+  # 21. self-improvement-side-effect: self_improvement_side_effect=true + no explicit_user_approval → FAIL
+  local self_improve has_approval
+  self_improve=$(jget "$f" "self_improvement_side_effect" 2>/dev/null || echo "false")
+  has_approval=$(jget "$f" "explicit_user_approval" 2>/dev/null || echo "false")
+  if [[ "$self_improve" == "true" && "$has_approval" != "true" ]]; then
+    record "self-improvement-side-effect" "FAIL"
+  else
+    record "self-improvement-side-effect" "PASS"
+  fi
+
+  # 22. tdd-red-evidence: required_matt_skill=tdd → red must exist or red_not_applicable_reason must exist
+  local tdd_required tdd_red tdd_reason tdd_red_trace
+  tdd_required=$(jget "$f" "matt_evidence_gate.required_skill" 2>/dev/null || echo "")
+  if [[ "$tdd_required" == "tdd" ]]; then
+    tdd_red=$(jget "$f" "work_orders.0.skill_evidence.red" 2>/dev/null || echo "")
+    tdd_reason=$(jget "$f" "work_orders.0.skill_evidence.red_not_applicable_reason" 2>/dev/null || echo "")
+    # Also check skill_trace.claudecode_skills[].evidence.red
+    tdd_red_trace=$(python3 -c "
+import json, sys
+with open('$f') as fh:
+    d = json.load(fh)
+for item in d.get('skill_trace', {}).get('claudecode_skills', []):
+    if isinstance(item, dict) and item.get('name') == 'tdd':
+        ev = item.get('evidence', {})
+        if isinstance(ev, dict) and ev.get('red'):
+            print('found')
+            sys.exit(0)
+print('')
+" 2>/dev/null || echo "")
+    if [[ -z "$tdd_red" && -z "$tdd_reason" && -z "$tdd_red_trace" ]]; then
+      record "tdd-red-evidence" "FAIL"
+    else
+      record "tdd-red-evidence" "PASS"
+    fi
+  else
+    record "tdd-red-evidence" "PASS"
+  fi
+
+  # 23. provenance: M/L run-state must be generated by harness with raw evidence source files.
+  local provenance_bad
+  provenance_bad=$(jprovenance_violation "$f")
+  if [[ "$provenance_bad" == "true" ]]; then
+    record "provenance" "FAIL"
+  else
+    record "provenance" "PASS"
+  fi
+
+  # 24. claudecode-result-contract: ClaudeCode result must not write final acceptance.
+  local claudecode_contract_bad
+  claudecode_contract_bad=$(jclaudecode_result_contract_violation "$f")
+  if [[ "$claudecode_contract_bad" == "true" ]]; then
+    record "claudecode-result-contract" "FAIL"
+  else
+    record "claudecode-result-contract" "PASS"
+  fi
+
+  # 25. tdd-command-log-evidence: M/L TDD needs RED/GREEN in command log summary.
+  local tdd_command_log_bad
+  tdd_command_log_bad=$(jtdd_command_log_violation "$f")
+  if [[ "$tdd_command_log_bad" == "true" ]]; then
+    record "tdd-command-log-evidence" "FAIL"
+  else
+    record "tdd-command-log-evidence" "PASS"
+  fi
+
+  # 26. codex-deferred-pass: deferred Codex must not be reported as PASS.
+  local codex_deferred_pass_bad
+  codex_deferred_pass_bad=$(jcodex_deferred_pass_violation "$f")
+  if [[ "$codex_deferred_pass_bad" == "true" ]]; then
+    record "codex-deferred-pass" "FAIL"
+  else
+    record "codex-deferred-pass" "PASS"
   fi
 }
 

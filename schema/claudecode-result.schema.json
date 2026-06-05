@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/claudecode-result.schema.json",
+  "title": "ClaudeCode Result Contract",
+  "description": "Structured execution receipt submitted by ClaudeCode. It is raw evidence, not final acceptance state.",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "status",
+    "required_matt_skill",
+    "matt_evidence",
+    "files_touched",
+    "commands_run",
+    "blocked",
+    "notes"
+  ],
+  "additionalProperties": true,
+  "not": {
+    "required": ["acceptance"]
+  },
+  "properties": {
+    "work_order_id": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "blocked", "partial"]
+    },
+    "required_matt_skill": {
+      "type": "string",
+      "enum": ["tdd", "diagnose", "prototype", "to-issues", "grill-me", "none"]
+    },
+    "matt_evidence": {
+      "type": "object",
+      "required": [
+        "red",
+        "red_exit_code",
+        "red_not_applicable_reason",
+        "green",
+        "green_exit_code",
+        "commands"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "red": { "type": "string" },
+        "red_exit_code": { "type": ["integer", "null"] },
+        "red_not_applicable_reason": { "type": "string" },
+        "green": { "type": "string" },
+        "green_exit_code": { "type": ["integer", "null"] },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "files_touched": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "commands_run": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blocked": { "type": "boolean" },
+    "notes": { "type": "string" },
+    "codex_deferred": {
+      "type": "object",
+      "properties": {
+        "deferred": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "required": { "type": "boolean" }
+      }
+    }
+  }
+}

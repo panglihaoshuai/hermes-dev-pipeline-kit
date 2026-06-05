@@ -91,7 +91,29 @@ Generated files 被手改且没有 Codex 批准 → **blocking issue**。
 
 ---
 
-## 5. Forbidden Files 越权即 FAIL
+## 5. Evidence Ownership / No Synthetic Run-State
+
+### 机制
+v0.3 将状态生成权从 agent 转移到 harness：
+
+- Hermes / ClaudeCode 只能提交 raw evidence；
+- `scripts/record-command.sh` 记录命令事实；
+- `scripts/generate-run-state.sh` 生成 `generated/run-state.json`；
+- generated run-state 必须包含 provenance；
+- M/L 手写 run-state 不得冒充真实执行。
+
+### 阻塞条件
+M/L run-state 缺少 provenance、`state_source != generated`，或 provenance 未引用 `raw/command-log.jsonl` → **blocking issue**。
+
+ClaudeCode result contract 包含 `acceptance.complete` → **blocking issue**。
+
+TDD 只有文本 RED/GREEN、没有 command log RED/GREEN exit code → **blocking issue**。
+
+Codex deferred 但 Codex verdict 写 PASS → **blocking issue**。
+
+---
+
+## 6. Forbidden Files 越权即 FAIL
 
 ### 机制
 每个 WO 包含：

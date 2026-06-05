@@ -16,26 +16,26 @@
   "report_scale_enforcement": {
     "report_scale": "full",
     "required_sections": [
-      "\u8d1f\u8d23\u4eba\u6458\u8981",
-      "\u9636\u6bb5\u66f4\u65b0",
-      "\u6280\u80fd\u4f7f\u7528\u8bc1\u636e",
-      "\u8d23\u4efb\u5f52\u56e0",
-      "\u5f85\u4f60\u5ba1\u6279",
-      "\u9a8c\u8bc1\u8bc1\u636e",
-      "Codex\u5ba1\u67e5",
-      "\u98ce\u9669\u4e0e\u65e7\u503a",
-      "\u4e0b\u4e00\u6b65"
+      "负责人摘要",
+      "阶段更新",
+      "技能使用证据",
+      "责任归因",
+      "待你审批",
+      "验证证据",
+      "Codex审查",
+      "风险与旧债",
+      "下一步"
     ],
     "present_sections": [
-      "\u8d1f\u8d23\u4eba\u6458\u8981",
-      "\u9636\u6bb5\u66f4\u65b0",
-      "\u6280\u80fd\u4f7f\u7528\u8bc1\u636e",
-      "\u8d23\u4efb\u5f52\u56e0",
-      "\u5f85\u4f60\u5ba1\u6279",
-      "\u9a8c\u8bc1\u8bc1\u636e",
-      "Codex\u5ba1\u67e5",
-      "\u98ce\u9669\u4e0e\u65e7\u503a",
-      "\u4e0b\u4e00\u6b65"
+      "负责人摘要",
+      "阶段更新",
+      "技能使用证据",
+      "责任归因",
+      "待你审批",
+      "验证证据",
+      "Codex审查",
+      "风险与旧债",
+      "下一步"
     ],
     "missing_sections": [],
     "all_present": true
@@ -66,7 +66,19 @@
     {
       "id": "WO-1",
       "required_matt_skill": "tdd",
-      "status": "completed"
+      "status": "completed",
+      "skill_evidence": {
+        "red": "node test.js exit 1",
+        "green": "node test.js exit 0",
+        "commands": [
+          "node test.js",
+          "node test.js"
+        ],
+        "exit_codes": [
+          1,
+          0
+        ]
+      }
     },
     {
       "id": "WO-2",
@@ -76,10 +88,10 @@
   ],
   "skill_trace": {
     "display_language": "zh-CN",
-    "current_phase_label": "\u5b8c\u6210",
+    "current_phase_label": "完成",
     "user_visible_skill_banner": true,
     "clarification_trace": {
-      "why_questions_are_needed": "\u9700\u6c42\u6807\u51c6\u5316"
+      "why_questions_are_needed": "需求标准化"
     },
     "missing_evidence": [],
     "acceptance_impact": "none",
@@ -134,39 +146,39 @@
   "stage_updates": [
     {
       "phase": "intake",
-      "label": "\u9700\u6c42\u6536\u96c6\u4e0e\u5934\u8111\u98ce\u66b4",
+      "label": "需求收集与头脑风暴",
       "status": "done"
     },
     {
       "phase": "planning",
-      "label": "\u65b9\u6848\u8bbe\u8ba1\u4e0e\u8ba1\u5212\u7f16\u5199",
+      "label": "方案设计与计划编写",
       "status": "done"
     },
     {
       "phase": "work_orders",
-      "label": "\u5de5\u5355\u6267\u884c\u4e0e\u9a8c\u8bc1",
+      "label": "工单执行与验证",
       "status": "done"
     },
     {
       "phase": "verification",
-      "label": "Hermes \u9a8c\u8bc1",
+      "label": "Hermes 验证",
       "status": "done"
     },
     {
       "phase": "codex_review",
-      "label": "Codex \u5ba1\u67e5",
+      "label": "Codex 审查",
       "status": "done"
     },
     {
       "phase": "approval",
-      "label": "Commit \u5ba1\u6279",
+      "label": "Commit 审批",
       "status": "waiting"
     }
   ],
   "owner_summary": {
     "task": "build CLI tool",
     "status_color": "green",
-    "current_stage_label": "Commit \u5ba1\u6279",
+    "current_stage_label": "Commit 审批",
     "progress": {
       "intake": "done",
       "planning": "done",
@@ -175,7 +187,7 @@
       "codex_review": "done",
       "approval": "waiting"
     },
-    "largest_risk": "\u7b49\u5f85\u7528\u6237\u6279\u51c6 commit",
+    "largest_risk": "等待用户批准 commit",
     "needs_user_decision": true,
     "next_action": "commit and push",
     "display_language": "zh-CN"
@@ -212,5 +224,32 @@
       "default": "approve",
       "consequence": "changes stay local"
     }
-  ]
+  ],
+  "state_source": "generated",
+  "provenance": {
+    "generated_by": "scripts/generate-run-state.sh",
+    "generated_at": "2026-06-04T00:00:00Z",
+    "generator_version": "0.3.0-fixture",
+    "source_files": [
+      "run-manifest.json",
+      "classification.json",
+      "raw/command-log.jsonl",
+      "raw/claudecode-result.json"
+    ]
+  },
+  "raw_evidence": {
+    "run_manifest": "run-manifest.json",
+    "classification": "classification.json",
+    "command_log": "raw/command-log.jsonl",
+    "claudecode_result": "raw/claudecode-result.json",
+    "claudecode_result_contains_acceptance": false
+  },
+  "command_log_summary": {
+    "source": "raw/command-log.jsonl",
+    "red_exit_code": 1,
+    "green_exit_code": 0,
+    "red_command": "node test.js",
+    "green_command": "node test.js",
+    "tdd_sequence_verified": true
+  }
 }

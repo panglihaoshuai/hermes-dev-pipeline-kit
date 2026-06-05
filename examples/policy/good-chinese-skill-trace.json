@@ -19,14 +19,21 @@
       "required_skill": "tdd",
       "required_matt_skill": "tdd",
       "status": "completed",
-      "files": ["src/export.ts", "tests/export.test.ts"],
+      "files": [
+        "src/export.ts",
+        "tests/export.test.ts"
+      ],
       "retries": 0,
       "skill_evidence": {
         "skill": "tdd",
         "red": "tests/export.test.ts failed before implementation",
         "green": "tests/export.test.ts passed after implementation",
-        "commands": ["npm test -- tests/export.test.ts"],
-        "exit_codes": [0],
+        "commands": [
+          "npm test -- tests/export.test.ts"
+        ],
+        "exit_codes": [
+          0
+        ],
         "zh_summary": "已提供 RED、GREEN 和退出码证据。"
       }
     }
@@ -87,7 +94,10 @@
     {
       "from": "Hermes 验证",
       "to": "Commit 审批",
-      "tools_or_skills": ["dev-pipeline-orchestrator", "policy-check.sh"],
+      "tools_or_skills": [
+        "dev-pipeline-orchestrator",
+        "policy-check.sh"
+      ],
       "goal": "请求用户决定是否提交",
       "next_gate_condition": "用户批准 commit",
       "needs_user_decision": true
@@ -125,7 +135,11 @@
     "user_visible_skill_banner": true,
     "clarification_trace": {
       "stage_label": "需求澄清与关键问题确认",
-      "skills_used": ["dev-pipeline-orchestrator", "Simple Prompt Intake", "writing-plans"],
+      "skills_used": [
+        "dev-pipeline-orchestrator",
+        "Simple Prompt Intake",
+        "writing-plans"
+      ],
       "why_questions_are_needed": "问题会影响导出范围和后续 ClaudeCode 工单边界。",
       "next_stage_label": "方案设计与计划编写"
     },
@@ -149,8 +163,12 @@
         "evidence": {
           "red": "tests/export.test.ts failed before implementation",
           "green": "tests/export.test.ts passed after implementation",
-          "commands": ["npm test -- tests/export.test.ts"],
-          "exit_codes": [0],
+          "commands": [
+            "npm test -- tests/export.test.ts"
+          ],
+          "exit_codes": [
+            0
+          ],
           "zh_summary": "已提供 RED、GREEN 和退出码证据。"
         },
         "verdict": "PASS"
@@ -192,7 +210,38 @@
     "delegated": true
   },
   "verification_exit_codes": [
-    {"command": "npm test", "exit_code": 0, "pass": true}
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "pass": true
+    }
   ],
-  "follow_up_backlog": []
+  "follow_up_backlog": [],
+  "state_source": "generated",
+  "provenance": {
+    "generated_by": "scripts/generate-run-state.sh",
+    "generated_at": "2026-06-04T00:00:00Z",
+    "generator_version": "0.3.0-fixture",
+    "source_files": [
+      "run-manifest.json",
+      "classification.json",
+      "raw/command-log.jsonl",
+      "raw/claudecode-result.json"
+    ]
+  },
+  "raw_evidence": {
+    "run_manifest": "run-manifest.json",
+    "classification": "classification.json",
+    "command_log": "raw/command-log.jsonl",
+    "claudecode_result": "raw/claudecode-result.json",
+    "claudecode_result_contains_acceptance": false
+  },
+  "command_log_summary": {
+    "source": "raw/command-log.jsonl",
+    "red_exit_code": 1,
+    "green_exit_code": 0,
+    "red_command": "node test.js",
+    "green_command": "node test.js",
+    "tdd_sequence_verified": true
+  }
 }

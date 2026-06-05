@@ -1,0 +1,235 @@
+{
+  "run_id": "fixture-v03",
+  "project": "fixture-project",
+  "mode": "auto_run",
+  "current_gate": "Gate 8: generated evidence report",
+  "classification": {
+    "scale": "M",
+    "reasons": [
+      "v0.3 fixture"
+    ],
+    "risk_level": "medium"
+  },
+  "work_orders": [
+    {
+      "id": "WO-1",
+      "owner": "ClaudeCode",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "required_matt_skill": "tdd",
+      "status": "completed",
+      "files": [
+        "add.js",
+        "test.js"
+      ],
+      "retries": 0,
+      "skill_evidence": {
+        "red": "node test.js exited 1",
+        "red_exit_code": 1,
+        "red_not_applicable_reason": "",
+        "green": "node test.js exited 0",
+        "green_exit_code": 0,
+        "commands": [
+          "node test.js",
+          "node test.js"
+        ],
+        "exit_codes": [
+          1,
+          0
+        ],
+        "source": "raw/command-log.jsonl"
+      }
+    }
+  ],
+  "allowed_files": [
+    "add.js",
+    "test.js"
+  ],
+  "forbidden_files": [
+    ".env",
+    "secrets.json"
+  ],
+  "modified_files": [
+    "add.js",
+    "test.js"
+  ],
+  "command_evidence": [
+    {
+      "command": "node test.js",
+      "exit_code": 1,
+      "key_output": "RED expected failure",
+      "pass_fail": "FAIL"
+    },
+    {
+      "command": "node test.js",
+      "exit_code": 0,
+      "key_output": "GREEN pass",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tadd.js\nM\ttest.js",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "approval_gates": {
+    "commit_approved": false,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "report_scale": "standard",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "v0.3 generated run-state fixture",
+    "status_color": "yellow",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "done",
+      "planning": "done",
+      "work_order_split": "done",
+      "execution": "done",
+      "verification": "done",
+      "codex_review": "not_required",
+      "approval": "none"
+    },
+    "largest_risk": "TDD RED is expected failure",
+    "needs_user_decision": false,
+    "next_action": "policy-check"
+  },
+  "stage_updates": [
+    {
+      "from": "raw evidence collection",
+      "to": "generated run-state",
+      "tools_or_skills": [
+        "scripts/generate-run-state.sh"
+      ],
+      "goal": "derive state from raw evidence",
+      "next_gate_condition": "policy-check",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "TDD RED",
+      "owner": "Hermes",
+      "status": "failed",
+      "evidence": "raw/command-log.jsonl",
+      "blocking": false,
+      "failure_owner": "Expected TDD RED"
+    },
+    {
+      "item": "TDD GREEN",
+      "owner": "Hermes",
+      "status": "completed",
+      "evidence": "raw/command-log.jsonl",
+      "blocking": false,
+      "failure_owner": ""
+    }
+  ],
+  "approval_inbox": [],
+  "baseline_debt": [],
+  "follow_up_backlog": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "证据报告输出",
+    "user_visible_skill_banner": true,
+    "hermes_skills": [
+      {
+        "name": "dev-pipeline-orchestrator",
+        "planned": true,
+        "used": true,
+        "evidence": "generated run-state fixture",
+        "verdict": "PASS"
+      }
+    ],
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "evidence": {
+          "red": "node test.js exited 1",
+          "green": "node test.js exited 0",
+          "commands": [
+            "node test.js",
+            "node test.js"
+          ],
+          "exit_codes": [
+            1,
+            0
+          ]
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "codex_gates": [],
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "claudecode_delegation": {
+    "delegated": true,
+    "waiver": false,
+    "waiver_reason": ""
+  },
+  "matt_evidence_gate": {
+    "required_skill": "tdd",
+    "evidence_present": true,
+    "evidence_type": "tdd",
+    "blocking": true
+  },
+  "codex_deferred": {
+    "deferred": false,
+    "reason": "",
+    "required": false
+  },
+  "vague_task": false,
+  "verification_exit_codes": [
+    {
+      "command": "node test.js",
+      "exit_code": 0,
+      "pass": true
+    }
+  ],
+  "self_improvement_side_effect": false,
+  "explicit_user_approval": false,
+  "command_log_summary": {
+    "source": "raw/command-log.jsonl",
+    "red_exit_code": 1,
+    "green_exit_code": 0,
+    "red_command": "node test.js",
+    "green_command": "node test.js",
+    "tdd_sequence_verified": true
+  },
+  "raw_evidence": {
+    "run_manifest": "run-manifest.json",
+    "classification": "classification.json",
+    "command_log": "raw/command-log.jsonl",
+    "claudecode_result": "raw/claudecode-result.json",
+    "claudecode_result_contains_acceptance": false
+  },
+  "state_source": "generated",
+  "provenance": {
+    "generated_by": "scripts/generate-run-state.sh",
+    "generated_at": "2026-06-04T00:00:00Z",
+    "generator_version": "0.3.0-fixture",
+    "source_files": [
+      "run-manifest.json",
+      "classification.json",
+      "raw/command-log.jsonl",
+      "raw/claudecode-result.json"
+    ]
+  }
+}

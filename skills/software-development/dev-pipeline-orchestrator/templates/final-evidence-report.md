@@ -2,6 +2,14 @@
 
 # Dev Pipeline Evidence Report
 
+For v0.3 M/L tasks, prefer generating this report with:
+
+```bash
+scripts/final-report.sh <run-dir>/generated/run-state.json
+```
+
+Do not treat a hand-written final report as runtime evidence unless it references a generated run-state with provenance.
+
 <!--
 Chinese Report Scale Policy:
 - report_scale: compact for S-level small fixes.
@@ -339,3 +347,10 @@ Choose exactly one:
 | | | PASS/FAIL | 是/否 |
 
 M/L tasks: tests_pass=true requires exit code evidence. Missing exit code with acceptance.complete=true is a blocking violation.
+
+## Evidence Consistency Status
+
+- TDD RED/GREEN evidence: present / missing / not_applicable
+- Acceptance-evidence consistency: consistent / inconsistent
+- Codex deferred status: deferred / not_required / complete
+- Self-improvement side effects: none / pending_approval

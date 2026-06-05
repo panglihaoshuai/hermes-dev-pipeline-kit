@@ -5,7 +5,10 @@
   "current_gate": "Gate 8",
   "classification": {
     "scale": "L",
-    "reasons": ["API/store/UI feature slice", "Codex plan and diff review required"],
+    "reasons": [
+      "API/store/UI feature slice",
+      "Codex plan and diff review required"
+    ],
     "risk_level": "high"
   },
   "work_orders": [
@@ -17,17 +20,35 @@
       "skill_evidence": {
         "red": "feature test failed before implementation",
         "green": "feature test passed after implementation",
-        "commands": ["npm test -- feature"],
-        "exit_codes": [0]
+        "commands": [
+          "npm test -- feature"
+        ],
+        "exit_codes": [
+          0
+        ]
       },
       "status": "completed",
-      "files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
+      "files": [
+        "src/api/feature.ts",
+        "src/store/feature.ts",
+        "src/ui/Feature.tsx"
+      ],
       "retries": 0
     }
   ],
-  "allowed_files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
-  "forbidden_files": [".env"],
-  "modified_files": ["src/api/feature.ts", "src/store/feature.ts", "src/ui/Feature.tsx"],
+  "allowed_files": [
+    "src/api/feature.ts",
+    "src/store/feature.ts",
+    "src/ui/Feature.tsx"
+  ],
+  "forbidden_files": [
+    ".env"
+  ],
+  "modified_files": [
+    "src/api/feature.ts",
+    "src/store/feature.ts",
+    "src/ui/Feature.tsx"
+  ],
   "command_evidence": [
     {
       "command": "npm test -- feature",
@@ -83,7 +104,10 @@
     {
       "from": "方案设计与计划编写",
       "to": "Codex 计划审查",
-      "tools_or_skills": ["dev-pipeline-orchestrator", "Codex plan review"],
+      "tools_or_skills": [
+        "dev-pipeline-orchestrator",
+        "Codex plan review"
+      ],
       "goal": "验证 L 级计划风险",
       "next_gate_condition": "Codex plan PASS",
       "needs_user_decision": false
@@ -91,7 +115,9 @@
     {
       "from": "Hermes 验证",
       "to": "Codex 代码变更审查",
-      "tools_or_skills": ["Codex diff review"],
+      "tools_or_skills": [
+        "Codex diff review"
+      ],
       "goal": "验证最终 diff",
       "next_gate_condition": "Codex diff PASS",
       "needs_user_decision": false
@@ -139,8 +165,12 @@
         "evidence": {
           "red": "feature test failed before implementation",
           "green": "feature test passed after implementation",
-          "commands": ["npm test -- feature"],
-          "exit_codes": [0]
+          "commands": [
+            "npm test -- feature"
+          ],
+          "exit_codes": [
+            0
+          ]
         },
         "verdict": "PASS"
       }
@@ -178,7 +208,38 @@
     "delegated": true
   },
   "verification_exit_codes": [
-    {"command": "npm test", "exit_code": 0, "pass": true}
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "pass": true
+    }
   ],
-  "follow_up_backlog": []
+  "follow_up_backlog": [],
+  "state_source": "generated",
+  "provenance": {
+    "generated_by": "scripts/generate-run-state.sh",
+    "generated_at": "2026-06-04T00:00:00Z",
+    "generator_version": "0.3.0-fixture",
+    "source_files": [
+      "run-manifest.json",
+      "classification.json",
+      "raw/command-log.jsonl",
+      "raw/claudecode-result.json"
+    ]
+  },
+  "raw_evidence": {
+    "run_manifest": "run-manifest.json",
+    "classification": "classification.json",
+    "command_log": "raw/command-log.jsonl",
+    "claudecode_result": "raw/claudecode-result.json",
+    "claudecode_result_contains_acceptance": false
+  },
+  "command_log_summary": {
+    "source": "raw/command-log.jsonl",
+    "red_exit_code": 1,
+    "green_exit_code": 0,
+    "red_command": "node test.js",
+    "green_command": "node test.js",
+    "tdd_sequence_verified": true
+  }
 }

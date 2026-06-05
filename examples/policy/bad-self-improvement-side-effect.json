@@ -1,0 +1,41 @@
+{
+  "mode": "auto_run",
+  "classification": {
+    "scale": "S",
+    "reason": "single file fix"
+  },
+  "self_improvement_side_effect": true,
+  "acceptance": {
+    "complete": true
+  },
+  "verification": {
+    "tests_pass": true
+  },
+  "verification_exit_codes": [
+    {"command": "node test.js", "exit_code": 0, "pass": true}
+  ],
+  "work_orders": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "完成",
+    "user_visible_skill_banner": true,
+    "clarification_trace": {"why_questions_are_needed": "需求标准化"},
+    "missing_evidence": [],
+    "acceptance_impact": "none",
+    "claudecode_skills": [],
+    "codex_gates": []
+  },
+  "owner_summary": {
+    "display_language": "zh-CN",
+    "task": "fix typo",
+    "status_color": "green",
+    "current_stage_label": "完成",
+    "progress": {"intake": "done", "planning": "done", "work_orders": "done", "verification": "done", "codex_review": "done", "approval": "done"},
+    "largest_risk": "无",
+    "needs_user_decision": false,
+    "next_action": "commit"
+  },
+  "stage_updates": [{"phase": "intake", "label": "需求收集", "status": "done"}],
+  "responsibility_trace": [{"item": "implementation", "owner": "Hermes", "status": "done"}],
+  "approval_inbox": []
+}

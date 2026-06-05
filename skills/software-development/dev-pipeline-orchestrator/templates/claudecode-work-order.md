@@ -105,9 +105,54 @@ Skill reason examples:
 - For `to-issues`, output the issue slices and dependencies.
 - For `grill-me`, output the decision branches resolved.
 
+## TDD Evidence Requirements (when required_matt_skill=tdd)
+
+1. RED phase: Create test, run test, record failure (exit code != 0)
+2. GREEN phase: Implement, run test, record success (exit code = 0)
+3. If RED is not applicable, provide `red_not_applicable_reason`
+4. Output: commands, exit codes, expected failures
+
 ClaudeCode must not merely say "used tdd". It must provide evidence matching the skill.
 
 If the required Matt skill evidence is missing, Hermes must return the work order as PARTIAL/FAIL unless explicitly waived with reason.
+
+## ClaudeCode Result Contract (v0.3)
+
+ClaudeCode must submit raw execution receipt data as `raw/claudecode-result.json` or return exactly equivalent JSON for Hermes to place there.
+
+Minimum shape:
+
+```json
+{
+  "work_order_id": "WO-1",
+  "status": "completed|blocked|partial",
+  "required_matt_skill": "tdd|diagnose|prototype|to-issues|grill-me|none",
+  "matt_evidence": {
+    "red": "",
+    "red_exit_code": null,
+    "red_not_applicable_reason": "",
+    "green": "",
+    "green_exit_code": null,
+    "commands": []
+  },
+  "files_touched": [],
+  "commands_run": [],
+  "blocked": false,
+  "notes": ""
+}
+```
+
+Forbidden in ClaudeCode result:
+
+```json
+{
+  "acceptance": {
+    "complete": true
+  }
+}
+```
+
+ClaudeCode submits raw evidence only. Harness generates `generated/run-state.json`.
 
 ## ClaudeCode Plugin Routing
 
