@@ -43,6 +43,14 @@ SKILL_NAMES=(
     "dev-pipeline-report"
 )
 
+HARNESS_SCRIPT_NAMES=(
+    "run-init.sh"
+    "record-command.sh"
+    "generate-run-state.sh"
+    "final-report.sh"
+    "policy-check.sh"
+)
+
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 DELEGATION_PROTOCOL_SOURCE="$KIT_ROOT/protocols/claude-delegation-protocol.md"
 
@@ -103,6 +111,32 @@ install_skill() {
         cp -R "$src" "$dst"
         echo "[install] Copied: $skill_name → $dst"
     fi
+}
+
+install_harness_scripts() {
+    local bin_dir="$TARGET_PARENT/dev-pipeline-orchestrator/bin"
+
+    echo ""
+    echo "--- Installing v0.3 evidence harness scripts ---"
+
+    for script in "${HARNESS_SCRIPT_NAMES[@]}"; do
+        local src="$KIT_ROOT/scripts/$script"
+        local dst="$bin_dir/$script"
+
+        if [[ ! -f "$src" ]]; then
+            echo "[ERROR] Required harness script not found: $src"
+            exit 1
+        fi
+
+        if [[ $DRY_RUN -eq 1 ]]; then
+            echo "[DRY-RUN] Would copy $src → $dst and chmod +x"
+        else
+            mkdir -p "$bin_dir"
+            cp "$src" "$dst"
+            chmod 755 "$dst"
+            echo "[install] Copied harness script: $script → $dst"
+        fi
+    done
 }
 
 check_delegation_protocol() {
@@ -171,6 +205,7 @@ echo "--- Installing skills ---"
 for skill in "${SKILL_NAMES[@]}"; do
     install_skill "$skill"
 done
+install_harness_scripts
 
 # 4. Check delegation protocol
 check_delegation_protocol
@@ -191,6 +226,11 @@ for skill in "${SKILL_NAMES[@]}"; do
         echo "  [--] $skill (dry-run mode)"
     fi
 done
+if [[ $DRY_RUN -eq 1 ]]; then
+    echo "  [dry-run] v0.3 evidence harness scripts (would be installed to dev-pipeline-orchestrator/bin)"
+else
+    echo "  [ok] v0.3 evidence harness scripts"
+fi
 echo ""
 echo "No global dependencies were installed."
 echo "No secrets were written."

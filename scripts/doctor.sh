@@ -45,6 +45,19 @@ check_optional() {
     fi
 }
 
+check_core_executable() {
+    local label="$1"
+    local path="$2"
+    if [[ -f "$path" && -x "$path" ]]; then
+        echo "  PASS  $label"
+        core_pass=$((core_pass + 1))
+    else
+        echo "  FAIL  $label"
+        echo "        ($path — not found or not executable)"
+        core_fail=$((core_fail + 1))
+    fi
+}
+
 # --- Header ------------------------------------------------------------------
 
 echo "========================================"
@@ -57,27 +70,43 @@ echo ""
 echo "--- Core Skill Files ---"
 
 if [[ -d "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator" ]]; then
+    INSTALLED_ORCHESTRATOR="$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator"
     check_core \
         "dev-pipeline-orchestrator SKILL.md" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/SKILL.md"
+        "$INSTALLED_ORCHESTRATOR/SKILL.md"
     check_core \
         "dev-pipeline-report SKILL.md" \
         "$HERMES_SKILLS_DIR/software-development/dev-pipeline-report/SKILL.md"
     check_core \
         "claudecode-work-order.md template" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/templates/claudecode-work-order.md"
+        "$INSTALLED_ORCHESTRATOR/templates/claudecode-work-order.md"
     check_core \
         "codex-plan-review.md template" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/templates/codex-plan-review.md"
+        "$INSTALLED_ORCHESTRATOR/templates/codex-plan-review.md"
     check_core \
         "codex-diff-review.md template" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/templates/codex-diff-review.md"
+        "$INSTALLED_ORCHESTRATOR/templates/codex-diff-review.md"
     check_core \
         "hermes-verification-report.md template" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/templates/hermes-verification-report.md"
+        "$INSTALLED_ORCHESTRATOR/templates/hermes-verification-report.md"
     check_core \
         "final-evidence-report.md template" \
-        "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator/templates/final-evidence-report.md"
+        "$INSTALLED_ORCHESTRATOR/templates/final-evidence-report.md"
+    check_core_executable \
+        "installed run-init.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/run-init.sh"
+    check_core_executable \
+        "installed record-command.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/record-command.sh"
+    check_core_executable \
+        "installed generate-run-state.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/generate-run-state.sh"
+    check_core_executable \
+        "installed final-report.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/final-report.sh"
+    check_core_executable \
+        "installed policy-check.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/policy-check.sh"
 else
     # Not installed yet — check kit source files instead
     echo "  [info] Skills not yet installed. Checking kit source files..."
