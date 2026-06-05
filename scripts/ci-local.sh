@@ -165,6 +165,7 @@ main() {
   bash scripts/smoke/smoke-publish-lane-stop.sh
   bash scripts/smoke/smoke-generated-run-state.sh
   bash scripts/smoke/smoke-installed-evidence-harness.sh
+  bash scripts/smoke/smoke-real-task-medium.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

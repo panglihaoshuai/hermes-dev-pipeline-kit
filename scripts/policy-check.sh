@@ -1072,11 +1072,14 @@ check_run_state() {
     record "scale-classification" "PASS"
   fi
 
-  # 13. ml-delegation: M/L must have ClaudeCode delegation or waiver
-  local ml_delegated ml_waiver
+  # 13. ml-delegation: M/L must have ClaudeCode delegation or waiver.
+  # For generated evidence runs, delegation requires raw/claudecode-result.json.
+  local ml_delegated ml_waiver ml_raw_result ml_contract_valid
   ml_delegated=$(jget "$f" "claudecode_delegation.delegated" 2>/dev/null || echo "false")
   ml_waiver=$(jget "$f" "claudecode_delegation.waiver" 2>/dev/null || echo "false")
-  if [[ ("$scale_val" == "M" || "$scale_val" == "L") && "$ml_delegated" != "true" && "$ml_waiver" != "true" ]]; then
+  ml_raw_result=$(jget "$f" "raw_evidence.claudecode_result" 2>/dev/null || echo "")
+  ml_contract_valid=$(jget "$f" "raw_evidence.claudecode_result_contract_valid" 2>/dev/null || echo "")
+  if [[ ("$scale_val" == "M" || "$scale_val" == "L") && "$ml_waiver" != "true" && ( "$ml_delegated" != "true" || -z "$ml_raw_result" || "$ml_contract_valid" == "false" ) ]]; then
     record "ml-delegation" "FAIL"
   else
     record "ml-delegation" "PASS"
@@ -1205,7 +1208,9 @@ print('')
   # 24. claudecode-result-contract: ClaudeCode result must not write final acceptance.
   local claudecode_contract_bad
   claudecode_contract_bad=$(jclaudecode_result_contract_violation "$f")
-  if [[ "$claudecode_contract_bad" == "true" ]]; then
+  local claudecode_contract_valid
+  claudecode_contract_valid=$(jget "$f" "raw_evidence.claudecode_result_contract_valid" 2>/dev/null || echo "")
+  if [[ "$claudecode_contract_bad" == "true" || "$claudecode_contract_valid" == "false" ]]; then
     record "claudecode-result-contract" "FAIL"
   else
     record "claudecode-result-contract" "PASS"

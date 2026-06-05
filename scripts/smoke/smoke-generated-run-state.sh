@@ -10,7 +10,7 @@ mkdir -p "$TMP_ROOT/work"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 cat > "$TMP_ROOT/task.md" <<'EOF'
-Add a tiny add.js implementation with TDD evidence.
+Add a tiny todo store implementation with TDD evidence.
 EOF
 
 RUN_DIR="$("$REPO_ROOT/scripts/run-init.sh" \
@@ -22,11 +22,20 @@ RUN_DIR="$("$REPO_ROOT/scripts/run-init.sh" \
   --scale "M" \
   --project "generated-run-state-smoke")"
 
-cat > "$TMP_ROOT/work/test.js" <<'EOF'
-const { add } = require("./add");
+mkdir -p "$TMP_ROOT/work/src"
 
-if (add(1, 2) !== 3) {
-  throw new Error("add(1, 2) should equal 3");
+cat > "$TMP_ROOT/work/test.js" <<'EOF'
+const { createTodoStore } = require("./src/todo");
+
+const store = createTodoStore();
+store.add("write test first");
+
+if (store.list().length !== 1) {
+  throw new Error("todo should be added");
+}
+
+if (store.list()[0].title !== "write test first") {
+  throw new Error("todo title should be preserved");
 }
 EOF
 
@@ -36,16 +45,44 @@ if "$REPO_ROOT/scripts/record-command.sh" \
   --step-id "red" \
   --phase "RED" \
   -- node test.js; then
-  echo "FAIL: RED phase should fail before add.js exists"
+  echo "FAIL: RED phase should fail before src/todo.js exists"
   exit 1
 fi
 
-cat > "$TMP_ROOT/work/add.js" <<'EOF'
-function add(a, b) {
-  return a + b;
+cat > "$TMP_ROOT/work/src/store.js" <<'EOF'
+function createStore() {
+  const items = [];
+
+  return {
+    add(item) {
+      items.push(item);
+    },
+    list() {
+      return [...items];
+    },
+  };
 }
 
-module.exports = { add };
+module.exports = { createStore };
+EOF
+
+cat > "$TMP_ROOT/work/src/todo.js" <<'EOF'
+const { createStore } = require("./store");
+
+function createTodoStore() {
+  const store = createStore();
+
+  return {
+    add(title) {
+      store.add({ title, completed: false });
+    },
+    list() {
+      return store.list();
+    },
+  };
+}
+
+module.exports = { createTodoStore };
 EOF
 
 "$REPO_ROOT/scripts/record-command.sh" \
@@ -56,7 +93,8 @@ EOF
   -- node test.js
 
 cat > "$RUN_DIR/raw/files-touched.txt" <<'EOF'
-add.js
+src/store.js
+src/todo.js
 test.js
 EOF
 
@@ -66,10 +104,10 @@ cat > "$RUN_DIR/raw/claudecode-result.json" <<'EOF'
   "status": "completed",
   "required_matt_skill": "tdd",
   "matt_evidence": {
-    "red": "node test.js failed before add.js existed",
+    "red": "node test.js failed before src/todo.js existed",
     "red_exit_code": 1,
     "red_not_applicable_reason": "",
-    "green": "node test.js passed after add.js implementation",
+    "green": "node test.js passed after src/store.js and src/todo.js implementation",
     "green_exit_code": 0,
     "commands": [
       "node test.js",
@@ -77,7 +115,8 @@ cat > "$RUN_DIR/raw/claudecode-result.json" <<'EOF'
     ]
   },
   "files_touched": [
-    "add.js",
+    "src/store.js",
+    "src/todo.js",
     "test.js"
   ],
   "commands_run": [

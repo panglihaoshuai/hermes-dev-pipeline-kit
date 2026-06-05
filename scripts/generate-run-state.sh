@@ -86,7 +86,59 @@ classification = load_json(classification_path, {
     "reasons": ["classification.json missing; generator defaulted to S"],
     "risk_level": "low",
 })
-claude_result = load_json(claude_result_path, {})
+raw_claude_result = load_json(claude_result_path, {})
+
+
+def valid_claudecode_result(value):
+    if not isinstance(value, dict) or not value:
+        return False
+    if "acceptance" in value:
+        return False
+    required = {
+        "work_order_id",
+        "status",
+        "required_matt_skill",
+        "matt_evidence",
+        "files_touched",
+        "commands_run",
+        "blocked",
+        "notes",
+    }
+    if not required.issubset(value):
+        return False
+    if value.get("status") not in {"completed", "blocked", "partial"}:
+        return False
+    if value.get("required_matt_skill") not in {"tdd", "diagnose", "prototype", "to-issues", "grill-me", "none"}:
+        return False
+    if not isinstance(value.get("files_touched"), list):
+        return False
+    if not isinstance(value.get("commands_run"), list):
+        return False
+    if not isinstance(value.get("blocked"), bool):
+        return False
+    if not isinstance(value.get("notes"), str):
+        return False
+    matt = value.get("matt_evidence")
+    if not isinstance(matt, dict):
+        return False
+    if value.get("required_matt_skill") == "tdd":
+        matt_required = {
+            "red",
+            "red_exit_code",
+            "red_not_applicable_reason",
+            "green",
+            "green_exit_code",
+            "commands",
+        }
+        if not matt_required.issubset(matt):
+            return False
+        if not isinstance(matt.get("commands"), list):
+            return False
+    return True
+
+
+claude_contract_valid = valid_claudecode_result(raw_claude_result)
+claude_result = raw_claude_result if claude_contract_valid else {}
 
 command_log = []
 if command_log_path.exists():
@@ -357,7 +409,7 @@ state = {
         "acceptance_impact": "none" if evidence_present else "blocking",
     },
     "claudecode_delegation": {
-        "delegated": bool(claude_result),
+        "delegated": bool(claude_contract_valid),
         "waiver": False,
         "waiver_reason": "",
     },
@@ -388,8 +440,9 @@ state = {
         "run_manifest": "run-manifest.json",
         "classification": "classification.json",
         "command_log": "raw/command-log.jsonl",
-        "claudecode_result": "raw/claudecode-result.json" if claude_result else "",
-        "claudecode_result_contains_acceptance": "acceptance" in claude_result,
+        "claudecode_result": "raw/claudecode-result.json" if claude_result_path.exists() else "",
+        "claudecode_result_contains_acceptance": isinstance(raw_claude_result, dict) and "acceptance" in raw_claude_result,
+        "claudecode_result_contract_valid": bool(claude_contract_valid),
     },
     "state_source": "generated",
     "provenance": {
