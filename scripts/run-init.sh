@@ -19,6 +19,8 @@ Creates:
 EOF
 }
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 ROOT=""
 TASK_FILE=""
 RUN_ID=""
@@ -88,6 +90,7 @@ mkdir -p \
 cp "$TASK_FILE" "$RUN_DIR/task.md"
 : > "$RUN_DIR/raw/command-log.jsonl"
 : > "$RUN_DIR/raw/files-touched.txt"
+: > "$RUN_DIR/events.jsonl"
 
 CREATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
@@ -138,5 +141,29 @@ work_order = {
     encoding="utf-8",
 )
 PY
+
+cat > "$RUN_DIR/state.json" <<EOF
+{
+  "run_id": "$RUN_ID",
+  "current_state": "NONE",
+  "last_event_hash": "",
+  "event_count": 0,
+  "updated_at": "$CREATED_AT"
+}
+EOF
+
+"$SCRIPT_DIR/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type RUN_INIT \
+  --actor harness \
+  --state-after RUN_INITIALIZED \
+  --artifact run-manifest.json >/dev/null
+
+"$SCRIPT_DIR/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type CLASSIFICATION_RECORDED \
+  --actor harness \
+  --state-after CLASSIFIED \
+  --artifact classification.json >/dev/null
 
 echo "$RUN_DIR"

@@ -93,6 +93,15 @@ if [[ -d "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator" ]];
         "final-evidence-report.md template" \
         "$INSTALLED_ORCHESTRATOR/templates/final-evidence-report.md"
     check_core_executable \
+        "installed append-event.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/append-event.sh"
+    check_core_executable \
+        "installed transition-check.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/transition-check.sh"
+    check_core_executable \
+        "installed replay-run.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/replay-run.sh"
+    check_core_executable \
         "installed run-init.sh" \
         "$INSTALLED_ORCHESTRATOR/bin/run-init.sh"
     check_core_executable \
@@ -128,15 +137,25 @@ check_core "uninstall.sh" "$KIT_ROOT/scripts/uninstall.sh"
 check_core "install-deps.sh" "$KIT_ROOT/scripts/install-deps.sh"
 check_core "doctor.sh" "$KIT_ROOT/scripts/doctor.sh"
 check_core "ci-local.sh" "$KIT_ROOT/scripts/ci-local.sh"
+check_core "append-event.sh" "$KIT_ROOT/scripts/append-event.sh"
+check_core "transition-check.sh" "$KIT_ROOT/scripts/transition-check.sh"
+check_core "replay-run.sh" "$KIT_ROOT/scripts/replay-run.sh"
 check_core "run-init.sh" "$KIT_ROOT/scripts/run-init.sh"
 check_core "record-command.sh" "$KIT_ROOT/scripts/record-command.sh"
 check_core "generate-run-state.sh" "$KIT_ROOT/scripts/generate-run-state.sh"
 check_core "final-report.sh" "$KIT_ROOT/scripts/final-report.sh"
 check_core "smoke-generated-run-state.sh" "$KIT_ROOT/scripts/smoke/smoke-generated-run-state.sh"
+check_core "smoke-state-machine-medium.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-medium.sh"
+check_core "smoke-state-machine-tamper.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-tamper.sh"
 check_core "run-manifest.schema.json" "$KIT_ROOT/schema/run-manifest.schema.json"
 check_core "command-log.schema.json" "$KIT_ROOT/schema/command-log.schema.json"
 check_core "claudecode-result.schema.json" "$KIT_ROOT/schema/claudecode-result.schema.json"
 check_core "generated-run-state.schema.json" "$KIT_ROOT/schema/generated-run-state.schema.json"
+check_core "event.schema.json" "$KIT_ROOT/schema/event.schema.json"
+check_core "state.schema.json" "$KIT_ROOT/schema/state.schema.json"
+check_core "state-machine.schema.json" "$KIT_ROOT/schema/state-machine.schema.json"
+check_core "replay-result.schema.json" "$KIT_ROOT/schema/replay-result.schema.json"
+check_core "artifact-manifest.schema.json" "$KIT_ROOT/schema/artifact-manifest.schema.json"
 check_core "protocols/claude-delegation-protocol.md" "$KIT_ROOT/protocols/claude-delegation-protocol.md"
 check_core "docs/agent-install.md" "$KIT_ROOT/docs/agent-install.md"
 

@@ -1,0 +1,295 @@
+{
+  "run_id": "fixture-v04",
+  "project": "fixture-v04",
+  "mode": "auto_run",
+  "current_gate": "Gate 8: generated evidence report",
+  "classification": {
+    "scale": "M",
+    "reasons": [
+      "Initialized by scripts/run-init.sh as M-level feature task"
+    ],
+    "risk_level": "medium"
+  },
+  "work_orders": [
+    {
+      "id": "WO-1",
+      "owner": "ClaudeCode",
+      "required_skill": "hermes-dev-pipeline-kit",
+      "required_matt_skill": "tdd",
+      "status": "completed",
+      "files": [
+        "src/store.js",
+        "src/todo.js",
+        "test.js"
+      ],
+      "retries": 0,
+      "skill_evidence": {
+        "red": "node test.js exited 1",
+        "red_exit_code": 1,
+        "red_not_applicable_reason": "",
+        "green": "node test.js exited 0",
+        "green_exit_code": 0,
+        "commands": [
+          "node test.js",
+          "node test.js"
+        ],
+        "exit_codes": [
+          1,
+          0
+        ],
+        "source": "raw/command-log.jsonl"
+      }
+    }
+  ],
+  "allowed_files": [
+    "src/store.js",
+    "src/todo.js",
+    "test.js"
+  ],
+  "forbidden_files": [
+    ".env",
+    "secrets.json",
+    "~/.hermes",
+    "~/.claude"
+  ],
+  "modified_files": [
+    "src/store.js",
+    "src/todo.js",
+    "test.js"
+  ],
+  "generated_files": [],
+  "generation_command_evidence": false,
+  "command_evidence": [
+    {
+      "command": "node test.js",
+      "exit_code": 1,
+      "key_output": "node:internal/modules/cjs/loader:1478   throw err;   ^  Error: Cannot find module './src/todo' Require stack: - /private/tmp/hermes-v04-fixture.2t3DPy/project/test.js     at Module._resolveFilename (node:internal/modules/cjs/loader:1475:15)",
+      "pass_fail": "FAIL"
+    },
+    {
+      "command": "node test.js",
+      "exit_code": 0,
+      "key_output": "phase=GREEN",
+      "pass_fail": "PASS"
+    }
+  ],
+  "codex": {
+    "plan_review_verdict": "NOT_REQUIRED",
+    "diff_review_verdict": "NOT_REQUIRED",
+    "disabled_by_user": false
+  },
+  "verification": {
+    "git_diff_name_status": "M\tsrc/store.js\nM\tsrc/todo.js\nM\ttest.js",
+    "git_diff_check_exit": 0,
+    "tests_pass": true,
+    "typecheck_exit": null
+  },
+  "acceptance": {
+    "complete": true,
+    "final_decision": "ACCEPTED"
+  },
+  "approval_gates": {
+    "commit_approved": false,
+    "push_approved": false,
+    "pr_approved": false,
+    "repo_create_approved": false
+  },
+  "report_scale": "standard",
+  "owner_summary_required": true,
+  "stage_update_required": true,
+  "responsibility_trace_required": true,
+  "approval_inbox_required": false,
+  "owner_summary": {
+    "task": "Fixture M task",
+    "status_color": "yellow",
+    "current_stage_label": "证据报告输出",
+    "progress": {
+      "intake": "完成",
+      "planning": "完成",
+      "work_order_split": "完成",
+      "execution": "完成",
+      "verification": "完成",
+      "codex_review": "不需要",
+      "approval": "未请求"
+    },
+    "largest_risk": "TDD RED is expected failure and must be interpreted through command_log_summary",
+    "needs_user_decision": false,
+    "next_action": "Review generated/final-report.md; commit/push still requires approval"
+  },
+  "stage_updates": [
+    {
+      "from": "raw evidence collection",
+      "to": "generated run-state",
+      "tools_or_skills": [
+        "scripts/generate-run-state.sh",
+        "scripts/record-command.sh"
+      ],
+      "goal": "从原始命令日志和 ClaudeCode result contract 派生状态",
+      "next_gate_condition": "policy-check must validate generated/run-state.json",
+      "needs_user_decision": false
+    }
+  ],
+  "responsibility_trace": [
+    {
+      "item": "raw command execution",
+      "owner": "Hermes",
+      "status": "completed",
+      "evidence": "raw/command-log.jsonl",
+      "blocking": false,
+      "failure_owner": "Expected TDD RED"
+    },
+    {
+      "item": "ClaudeCode result contract",
+      "owner": "ClaudeCode",
+      "status": "completed",
+      "evidence": "raw/claudecode-result.json",
+      "blocking": false,
+      "failure_owner": ""
+    }
+  ],
+  "approval_inbox": [],
+  "baseline_debt": [],
+  "follow_up_backlog": [],
+  "skill_trace": {
+    "display_language": "zh-CN",
+    "current_phase_label": "证据报告输出",
+    "user_visible_skill_banner": true,
+    "hermes_skills": [
+      {
+        "name": "dev-pipeline-orchestrator",
+        "planned": true,
+        "used": true,
+        "evidence": "run-manifest.json + generated/run-state.json",
+        "verdict": "PASS"
+      }
+    ],
+    "claudecode_skills": [
+      {
+        "name": "tdd",
+        "required": true,
+        "reported": true,
+        "evidence": {
+          "red": "node test.js exited 1",
+          "red_exit_code": 1,
+          "red_not_applicable_reason": "",
+          "green": "node test.js exited 0",
+          "green_exit_code": 0,
+          "commands": [
+            "node test.js",
+            "node test.js"
+          ],
+          "exit_codes": [
+            1,
+            0
+          ],
+          "source": "raw/command-log.jsonl"
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "codex_gates": [
+      {
+        "name": "diff_review",
+        "required": false,
+        "used": false,
+        "evidence": "NOT_REQUIRED",
+        "verdict": "SKIPPED"
+      }
+    ],
+    "missing_evidence": [],
+    "acceptance_impact": "none"
+  },
+  "claudecode_delegation": {
+    "delegated": true,
+    "waiver": false,
+    "waiver_reason": ""
+  },
+  "matt_evidence_gate": {
+    "required_skill": "tdd",
+    "evidence_present": true,
+    "evidence_type": "tdd",
+    "blocking": true
+  },
+  "codex_deferred": {
+    "deferred": false,
+    "reason": "",
+    "required": false
+  },
+  "vague_task": false,
+  "verification_exit_codes": [
+    {
+      "command": "node test.js",
+      "exit_code": 1,
+      "pass": false
+    },
+    {
+      "command": "node test.js",
+      "exit_code": 0,
+      "pass": true
+    }
+  ],
+  "self_improvement_side_effect": false,
+  "explicit_user_approval": false,
+  "command_log_summary": {
+    "source": "raw/command-log.jsonl",
+    "red_exit_code": 1,
+    "green_exit_code": 0,
+    "red_command": "node test.js",
+    "green_command": "node test.js",
+    "tdd_sequence_verified": true
+  },
+  "event_chain": {
+    "source": "events.jsonl",
+    "event_count": 9,
+    "last_event_hash": "c3fcc1be22b623adf5bf08f79f1088e4826d4ab242b5121d35debafd2a2ecc84",
+    "final_state": "RUN_STATE_GENERATED",
+    "replay_pass": false,
+    "event_types": [
+      "RUN_INIT",
+      "CLASSIFICATION_RECORDED",
+      "INTAKE_RECORDED",
+      "WORK_ORDER_CREATED",
+      "CLAUDECODE_DELEGATED",
+      "COMMAND_RECORDED_RED",
+      "COMMAND_RECORDED_GREEN",
+      "CLAUDECODE_RESULT_RECORDED",
+      "RUN_STATE_GENERATED"
+    ]
+  },
+  "replay_result": {
+    "replay_pass": false,
+    "run_id": "fixture-v04",
+    "event_count": 9,
+    "final_state": "RUN_STATE_GENERATED",
+    "last_event_hash": "c3fcc1be22b623adf5bf08f79f1088e4826d4ab242b5121d35debafd2a2ecc84",
+    "failures": [
+      "event_hash mismatch"
+    ],
+    "checked_at": "2026-06-05T04:16:59Z"
+  },
+  "raw_evidence": {
+    "run_manifest": "run-manifest.json",
+    "classification": "classification.json",
+    "command_log": "raw/command-log.jsonl",
+    "claudecode_result": "raw/claudecode-result.json",
+    "claudecode_result_contains_acceptance": false,
+    "claudecode_result_contract_valid": true
+  },
+  "state_source": "generated",
+  "provenance": {
+    "generated_by": "scripts/generate-run-state.sh",
+    "generated_at": "2026-06-05T04:16:59Z",
+    "generator_version": "0.4.0",
+    "source_files": [
+      "classification.json",
+      "events.jsonl",
+      "generated/replay-result.json",
+      "raw/claudecode-result.json",
+      "raw/command-log.jsonl",
+      "raw/files-touched.txt",
+      "run-manifest.json",
+      "state.json",
+      "work-orders/WO-1.json"
+    ]
+  }
+}

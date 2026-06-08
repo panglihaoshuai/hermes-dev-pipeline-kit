@@ -117,6 +117,7 @@ main() {
   bash scripts/policy-check.sh --run-state examples/policy/good-tdd-red-green-evidence.json
   bash scripts/policy-check.sh --run-state examples/policy/good-generated-run-state-with-provenance.json
   bash scripts/policy-check.sh --run-state examples/policy/good-tdd-command-log-red-green.json
+  bash scripts/policy-check.sh --run-state examples/policy/good-v04-generated-run-state.json
 
   section "Policy negative fixtures"
   expect_fail "bad-forbidden-file" \
@@ -157,6 +158,18 @@ main() {
     bash scripts/policy-check.sh --run-state examples/policy/bad-tdd-text-only-no-command-log.json
   expect_fail "bad-codex-pass-while-deferred" \
     bash scripts/policy-check.sh --run-state examples/policy/bad-codex-pass-while-deferred.json
+  expect_fail "bad-event-chain-tampered" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-event-chain-tampered.json
+  expect_fail "bad-state-transition-skip" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-state-transition-skip.json
+  expect_fail "bad-generated-run-state-without-replay" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-generated-run-state-without-replay.json
+  expect_fail "bad-green-before-red" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-green-before-red.json
+  expect_fail "bad-final-report-before-policy" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-final-report-before-policy.json
+  expect_fail "bad-complete-with-failed-policy" \
+    bash scripts/policy-check.sh --run-state examples/policy/bad-complete-with-failed-policy.json
 
   section "Smoke tests"
   bash scripts/smoke/smoke-small-fix.sh
@@ -166,6 +179,8 @@ main() {
   bash scripts/smoke/smoke-generated-run-state.sh
   bash scripts/smoke/smoke-installed-evidence-harness.sh
   bash scripts/smoke/smoke-real-task-medium.sh
+  bash scripts/smoke/smoke-state-machine-medium.sh
+  bash scripts/smoke/smoke-state-machine-tamper.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json
@@ -174,6 +189,11 @@ main() {
   json_check schema/command-log.schema.json
   json_check schema/claudecode-result.schema.json
   json_check schema/generated-run-state.schema.json
+  json_check schema/event.schema.json
+  json_check schema/state.schema.json
+  json_check schema/state-machine.schema.json
+  json_check schema/replay-result.schema.json
+  json_check schema/artifact-manifest.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
-# smoke-generated-run-state.sh — v0.3 executable evidence harness smoke test.
+# smoke-state-machine-medium.sh — v0.4 M-level hash-linked state-machine smoke.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-TMP_ROOT="/tmp/hermes-generated-run-state-smoke"
+TMP_ROOT="/tmp/hermes-v04-state-machine-medium"
 
 rm -rf "$TMP_ROOT"
-mkdir -p "$TMP_ROOT/work"
+mkdir -p "$TMP_ROOT/project/src"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 cat > "$TMP_ROOT/task.md" <<'EOF'
-Add a tiny todo store implementation with TDD evidence.
+Implement a tiny todo store with hash-linked state-machine evidence.
 EOF
 
 RUN_DIR="$("$REPO_ROOT/scripts/run-init.sh" \
   --root "$TMP_ROOT" \
   --task-file "$TMP_ROOT/task.md" \
-  --run-id "smoke-generated-run-state" \
-  --task-type "bugfix" \
+  --run-id "v04-state-machine-medium" \
+  --task-type "feature" \
   --mode "auto_run" \
   --scale "M" \
-  --project "generated-run-state-smoke")"
+  --project "v04-state-machine-medium")"
 
 "$REPO_ROOT/scripts/append-event.sh" \
   --run-dir "$RUN_DIR" \
@@ -43,56 +43,50 @@ RUN_DIR="$("$REPO_ROOT/scripts/run-init.sh" \
   --state-after CLAUDECODE_DELEGATED \
   --artifact work-orders/WO-1.json >/dev/null
 
-mkdir -p "$TMP_ROOT/work/src"
-
-cat > "$TMP_ROOT/work/test.js" <<'EOF'
+cat > "$TMP_ROOT/project/test.js" <<'EOF'
 const { createTodoStore } = require("./src/todo");
 
 const store = createTodoStore();
-store.add("write test first");
+store.add("red before green");
 
 if (store.list().length !== 1) {
-  throw new Error("todo should be added");
+  throw new Error("expected one todo");
 }
-
-if (store.list()[0].title !== "write test first") {
-  throw new Error("todo title should be preserved");
+if (store.list()[0].completed !== false) {
+  throw new Error("todo should start incomplete");
 }
 EOF
 
 if "$REPO_ROOT/scripts/record-command.sh" \
   --run-dir "$RUN_DIR" \
-  --cwd "$TMP_ROOT/work" \
+  --cwd "$TMP_ROOT/project" \
   --step-id "red" \
   --phase "RED" \
   -- node test.js; then
-  echo "FAIL: RED phase should fail before src/todo.js exists"
+  echo "FAIL: RED must fail before implementation exists"
   exit 1
 fi
 
-cat > "$TMP_ROOT/work/src/store.js" <<'EOF'
+cat > "$TMP_ROOT/project/src/store.js" <<'EOF'
 function createStore() {
   const items = [];
-
   return {
     add(item) {
       items.push(item);
     },
     list() {
-      return [...items];
+      return items.map((item) => ({ ...item }));
     },
   };
 }
-
 module.exports = { createStore };
 EOF
 
-cat > "$TMP_ROOT/work/src/todo.js" <<'EOF'
+cat > "$TMP_ROOT/project/src/todo.js" <<'EOF'
 const { createStore } = require("./store");
 
 function createTodoStore() {
   const store = createStore();
-
   return {
     add(title) {
       store.add({ title, completed: false });
@@ -102,13 +96,12 @@ function createTodoStore() {
     },
   };
 }
-
 module.exports = { createTodoStore };
 EOF
 
 "$REPO_ROOT/scripts/record-command.sh" \
   --run-dir "$RUN_DIR" \
-  --cwd "$TMP_ROOT/work" \
+  --cwd "$TMP_ROOT/project" \
   --step-id "green" \
   --phase "GREEN" \
   -- node test.js
@@ -145,7 +138,7 @@ cat > "$RUN_DIR/raw/claudecode-result.json" <<'EOF'
     "node test.js"
   ],
   "blocked": false,
-  "notes": "Smoke result contract. Acceptance is intentionally absent."
+  "notes": "v0.4 state-machine smoke result contract. Acceptance is intentionally absent."
 }
 EOF
 
@@ -157,17 +150,35 @@ EOF
   --artifact raw/claudecode-result.json >/dev/null
 
 "$REPO_ROOT/scripts/generate-run-state.sh" "$RUN_DIR" >/dev/null
-"$REPO_ROOT/scripts/policy-check.sh" --run-state "$RUN_DIR/generated/run-state.json" >/dev/null
+"$REPO_ROOT/scripts/replay-run.sh" "$RUN_DIR" >/dev/null
+"$REPO_ROOT/scripts/policy-check.sh" --run-state "$RUN_DIR/generated/run-state.json" > "$TMP_ROOT/policy.out"
 "$REPO_ROOT/scripts/final-report.sh" "$RUN_DIR/generated/run-state.json" > "$TMP_ROOT/final-report.out"
 
-if ! grep -q "负责人摘要" "$TMP_ROOT/final-report.out"; then
-  echo "FAIL: final report should contain Chinese owner summary"
-  exit 1
-fi
+test -f "$RUN_DIR/events.jsonl"
+test -f "$RUN_DIR/state.json"
+test -f "$RUN_DIR/raw/command-log.jsonl"
+test -f "$RUN_DIR/raw/claudecode-result.json"
+test -f "$RUN_DIR/generated/run-state.json"
+test -f "$RUN_DIR/generated/replay-result.json"
+test -f "$RUN_DIR/generated/final-report.md"
 
-if [[ ! -f "$RUN_DIR/generated/final-report.md" ]]; then
-  echo "FAIL: final report file was not written"
-  exit 1
-fi
+grep -q '"event_chain"' "$RUN_DIR/generated/run-state.json"
+grep -q '"last_event_hash"' "$RUN_DIR/generated/run-state.json"
+grep -Eq "Overall:[[:space:]]+PASS" "$TMP_ROOT/policy.out"
 
-echo "smoke-generated-run-state: PASS"
+python3 - "$RUN_DIR/events.jsonl" "$RUN_DIR/generated/run-state.json" "$RUN_DIR/generated/replay-result.json" <<'PY'
+import json
+import sys
+
+events = [json.loads(line) for line in open(sys.argv[1], encoding="utf-8") if line.strip()]
+types = [event["event_type"] for event in events]
+assert types.index("COMMAND_RECORDED_RED") < types.index("COMMAND_RECORDED_GREEN")
+state = json.load(open(sys.argv[2], encoding="utf-8"))
+assert state["event_chain"]["last_event_hash"]
+assert state["event_chain"]["replay_pass"] is True
+replay = json.load(open(sys.argv[3], encoding="utf-8"))
+assert replay["replay_pass"] is True
+assert replay["last_event_hash"]
+PY
+
+echo "smoke-state-machine-medium: PASS"

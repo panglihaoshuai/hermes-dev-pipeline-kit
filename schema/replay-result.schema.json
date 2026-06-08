@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/replay-result.schema.json",
+  "title": "Replay Result",
+  "type": "object",
+  "required": ["replay_pass", "run_id", "event_count", "final_state", "last_event_hash", "failures"],
+  "additionalProperties": true,
+  "properties": {
+    "replay_pass": { "type": "boolean" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "event_count": { "type": "integer", "minimum": 0 },
+    "final_state": { "type": "string" },
+    "last_event_hash": { "type": "string" },
+    "failures": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

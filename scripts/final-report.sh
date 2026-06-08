@@ -22,6 +22,33 @@ if [[ -z "$STATE_FILE" || ! -f "$STATE_FILE" ]]; then
   exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+STATE_FILE="$(cd "$(dirname "$STATE_FILE")" && pwd)/$(basename "$STATE_FILE")"
+
+if [[ "$(basename "$(dirname "$STATE_FILE")")" == "generated" ]]; then
+  RUN_DIR="$(dirname "$(dirname "$STATE_FILE")")"
+  if [[ -f "$RUN_DIR/events.jsonl" ]]; then
+    "$SCRIPT_DIR/replay-run.sh" "$RUN_DIR" >/dev/null
+    if ! grep -q '"event_type":"POLICY_CHECKED"' "$RUN_DIR/events.jsonl"; then
+      echo "Error: final report requires POLICY_CHECKED event" >&2
+      exit 1
+    fi
+    if ! grep -q '"event_type":"FINAL_REPORT_GENERATED"' "$RUN_DIR/events.jsonl"; then
+      ARTIFACT_ARGS=(--artifact generated/run-state.json)
+      if [[ -f "$RUN_DIR/generated/policy-result.json" ]]; then
+        ARTIFACT_ARGS+=(--artifact generated/policy-result.json)
+      fi
+      "$SCRIPT_DIR/append-event.sh" \
+        --run-dir "$RUN_DIR" \
+        --event-type FINAL_REPORT_GENERATED \
+        --actor harness \
+        --state-after FINAL_REPORT_GENERATED \
+        "${ARTIFACT_ARGS[@]}" >/dev/null
+    fi
+    "$SCRIPT_DIR/replay-run.sh" "$RUN_DIR" >/dev/null
+  fi
+fi
+
 python3 - "$STATE_FILE" <<'PY'
 import json
 import pathlib
@@ -47,6 +74,21 @@ acceptance = state.get("acceptance", {})
 provenance = state.get("provenance", {})
 command_summary = state.get("command_log_summary", {})
 skill_trace = state.get("skill_trace", {})
+event_chain = state.get("event_chain", {})
+replay_result = state.get("replay_result", {})
+policy_result = {}
+policy_path = state_path.parent / "policy-result.json"
+replay_path = state_path.parent / "replay-result.json"
+if policy_path.exists():
+    policy_result = json.loads(policy_path.read_text(encoding="utf-8"))
+if replay_path.exists():
+    replay_result = json.loads(replay_path.read_text(encoding="utf-8"))
+    event_chain = {
+        "event_count": replay_result.get("event_count", event_chain.get("event_count", 0)),
+        "last_event_hash": replay_result.get("last_event_hash", event_chain.get("last_event_hash", "")),
+        "final_state": replay_result.get("final_state", event_chain.get("final_state", "")),
+        "replay_pass": replay_result.get("replay_pass", event_chain.get("replay_pass", False)),
+    }
 
 lines = []
 lines.append("# Dev Pipeline Evidence Report")
@@ -60,6 +102,11 @@ lines.append(f"- 最大风险：{owner.get('largest_risk', 'unknown')}")
 lines.append(f"- 下一步：{owner.get('next_action', 'unknown')}")
 lines.append(f"- 验收完成：{str(acceptance.get('complete', False)).lower()}")
 lines.append(f"- 最终决定：{acceptance.get('final_decision', 'UNKNOWN')}")
+lines.append(f"- run_id：{state.get('run_id', '')}")
+lines.append(f"- final_state：{event_chain.get('final_state', '')}")
+lines.append(f"- last_event_hash：{event_chain.get('last_event_hash', '')}")
+lines.append(f"- replay_pass：{event_chain.get('replay_pass', False)}")
+lines.append(f"- policy verdict：{policy_result.get('overall', 'UNKNOWN')}")
 lines.append("")
 
 lines.append("## 阶段更新")
@@ -124,6 +171,24 @@ else:
 lines.append("")
 
 lines.append("## Verification Evidence")
+lines.append("")
+
+lines.append("## State Machine Evidence")
+lines.append("")
+lines.append(f"- events.jsonl: {state_path.parent.parent / 'events.jsonl'}")
+lines.append(f"- state.json: {state_path.parent.parent / 'state.json'}")
+lines.append(f"- replay-result.json: {state_path.parent / 'replay-result.json'}")
+lines.append(f"- event_count: {event_chain.get('event_count', 0)}")
+lines.append(f"- final_state: {event_chain.get('final_state', '')}")
+lines.append(f"- last_event_hash: {event_chain.get('last_event_hash', '')}")
+lines.append(f"- replay_pass: {event_chain.get('replay_pass', False)}")
+failed = replay_result.get("failures", []) if isinstance(replay_result, dict) else []
+if failed:
+    lines.append("- failed gates:")
+    for item in failed:
+        lines.append(f"  - {item}")
+else:
+    lines.append("- failed gates: none")
 lines.append("")
 lines.append(f"- tests_pass: {verification.get('tests_pass', False)}")
 lines.append(f"- git_diff_check_exit: {verification.get('git_diff_check_exit', '')}")

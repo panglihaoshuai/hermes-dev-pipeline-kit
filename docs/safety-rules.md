@@ -369,3 +369,16 @@ REFACTOR:
 - [ ] Report: Codex PASS 才设 acceptance complete
 - [ ] Report: 记录所有 BASELINE_TECH_DEBT 为 backlog
 - [ ] Report: 不将 post-commit findings 变成新任务
+---
+
+## v0.4 Tamper-evident Boundary
+
+The v0.4 state machine is tamper-evident, not tamper-proof.
+
+- A local user with write access can delete or rewrite a run directory.
+- Hash links detect whether the submitted `events.jsonl` chain is internally consistent.
+- Artifact hashes detect whether referenced files changed after the event was recorded.
+- Replay validation detects broken links, invalid transitions, GREEN before RED, and final report before policy.
+- Root-level filesystem control remains outside the harness threat model.
+
+Agents cannot write final state. They may only submit raw evidence and result contracts. Final verdicts must come from replay + `policy-check.sh`.

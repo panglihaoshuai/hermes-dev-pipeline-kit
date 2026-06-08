@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/event.schema.json",
+  "title": "Hash-linked Harness Event",
+  "type": "object",
+  "required": [
+    "seq",
+    "run_id",
+    "event_type",
+    "state_before",
+    "state_after",
+    "actor",
+    "timestamp",
+    "artifact_paths",
+    "artifact_hashes",
+    "prev_event_hash",
+    "event_hash"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "seq": { "type": "integer", "minimum": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "event_type": { "type": "string", "minLength": 1 },
+    "state_before": { "type": "string", "minLength": 1 },
+    "state_after": { "type": "string", "minLength": 1 },
+    "actor": { "enum": ["harness", "Hermes", "ClaudeCode", "Codex", "Owner"] },
+    "timestamp": { "type": "string", "minLength": 1 },
+    "artifact_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "artifact_hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "prev_event_hash": {
+      "type": "string",
+      "pattern": "^$|^[a-f0-9]{64}$"
+    },
+    "event_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

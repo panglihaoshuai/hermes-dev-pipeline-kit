@@ -25,6 +25,27 @@ RUN_DIR="$("$REPO_ROOT/scripts/run-init.sh" \
   --scale "M" \
   --project "real-task-medium-smoke")"
 
+"$REPO_ROOT/scripts/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type INTAKE_RECORDED \
+  --actor Hermes \
+  --state-after INTAKE_RECORDED \
+  --artifact task.md >/dev/null
+
+"$REPO_ROOT/scripts/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type WORK_ORDER_CREATED \
+  --actor Hermes \
+  --state-after WORK_ORDER_CREATED \
+  --artifact work-orders/WO-1.json >/dev/null
+
+"$REPO_ROOT/scripts/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type CLAUDECODE_DELEGATED \
+  --actor Hermes \
+  --state-after CLAUDECODE_DELEGATED \
+  --artifact work-orders/WO-1.json >/dev/null
+
 cat > "$TMP_ROOT/project/test.js" <<'EOF'
 const { createTodoStore } = require("./src/todo");
 
@@ -136,9 +157,16 @@ cat > "$RUN_DIR/raw/claudecode-result.json" <<'EOF'
 }
 EOF
 
+"$REPO_ROOT/scripts/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type CLAUDECODE_RESULT_RECORDED \
+  --actor ClaudeCode \
+  --state-after CLAUDECODE_RESULT_RECORDED \
+  --artifact raw/claudecode-result.json >/dev/null
+
 "$REPO_ROOT/scripts/generate-run-state.sh" "$RUN_DIR" >/dev/null
-"$REPO_ROOT/scripts/final-report.sh" "$RUN_DIR/generated/run-state.json" >/dev/null
 "$REPO_ROOT/scripts/policy-check.sh" --run-state "$RUN_DIR/generated/run-state.json" > "$TMP_ROOT/policy.out"
+"$REPO_ROOT/scripts/final-report.sh" "$RUN_DIR/generated/run-state.json" >/dev/null
 
 grep -Eq "PASS[[:space:]]+ml-delegation" "$TMP_ROOT/policy.out"
 grep -Eq "PASS[[:space:]]+tdd-command-log-evidence" "$TMP_ROOT/policy.out"

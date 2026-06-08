@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/generated-run-state.schema.json",
   "title": "Generated Run State",
-  "description": "v0.3 generated run-state. Requires provenance and harness-owned state_source.",
+  "description": "v0.4 generated run-state. Requires provenance, replay result, and hash-linked event-chain summary.",
   "allOf": [
     { "$ref": "run-state.schema.json" },
     {
       "type": "object",
-      "required": ["state_source", "provenance", "raw_evidence", "command_log_summary"],
+      "required": ["state_source", "provenance", "raw_evidence", "command_log_summary", "event_chain", "replay_result"],
       "properties": {
         "state_source": { "const": "generated" },
         "provenance": {
@@ -25,7 +25,23 @@
           }
         },
         "raw_evidence": { "type": "object" },
-        "command_log_summary": { "type": "object" }
+        "command_log_summary": { "type": "object" },
+        "event_chain": {
+          "type": "object",
+          "required": ["source", "event_count", "last_event_hash", "final_state", "replay_pass"],
+          "properties": {
+            "source": { "const": "events.jsonl" },
+            "event_count": { "type": "integer", "minimum": 1 },
+            "last_event_hash": { "type": "string", "minLength": 64 },
+            "final_state": { "type": "string", "minLength": 1 },
+            "replay_pass": { "type": "boolean" },
+            "event_types": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "replay_result": { "$ref": "replay-result.schema.json" }
       }
     }
   ]

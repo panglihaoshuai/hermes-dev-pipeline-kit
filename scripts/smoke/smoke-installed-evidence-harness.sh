@@ -22,7 +22,7 @@ HOME="$TMP_HOME" bash "$REPO_ROOT/scripts/install.sh" --yes >/tmp/hermes-install
 
 BIN="$TMP_HOME/.hermes/skills/software-development/dev-pipeline-orchestrator/bin"
 
-for script in run-init.sh record-command.sh generate-run-state.sh final-report.sh policy-check.sh; do
+for script in append-event.sh transition-check.sh replay-run.sh run-init.sh record-command.sh generate-run-state.sh final-report.sh policy-check.sh; do
   if [[ ! -x "$BIN/$script" ]]; then
     echo "FAIL: installed $script missing or not executable at $BIN/$script"
     exit 1
@@ -41,6 +41,27 @@ RUN_DIR="$("$BIN/run-init.sh" \
   --mode "auto_run" \
   --scale "M" \
   --project "installed-evidence-harness-smoke")"
+
+"$BIN/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type INTAKE_RECORDED \
+  --actor Hermes \
+  --state-after INTAKE_RECORDED \
+  --artifact task.md >/dev/null
+
+"$BIN/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type WORK_ORDER_CREATED \
+  --actor Hermes \
+  --state-after WORK_ORDER_CREATED \
+  --artifact work-orders/WO-1.json >/dev/null
+
+"$BIN/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type CLAUDECODE_DELEGATED \
+  --actor Hermes \
+  --state-after CLAUDECODE_DELEGATED \
+  --artifact work-orders/WO-1.json >/dev/null
 
 mkdir -p "$TMP_WORK/project"
 cat > "$TMP_WORK/project/test.js" <<'EOF'
@@ -109,6 +130,13 @@ cat > "$RUN_DIR/raw/claudecode-result.json" <<'EOF'
   "notes": "Installed harness smoke result contract. Acceptance is intentionally absent."
 }
 EOF
+
+"$BIN/append-event.sh" \
+  --run-dir "$RUN_DIR" \
+  --event-type CLAUDECODE_RESULT_RECORDED \
+  --actor ClaudeCode \
+  --state-after CLAUDECODE_RESULT_RECORDED \
+  --artifact raw/claudecode-result.json >/dev/null
 
 "$BIN/generate-run-state.sh" "$RUN_DIR" >/dev/null
 "$BIN/policy-check.sh" --run-state "$RUN_DIR/generated/run-state.json" >/dev/null

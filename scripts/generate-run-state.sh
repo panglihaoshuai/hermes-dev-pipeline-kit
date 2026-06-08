@@ -35,7 +35,12 @@ if [[ ! -d "$RUN_DIR" ]]; then
   exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$RUN_DIR/generated"
+
+if [[ -s "$RUN_DIR/events.jsonl" ]]; then
+  "$SCRIPT_DIR/replay-run.sh" "$RUN_DIR" >/dev/null
+fi
 
 python3 - "$RUN_DIR" <<'PY'
 import glob
@@ -79,6 +84,7 @@ classification_path = run_dir / "classification.json"
 command_log_path = run_dir / "raw" / "command-log.jsonl"
 claude_result_path = run_dir / "raw" / "claudecode-result.json"
 files_touched_path = run_dir / "raw" / "files-touched.txt"
+replay_result_path = run_dir / "generated" / "replay-result.json"
 
 manifest = load_json(manifest_path, {})
 classification = load_json(classification_path, {
@@ -139,6 +145,13 @@ def valid_claudecode_result(value):
 
 claude_contract_valid = valid_claudecode_result(raw_claude_result)
 claude_result = raw_claude_result if claude_contract_valid else {}
+replay_result = load_json(replay_result_path, {})
+events_path = run_dir / "events.jsonl"
+event_types = []
+if events_path.exists():
+    for line in events_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            event_types.append(json.loads(line).get("event_type", ""))
 
 command_log = []
 if command_log_path.exists():
@@ -278,6 +291,8 @@ for path in sorted((run_dir / "work-orders").glob("*.json")):
     source_files.append(rel(path))
 if files_touched_path.exists():
     source_files.append(rel(files_touched_path))
+if replay_result_path.exists():
+    source_files.append(rel(replay_result_path))
 
 codex_deferred = claude_result.get("codex_deferred", {}) if isinstance(claude_result.get("codex_deferred"), dict) else {}
 codex_required = scale == "L"
@@ -436,6 +451,15 @@ state = {
         "green_command": green_commands[-1].get("command", "") if green_commands else "",
         "tdd_sequence_verified": tdd_sequence_verified,
     },
+    "event_chain": {
+        "source": "events.jsonl",
+        "event_count": replay_result.get("event_count", 0),
+        "last_event_hash": replay_result.get("last_event_hash", ""),
+        "final_state": replay_result.get("final_state", ""),
+        "replay_pass": bool(replay_result.get("replay_pass", False)),
+        "event_types": event_types,
+    },
+    "replay_result": replay_result,
     "raw_evidence": {
         "run_manifest": "run-manifest.json",
         "classification": "classification.json",
@@ -448,7 +472,7 @@ state = {
     "provenance": {
         "generated_by": "scripts/generate-run-state.sh",
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "generator_version": "0.3.0",
+        "generator_version": "0.4.0",
         "source_files": source_files,
     },
 }
@@ -457,3 +481,50 @@ out = run_dir / "generated" / "run-state.json"
 out.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 print(out)
 PY
+
+if [[ -s "$RUN_DIR/events.jsonl" ]]; then
+  EVENT_ARTIFACTS=(--artifact raw/command-log.jsonl)
+  if [[ -f "$RUN_DIR/raw/claudecode-result.json" ]]; then
+    EVENT_ARTIFACTS+=(--artifact raw/claudecode-result.json)
+  fi
+  "$SCRIPT_DIR/append-event.sh" \
+    --run-dir "$RUN_DIR" \
+    --event-type RUN_STATE_GENERATED \
+    --actor harness \
+    --state-after RUN_STATE_GENERATED \
+    "${EVENT_ARTIFACTS[@]}" >/dev/null
+
+  "$SCRIPT_DIR/replay-run.sh" "$RUN_DIR" >/dev/null
+
+python3 - "$RUN_DIR" <<'PY'
+import json
+import pathlib
+import sys
+
+run_dir = pathlib.Path(sys.argv[1]).resolve()
+run_state_path = run_dir / "generated" / "run-state.json"
+replay_path = run_dir / "generated" / "replay-result.json"
+events_path = run_dir / "events.jsonl"
+
+state = json.loads(run_state_path.read_text(encoding="utf-8"))
+replay = json.loads(replay_path.read_text(encoding="utf-8"))
+event_types = []
+if events_path.exists():
+    for line in events_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            event_types.append(json.loads(line).get("event_type", ""))
+
+state["event_chain"] = {
+    "source": "events.jsonl",
+    "event_count": replay.get("event_count", 0),
+    "last_event_hash": replay.get("last_event_hash", ""),
+    "final_state": replay.get("final_state", ""),
+    "replay_pass": bool(replay.get("replay_pass", False)),
+    "event_types": event_types,
+}
+state["replay_result"] = replay
+state["provenance"]["source_files"] = sorted(set(state["provenance"].get("source_files", []) + ["events.jsonl", "state.json", "generated/replay-result.json"]))
+
+run_state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+fi

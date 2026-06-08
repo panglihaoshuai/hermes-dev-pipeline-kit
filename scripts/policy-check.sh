@@ -7,6 +7,7 @@ PASS_COUNT=0
 FAIL_COUNT=0
 WARN_COUNT=0
 RESULTS=()
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,50 @@ show_results() {
     echo "  Overall: FAIL"
   fi
   echo ""
+}
+
+write_policy_result_and_event() {
+  local run_state="$1"
+  local generated_dir run_dir overall
+  generated_dir="$(cd "$(dirname "$run_state")" && pwd)"
+  run_dir="$(dirname "$generated_dir")"
+  if [[ "$(basename "$generated_dir")" != "generated" || ! -f "$run_dir/events.jsonl" ]]; then
+    return 0
+  fi
+  if grep -q '"event_type":"POLICY_CHECKED"' "$run_dir/events.jsonl"; then
+    return 0
+  fi
+  if (( FAIL_COUNT == 0 )); then
+    overall="PASS"
+  else
+    overall="FAIL"
+  fi
+  python3 - "$run_dir/generated/policy-result.json" "$overall" "${RESULTS[@]}" <<'PY'
+import json
+import pathlib
+import sys
+from datetime import datetime, timezone
+
+out = pathlib.Path(sys.argv[1])
+overall = sys.argv[2]
+checks = []
+for item in sys.argv[3:]:
+    parts = item.split()
+    if len(parts) >= 2:
+        checks.append({"status": parts[0], "name": parts[1]})
+out.write_text(json.dumps({
+    "overall": overall,
+    "checked_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "checks": checks,
+}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+  "$SCRIPT_DIR/append-event.sh" \
+    --run-dir "$run_dir" \
+    --event-type POLICY_CHECKED \
+    --actor harness \
+    --state-after POLICY_CHECKED \
+    --artifact generated/run-state.json \
+    --artifact generated/policy-result.json >/dev/null
 }
 
 # ── JSON extraction helper (python3) ────────────────────────────────────────
@@ -947,6 +992,122 @@ print("PASS")
 PY
 }
 
+jv04_check() {
+  # Usage: jv04_check <file> <check-name>
+  local file="$1" check_name="$2"
+  python3 - "$file" "$check_name" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+check = sys.argv[2]
+scale = (d.get("classification") or {}).get("scale")
+if scale not in {"M", "L"}:
+    print("PASS")
+    sys.exit(0)
+
+event_chain = d.get("event_chain")
+replay = d.get("replay_result")
+provenance = d.get("provenance") or {}
+sources = set(provenance.get("source_files") or [])
+events = []
+if isinstance(event_chain, dict):
+    events = event_chain.get("event_types") or []
+version = str(provenance.get("generator_version", ""))
+v04_required = version.startswith("0.4") or isinstance(event_chain, dict) or isinstance(replay, dict)
+if not v04_required:
+    print("PASS")
+    sys.exit(0)
+
+def fail():
+    print("FAIL")
+    sys.exit(0)
+
+def ok():
+    print("PASS")
+    sys.exit(0)
+
+if check == "event-chain-provenance":
+    if not isinstance(event_chain, dict):
+        fail()
+    if event_chain.get("source") != "events.jsonl":
+        fail()
+    if not event_chain.get("last_event_hash") or not event_chain.get("event_count"):
+        fail()
+    if "events.jsonl" not in sources or "generated/replay-result.json" not in sources:
+        fail()
+    ok()
+
+if check == "replay-result":
+    if not isinstance(replay, dict) or replay.get("replay_pass") is not True:
+        fail()
+    ok()
+
+if check == "state-transition-validity":
+    if not isinstance(replay, dict) or replay.get("failures"):
+        fail()
+    ok()
+
+if check == "hash-chain-integrity":
+    last_hash = event_chain.get("last_event_hash", "") if isinstance(event_chain, dict) else ""
+    if not isinstance(replay, dict) or replay.get("replay_pass") is not True or len(last_hash) != 64:
+        fail()
+    ok()
+
+if check == "artifact-hash-integrity":
+    if not isinstance(replay, dict) or replay.get("replay_pass") is not True:
+        fail()
+    failures = replay.get("failures") or []
+    if any("artifact" in str(item).lower() for item in failures):
+        fail()
+    ok()
+
+if check == "no-final-report-before-policy":
+    if "FINAL_REPORT_GENERATED" in events:
+        if "POLICY_CHECKED" not in events:
+            fail()
+        if events.index("FINAL_REPORT_GENERATED") < events.index("POLICY_CHECKED"):
+            fail()
+    ok()
+
+if check == "no-run-state-before-required-events":
+    if "RUN_STATE_GENERATED" not in events:
+        fail()
+    idx = events.index("RUN_STATE_GENERATED")
+    required = [
+        "INTAKE_RECORDED",
+        "WORK_ORDER_CREATED",
+        "CLAUDECODE_DELEGATED",
+        "COMMAND_RECORDED_RED",
+        "COMMAND_RECORDED_GREEN",
+        "CLAUDECODE_RESULT_RECORDED",
+    ]
+    for item in required:
+        if item not in events or events.index(item) > idx:
+            fail()
+    ok()
+
+if check == "no-green-before-red":
+    if "COMMAND_RECORDED_GREEN" in events:
+        if "COMMAND_RECORDED_RED" not in events:
+            fail()
+        if events.index("COMMAND_RECORDED_GREEN") < events.index("COMMAND_RECORDED_RED"):
+            fail()
+    ok()
+
+if check == "no-complete-with-failed-policy":
+    if "RUN_COMPLETED" in events:
+        policy = d.get("policy_result") or {}
+        if policy.get("overall") == "FAIL":
+            fail()
+    ok()
+
+fail()
+PY
+}
+
 # ── run-state checks ────────────────────────────────────────────────────────
 
 check_run_state() {
@@ -1233,6 +1394,23 @@ print('')
   else
     record "codex-deferred-pass" "PASS"
   fi
+
+  # v0.4 hash-linked state-machine checks.
+  local v04_check_name v04_status
+  for v04_check_name in \
+    "event-chain-provenance" \
+    "replay-result" \
+    "state-transition-validity" \
+    "hash-chain-integrity" \
+    "artifact-hash-integrity" \
+    "no-final-report-before-policy" \
+    "no-run-state-before-required-events" \
+    "no-green-before-red" \
+    "no-complete-with-failed-policy"
+  do
+    v04_status=$(jv04_check "$f" "$v04_check_name")
+    record "$v04_check_name" "$v04_status"
+  done
 }
 
 # ── report checks ───────────────────────────────────────────────────────────
@@ -1376,6 +1554,7 @@ main() {
       banner
       check_run_state "$2"
       show_results
+      write_policy_result_and_event "$2"
       if (( FAIL_COUNT > 0 )); then
         exit 1
       fi

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/artifact-manifest.schema.json",
+  "title": "Artifact Hash Manifest",
+  "type": "object",
+  "additionalProperties": {
+    "type": "string",
+    "pattern": "^[a-f0-9]{64}$"
+  }
+}

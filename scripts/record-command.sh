@@ -17,6 +17,8 @@ The wrapper exits with the wrapped command's exit code after logging it.
 EOF
 }
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 RUN_DIR=""
 CWD="$(pwd)"
 STEP_ID=""
@@ -109,5 +111,24 @@ record = {
 }
 print(json.dumps(record, ensure_ascii=False, separators=(",", ":")))
 PY
+
+PHASE_UPPER="$(printf "%s" "$PHASE" | tr '[:lower:]' '[:upper:]')"
+if [[ -f "$RUN_DIR/events.jsonl" && ( "$PHASE_UPPER" == "RED" || "$PHASE_UPPER" == "GREEN" ) ]]; then
+  if [[ "$PHASE_UPPER" == "RED" ]]; then
+    EVENT_TYPE="COMMAND_RECORDED_RED"
+    STATE_AFTER="RED_RECORDED"
+  else
+    EVENT_TYPE="COMMAND_RECORDED_GREEN"
+    STATE_AFTER="GREEN_RECORDED"
+  fi
+  "$SCRIPT_DIR/append-event.sh" \
+    --run-dir "$RUN_DIR" \
+    --event-type "$EVENT_TYPE" \
+    --actor harness \
+    --state-after "$STATE_AFTER" \
+    --artifact raw/command-log.jsonl \
+    --artifact "$STDOUT_REL" \
+    --artifact "$STDERR_REL" >/dev/null
+fi
 
 exit "$EXIT_CODE"

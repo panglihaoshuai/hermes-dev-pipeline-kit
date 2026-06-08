@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/state-machine.schema.json",
+  "title": "Dev Pipeline State Machine",
+  "type": "object",
+  "required": ["states", "events", "forbidden_transitions"],
+  "properties": {
+    "states": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "events": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forbidden_transitions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

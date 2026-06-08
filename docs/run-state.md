@@ -161,3 +161,26 @@ The report includes:
 - Run-state persistence between gate transitions
 - Diff of run-state across pipeline stages
 - Integration with dev-pipeline-report generator
+---
+
+## v0.4 Event Chain Fields
+
+Generated run-state now includes:
+
+- `event_chain.source`: always `events.jsonl`;
+- `event_chain.event_count`;
+- `event_chain.last_event_hash`;
+- `event_chain.final_state`;
+- `event_chain.replay_pass`;
+- `event_chain.event_types`;
+- `replay_result`: copied from `generated/replay-result.json`.
+
+`generated/run-state.json` is not accepted as runtime proof unless it is backed by raw evidence, `events.jsonl`, `state.json`, and replay output. The harness owns state generation; agents must not hand-write final run-state.
+
+Hash calculation:
+
+```text
+event_hash = sha256(canonical_json(event_without_event_hash))
+```
+
+`canonical_json` means sorted keys and compact JSON separators. `prev_event_hash` links each event to the prior event hash. Replay recomputes event hashes and artifact hashes from disk.

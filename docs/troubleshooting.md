@@ -533,3 +533,17 @@ GitHub Publish Lane 的 Gate E 发现缺少 README.md / CLAUDE.md / AGENTS.md / 
 ### codex-deferred-pass FAIL
 **Symptom**: Codex is marked deferred while Codex verdict is PASS
 **Fix**: Use `NOT_REQUIRED`, `UNKNOWN`, or deferred status with reason; never fabricate Codex PASS
+---
+
+## v0.4 Replay Failures
+
+Common failures:
+
+- `event_hash mismatch`: an event was edited after append.
+- `prev_event_hash mismatch`: the event chain was reordered, truncated, or spliced.
+- `artifact hash mismatch`: an artifact changed after the event recorded it.
+- `M/L GREEN before RED`: TDD order was violated.
+- `FINAL_REPORT_GENERATED before POLICY_CHECKED`: report was produced before policy evidence.
+- `RUN_STATE_GENERATED before required events`: M/L work order, delegation, RED/GREEN, or ClaudeCode result contract was skipped.
+
+Fix the process and rerun the failing scenario. Do not edit `generated/run-state.json` to make policy pass. Policy fixture validation is not runtime validation.

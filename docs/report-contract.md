@@ -218,3 +218,20 @@ The JSON contract is introduced in v0.2 as an opt-in enhancement. Existing
 workflows that rely on the Markdown report are unaffected. The Markdown report
 remains the primary deliverable and will continue to be generated regardless of
 whether the JSON report is present.
+---
+
+## v0.4 Report Source Rules
+
+The final report must be generated from `generated/run-state.json` plus replay/policy evidence. It must not use Hermes or ClaudeCode natural-language confidence as final state.
+
+Required v0.4 report facts:
+
+- `run_id`;
+- `final_state`;
+- `last_event_hash`;
+- `replay_pass`;
+- policy verdict;
+- evidence paths;
+- failed gates.
+
+If replay or policy-check fails, the report must not render the run as PASS. Process evidence is more important than result prose.

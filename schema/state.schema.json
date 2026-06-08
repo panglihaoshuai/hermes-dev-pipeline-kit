@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nousresearch/hermes-dev-pipeline-kit/schema/state.schema.json",
+  "title": "Harness Current State",
+  "type": "object",
+  "required": ["run_id", "current_state", "last_event_hash", "event_count", "updated_at"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "current_state": { "type": "string", "minLength": 1 },
+    "last_event_hash": { "type": "string" },
+    "event_count": { "type": "integer", "minimum": 0 },
+    "updated_at": { "type": "string", "minLength": 1 }
+  }
+}

@@ -67,6 +67,33 @@ Required installed script names:
 - `final-report.sh`
 - `policy-check.sh`
 
+## v0.4 Hash-linked State Machine Runtime
+
+For M/L tasks, the v0.4 harness is the state authority. Agent text is not state.
+
+- `append-event.sh` must append every state transition to `events.jsonl`.
+- `transition-check.sh` must reject invalid transitions before mutation when a gate is uncertain.
+- `replay-run.sh` must rebuild state from `events.jsonl` and verify `event_hash`, `prev_event_hash`, and artifact hashes.
+- `state.json` is the current harness state pointer, not an agent report.
+- `event_hash` is `sha256(canonical_json(event_without_event_hash))`.
+- `prev_event_hash` must equal the previous event's `event_hash`, except for the first event where it is empty.
+- M/L tasks must not generate run-state before `WORK_ORDER_CREATED`, `CLAUDECODE_DELEGATED`, RED, GREEN, and `CLAUDECODE_RESULT_RECORDED`.
+- GREEN must not occur before RED for M/L TDD tasks.
+- `policy-check.sh` must validate replay/event/hash evidence before acceptance.
+- `final-report.sh` must report replay + policy evidence, not Hermes self-evaluation.
+- If `append-event.sh`, `transition-check.sh`, `replay-run.sh`, `events.jsonl`, or `state.json` cannot be found for an M/L runtime task, fail closed.
+
+Required v0.4 installed script names:
+
+- `append-event.sh`
+- `transition-check.sh`
+- `replay-run.sh`
+- `run-init.sh`
+- `record-command.sh`
+- `generate-run-state.sh`
+- `final-report.sh`
+- `policy-check.sh`
+
 ## Hermes Delegation Protocol
 
 When delegating to Claude Code, the work order template (`templates/claudecode-work-order.md`) must include:

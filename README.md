@@ -462,6 +462,22 @@ bash scripts/uninstall.sh --yes
 
 MIT
 
+## v0.4 Hash-linked State Machine Harness
+
+v0.4 adds a local, hash-linked runtime layer on top of the v0.3 executable evidence harness.
+
+- Each run has `events.jsonl` and `state.json`.
+- Every transition is appended through `scripts/append-event.sh`.
+- Every event stores `prev_event_hash`, `event_hash`, and artifact hashes.
+- `scripts/replay-run.sh` recomputes event hashes, previous-hash links, artifact hashes, and state transitions.
+- `scripts/generate-run-state.sh` depends on replay evidence and writes `event_chain` / `replay_result`.
+- `scripts/policy-check.sh` validates replay and state-machine evidence before acceptance.
+- `scripts/final-report.sh` reports generated evidence, not agent self-evaluation.
+
+This is tamper-evident, not tamper-proof. A local user with write access can delete or rewrite run files. The hash chain detects whether the submitted event/artifact chain is internally consistent; it does not defend against root-level filesystem control.
+
+Policy fixtures are examples for policy validation only. Runtime validation requires a real run directory with `events.jsonl`, `state.json`, raw command logs, replay output, generated run-state, policy output, and final report.
+
 ---
 
 ## 相关文档

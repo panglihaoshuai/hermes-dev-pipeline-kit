@@ -44,6 +44,9 @@ SKILL_NAMES=(
 )
 
 HARNESS_SCRIPT_NAMES=(
+    "append-event.sh"
+    "transition-check.sh"
+    "replay-run.sh"
     "run-init.sh"
     "record-command.sh"
     "generate-run-state.sh"
@@ -117,7 +120,7 @@ install_harness_scripts() {
     local bin_dir="$TARGET_PARENT/dev-pipeline-orchestrator/bin"
 
     echo ""
-    echo "--- Installing v0.3 evidence harness scripts ---"
+    echo "--- Installing v0.4 state-machine harness scripts ---"
 
     for script in "${HARNESS_SCRIPT_NAMES[@]}"; do
         local src="$KIT_ROOT/scripts/$script"
@@ -227,9 +230,9 @@ for skill in "${SKILL_NAMES[@]}"; do
     fi
 done
 if [[ $DRY_RUN -eq 1 ]]; then
-    echo "  [dry-run] v0.3 evidence harness scripts (would be installed to dev-pipeline-orchestrator/bin)"
+    echo "  [dry-run] v0.4 state-machine harness scripts (would be installed to dev-pipeline-orchestrator/bin)"
 else
-    echo "  [ok] v0.3 evidence harness scripts"
+    echo "  [ok] v0.4 state-machine harness scripts"
 fi
 echo ""
 echo "No global dependencies were installed."
