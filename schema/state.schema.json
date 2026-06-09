@@ -7,7 +7,25 @@
   "additionalProperties": false,
   "properties": {
     "run_id": { "type": "string", "minLength": 1 },
-    "current_state": { "type": "string", "minLength": 1 },
+    "current_state": {
+      "enum": [
+        "NONE",
+        "RUN_INITIALIZED",
+        "CLASSIFIED",
+        "INTAKE_RECORDED",
+        "WORK_ORDER_CREATED",
+        "CLAUDECODE_DELEGATED",
+        "RED_RECORDED",
+        "GREEN_RECORDED",
+        "CLAUDECODE_RESULT_RECORDED",
+        "FAILED",
+        "RUN_STATE_GENERATED",
+        "POLICY_CHECKED",
+        "FINAL_REPORT_GENERATED",
+        "APPROVAL_PENDING",
+        "COMPLETED"
+      ]
+    },
     "last_event_hash": { "type": "string" },
     "event_count": { "type": "integer", "minimum": 0 },
     "updated_at": { "type": "string", "minLength": 1 }

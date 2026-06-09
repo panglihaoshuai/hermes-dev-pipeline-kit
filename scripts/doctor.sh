@@ -116,6 +116,9 @@ if [[ -d "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator" ]];
     check_core_executable \
         "installed policy-check.sh" \
         "$INSTALLED_ORCHESTRATOR/bin/policy-check.sh"
+    check_core_executable \
+        "installed fail-run.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/fail-run.sh"
 else
     # Not installed yet — check kit source files instead
     echo "  [info] Skills not yet installed. Checking kit source files..."
@@ -144,7 +147,9 @@ check_core "run-init.sh" "$KIT_ROOT/scripts/run-init.sh"
 check_core "record-command.sh" "$KIT_ROOT/scripts/record-command.sh"
 check_core "generate-run-state.sh" "$KIT_ROOT/scripts/generate-run-state.sh"
 check_core "final-report.sh" "$KIT_ROOT/scripts/final-report.sh"
+check_core "fail-run.sh" "$KIT_ROOT/scripts/fail-run.sh"
 check_core "smoke-generated-run-state.sh" "$KIT_ROOT/scripts/smoke/smoke-generated-run-state.sh"
+check_core "smoke-failure-finalization.sh" "$KIT_ROOT/scripts/smoke/smoke-failure-finalization.sh"
 check_core "smoke-state-machine-medium.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-medium.sh"
 check_core "smoke-state-machine-tamper.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-tamper.sh"
 check_core "run-manifest.schema.json" "$KIT_ROOT/schema/run-manifest.schema.json"

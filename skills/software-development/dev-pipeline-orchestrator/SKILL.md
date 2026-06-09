@@ -66,6 +66,7 @@ Required installed script names:
 - `generate-run-state.sh`
 - `final-report.sh`
 - `policy-check.sh`
+- `fail-run.sh`
 
 ## v0.4 Hash-linked State Machine Runtime
 
@@ -93,6 +94,37 @@ Required v0.4 installed script names:
 - `generate-run-state.sh`
 - `final-report.sh`
 - `policy-check.sh`
+- `fail-run.sh`
+
+## Failure Finalization Rule (v0.4)
+
+If any required command exits non-zero outside the expected RED phase:
+
+- do not wait indefinitely;
+- do not retry silently;
+- do not call the run complete;
+- invoke `fail-run.sh` or an equivalent failure path;
+- write `raw/failure-result.json`;
+- append `RUN_FAILED`;
+- run replay;
+- generate a failed `generated/run-state.json`;
+- run `policy-check.sh`;
+- generate a failure `generated/final-report.md`;
+- report `FAIL` or `PARTIAL` with evidence paths.
+
+GREEN exit code `0` is required for successful TDD completion. GREEN exit code
+non-zero is task failure evidence and must be finalized as a failed run, not
+left at `GREEN_RECORDED`.
+
+## No Dependency Invention Rule (v0.4)
+
+For smoke and calibration tasks:
+
+- do not use test runners that are not guaranteed installed;
+- prefer Node built-in `assert`, `node:test`, shell, or Python stdlib `unittest`;
+- do not introduce npm, pip, or global dependency installs just to pass a smoke;
+- if a dependency is missing, classify it as an environment failure and finalize the run as failed;
+- missing dependency evidence must appear in `raw/failure-result.json`, `generated/run-state.json`, and `generated/final-report.md`.
 
 ## Hermes Delegation Protocol
 

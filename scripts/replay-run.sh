@@ -103,10 +103,14 @@ def check_transition(state_before, event, seen):
     if event_type == "COMMAND_RECORDED_GREEN" and scale in {"M", "L"} and "COMMAND_RECORDED_RED" not in seen:
         return "M/L GREEN before RED"
     if event_type == "RUN_STATE_GENERATED" and scale in {"M", "L"}:
+        if "RUN_FAILED" in seen:
+            return ""
         required = {"INTAKE_RECORDED", "WORK_ORDER_CREATED", "CLAUDECODE_DELEGATED", "COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN", "CLAUDECODE_RESULT_RECORDED"}
         missing = sorted(required - seen)
         if missing:
             return "M/L RUN_STATE_GENERATED before required events: " + ",".join(missing)
+    if event_type == "RUN_COMPLETED" and "RUN_FAILED" in seen:
+        return "RUN_COMPLETED after RUN_FAILED"
     if event_type == "POLICY_CHECKED" and "RUN_STATE_GENERATED" not in seen:
         return "POLICY_CHECKED before RUN_STATE_GENERATED"
     if event_type == "FINAL_REPORT_GENERATED" and "POLICY_CHECKED" not in seen:

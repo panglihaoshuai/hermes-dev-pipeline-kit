@@ -19,6 +19,7 @@ entrypoints:
   record_command: scripts/record-command.sh
   generate_run_state: scripts/generate-run-state.sh
   final_report: scripts/final-report.sh
+  fail_run: scripts/fail-run.sh
   uninstall: scripts/uninstall.sh
   manifest: manifest.yaml
 

@@ -20,9 +20,61 @@
   "properties": {
     "seq": { "type": "integer", "minimum": 1 },
     "run_id": { "type": "string", "minLength": 1 },
-    "event_type": { "type": "string", "minLength": 1 },
-    "state_before": { "type": "string", "minLength": 1 },
-    "state_after": { "type": "string", "minLength": 1 },
+    "event_type": {
+      "enum": [
+        "RUN_INIT",
+        "CLASSIFICATION_RECORDED",
+        "INTAKE_RECORDED",
+        "WORK_ORDER_CREATED",
+        "CLAUDECODE_DELEGATED",
+        "COMMAND_RECORDED_RED",
+        "COMMAND_RECORDED_GREEN",
+        "CLAUDECODE_RESULT_RECORDED",
+        "RUN_FAILED",
+        "RUN_STATE_GENERATED",
+        "POLICY_CHECKED",
+        "FINAL_REPORT_GENERATED",
+        "APPROVAL_RECORDED",
+        "RUN_COMPLETED"
+      ]
+    },
+    "state_before": {
+      "enum": [
+        "NONE",
+        "RUN_INITIALIZED",
+        "CLASSIFIED",
+        "INTAKE_RECORDED",
+        "WORK_ORDER_CREATED",
+        "CLAUDECODE_DELEGATED",
+        "RED_RECORDED",
+        "GREEN_RECORDED",
+        "CLAUDECODE_RESULT_RECORDED",
+        "FAILED",
+        "RUN_STATE_GENERATED",
+        "POLICY_CHECKED",
+        "FINAL_REPORT_GENERATED",
+        "APPROVAL_PENDING",
+        "COMPLETED"
+      ]
+    },
+    "state_after": {
+      "enum": [
+        "RUN_INITIALIZED",
+        "CLASSIFIED",
+        "INTAKE_RECORDED",
+        "WORK_ORDER_CREATED",
+        "CLAUDECODE_DELEGATED",
+        "RED_RECORDED",
+        "GREEN_RECORDED",
+        "CLAUDECODE_RESULT_RECORDED",
+        "FAILED",
+        "RUN_STATE_GENERATED",
+        "POLICY_CHECKED",
+        "FINAL_REPORT_GENERATED",
+        "APPROVAL_PENDING",
+        "COMPLETED"
+      ]
+    },
     "actor": { "enum": ["harness", "Hermes", "ClaudeCode", "Codex", "Owner"] },
     "timestamp": { "type": "string", "minLength": 1 },
     "artifact_paths": {

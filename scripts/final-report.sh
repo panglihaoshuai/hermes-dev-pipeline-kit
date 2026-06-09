@@ -103,11 +103,41 @@ lines.append(f"- 下一步：{owner.get('next_action', 'unknown')}")
 lines.append(f"- 验收完成：{str(acceptance.get('complete', False)).lower()}")
 lines.append(f"- 最终决定：{acceptance.get('final_decision', 'UNKNOWN')}")
 lines.append(f"- run_id：{state.get('run_id', '')}")
+lines.append(f"- run status：{state.get('status', 'unknown')}")
 lines.append(f"- final_state：{event_chain.get('final_state', '')}")
 lines.append(f"- last_event_hash：{event_chain.get('last_event_hash', '')}")
 lines.append(f"- replay_pass：{event_chain.get('replay_pass', False)}")
 lines.append(f"- policy verdict：{policy_result.get('overall', 'UNKNOWN')}")
 lines.append("")
+
+if state.get("status") == "failed":
+    lines.append("## Failure Details")
+    lines.append("")
+    lines.append(f"- failed_phase: {state.get('failed_phase', '')}")
+    lines.append(f"- failed_command: {state.get('failed_command', '')}")
+    lines.append(f"- failed_exit_code: {state.get('failed_exit_code', '')}")
+    lines.append(f"- failure_reason: {state.get('failure_reason', '')}")
+    lines.append(f"- replay_pass: {event_chain.get('replay_pass', False)}")
+    lines.append(f"- policy verdict: {policy_result.get('overall', 'UNKNOWN')}")
+    missing = []
+    run_root = state_path.parent.parent
+    for rel_path in (
+        "raw/failure-result.json",
+        "generated/run-state.json",
+        "generated/replay-result.json",
+        "generated/policy-result.json",
+        "generated/final-report.md",
+    ):
+        if not (run_root / rel_path).exists():
+            missing.append(rel_path)
+    if missing:
+        lines.append("- missing artifacts:")
+        for item in missing:
+            lines.append(f"  - {item}")
+    else:
+        lines.append("- missing artifacts: none")
+    lines.append(f"- next action: {owner.get('next_action', 'repair failed command and rerun verification')}")
+    lines.append("")
 
 lines.append("## 阶段更新")
 lines.append("")

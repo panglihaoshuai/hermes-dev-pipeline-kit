@@ -106,6 +106,8 @@ record = {
     "started_at": os.environ["STARTED_AT"],
     "ended_at": os.environ["ENDED_AT"],
     "exit_code": int(os.environ["EXIT_CODE"]),
+    "passed": int(os.environ["EXIT_CODE"]) == 0,
+    "failure": int(os.environ["EXIT_CODE"]) != 0,
     "stdout_path": os.environ["STDOUT_REL"],
     "stderr_path": os.environ["STDERR_REL"],
 }

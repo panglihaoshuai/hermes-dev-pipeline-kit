@@ -52,6 +52,7 @@ HARNESS_SCRIPT_NAMES=(
     "generate-run-state.sh"
     "final-report.sh"
     "policy-check.sh"
+    "fail-run.sh"
 )
 
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"

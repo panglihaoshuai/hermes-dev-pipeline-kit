@@ -34,6 +34,27 @@
       "description": "Unique identifier for this pipeline run (UUID or ISO 8601 timestamp).",
       "minLength": 1
     },
+    "status": {
+      "type": "string",
+      "description": "Harness-level run outcome.",
+      "enum": ["completed", "partial", "failed"]
+    },
+    "failed_phase": {
+      "type": "string",
+      "description": "Phase that failed, if this run ended in failure."
+    },
+    "failed_command": {
+      "type": "string",
+      "description": "Command that failed, if available."
+    },
+    "failed_exit_code": {
+      "type": ["integer", "null"],
+      "description": "Exit code for the failed command, if available."
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Human-readable failure reason."
+    },
     "project": {
       "type": "string",
       "description": "Project path or name being processed.",

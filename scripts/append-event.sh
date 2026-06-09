@@ -166,6 +166,8 @@ def transition_allowed(state_before, event_type, events):
     if event_type == "CLAUDECODE_RESULT_RECORDED":
         return (state_before == "GREEN_RECORDED", "ClaudeCode result must follow GREEN")
     if event_type == "RUN_STATE_GENERATED":
+        if "RUN_FAILED" in seen:
+            return (state_before == "FAILED", "failed run-state must follow RUN_FAILED")
         if scale in {"M", "L"}:
             required = {"INTAKE_RECORDED", "WORK_ORDER_CREATED", "CLAUDECODE_DELEGATED", "COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN", "CLAUDECODE_RESULT_RECORDED"}
             missing = sorted(required - seen)
@@ -180,6 +182,8 @@ def transition_allowed(state_before, event_type, events):
     if event_type == "APPROVAL_RECORDED":
         return (state_before == "FINAL_REPORT_GENERATED", "approval must follow final report")
     if event_type == "RUN_COMPLETED":
+        if "RUN_FAILED" in seen:
+            return False, "failed run cannot be completed"
         return (state_before in {"FINAL_REPORT_GENERATED", "APPROVAL_PENDING"}, "completion must follow final report or approval")
     if event_type == "RUN_FAILED":
         return True, ""

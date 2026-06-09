@@ -181,6 +181,7 @@ main() {
   bash scripts/smoke/smoke-real-task-medium.sh
   bash scripts/smoke/smoke-state-machine-medium.sh
   bash scripts/smoke/smoke-state-machine-tamper.sh
+  bash scripts/smoke/smoke-failure-finalization.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

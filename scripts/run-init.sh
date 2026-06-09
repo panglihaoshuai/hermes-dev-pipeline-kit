@@ -108,7 +108,7 @@ manifest = {
     "task_type": task_type,
     "requested_mode": mode,
     "project": project,
-    "harness_version": "0.3.0",
+    "harness_version": "0.4.0",
     "run_dir": str(run_dir),
 }
 

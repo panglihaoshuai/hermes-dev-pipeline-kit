@@ -462,6 +462,58 @@ print("false")
 PY
 }
 
+jfailed_run_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+status = d.get("status")
+acceptance = d.get("acceptance") or {}
+verification = d.get("verification") or {}
+command_summary = d.get("command_log_summary") or {}
+event_chain = d.get("event_chain") or {}
+events = event_chain.get("event_types") or []
+raw = d.get("raw_evidence") or {}
+
+green_failed = isinstance(command_summary.get("green_exit_code"), int) and command_summary.get("green_exit_code") != 0
+
+if not (status == "failed" or green_failed):
+    print("false")
+    sys.exit(0)
+
+if status != "failed":
+    print("true")
+    sys.exit(0)
+if acceptance.get("complete") is True:
+    print("true")
+    sys.exit(0)
+if str(acceptance.get("final_decision", "")).upper() in {"PASS", "ACCEPTED"}:
+    print("true")
+    sys.exit(0)
+if verification.get("tests_pass") is True:
+    print("true")
+    sys.exit(0)
+if green_failed and "RUN_FAILED" not in events:
+    print("true")
+    sys.exit(0)
+if green_failed and not raw.get("failure_result"):
+    print("true")
+    sys.exit(0)
+if not isinstance(d.get("replay_result"), dict):
+    print("true")
+    sys.exit(0)
+if event_chain.get("replay_pass") is not True:
+    print("true")
+    sys.exit(0)
+
+print("false")
+PY
+}
+
 jcodex_deferred_pass_violation() {
   # Codex cannot be PASS while the run says Codex was deferred.
   local file="$1"
@@ -1004,7 +1056,8 @@ with open(sys.argv[1], encoding="utf-8") as f:
 
 check = sys.argv[2]
 scale = (d.get("classification") or {}).get("scale")
-if scale not in {"M", "L"}:
+status = d.get("status")
+if scale not in {"M", "L"} and status != "failed":
     print("PASS")
     sys.exit(0)
 
@@ -1076,6 +1129,8 @@ if check == "no-run-state-before-required-events":
     if "RUN_STATE_GENERATED" not in events:
         fail()
     idx = events.index("RUN_STATE_GENERATED")
+    if "RUN_FAILED" in events and events.index("RUN_FAILED") < idx:
+        ok()
     required = [
         "INTAKE_RECORDED",
         "WORK_ORDER_CREATED",
@@ -1371,7 +1426,10 @@ print('')
   claudecode_contract_bad=$(jclaudecode_result_contract_violation "$f")
   local claudecode_contract_valid
   claudecode_contract_valid=$(jget "$f" "raw_evidence.claudecode_result_contract_valid" 2>/dev/null || echo "")
-  if [[ "$claudecode_contract_bad" == "true" || "$claudecode_contract_valid" == "false" ]]; then
+  local run_status raw_claudecode_path
+  run_status=$(jget "$f" "status" 2>/dev/null || echo "")
+  raw_claudecode_path=$(jget "$f" "raw_evidence.claudecode_result" 2>/dev/null || echo "")
+  if [[ "$claudecode_contract_bad" == "true" || ( "$claudecode_contract_valid" == "false" && !( "$run_status" == "failed" && -z "$raw_claudecode_path" ) ) ]]; then
     record "claudecode-result-contract" "FAIL"
   else
     record "claudecode-result-contract" "PASS"
@@ -1393,6 +1451,22 @@ print('')
     record "codex-deferred-pass" "FAIL"
   else
     record "codex-deferred-pass" "PASS"
+  fi
+
+  local failed_run_bad
+  failed_run_bad=$(jfailed_run_violation "$f")
+  if [[ "$failed_run_bad" == "true" ]]; then
+    record "failed-run-finalization" "FAIL"
+  else
+    record "failed-run-finalization" "PASS"
+  fi
+
+  local failed_run_status
+  failed_run_status=$(jget "$f" "status" 2>/dev/null || echo "")
+  if [[ "$failed_run_status" == "failed" ]]; then
+    record "failed-run-status" "FAIL"
+  else
+    record "failed-run-status" "PASS"
   fi
 
   # v0.4 hash-linked state-machine checks.

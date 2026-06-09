@@ -83,6 +83,7 @@ manifest_path = run_dir / "run-manifest.json"
 classification_path = run_dir / "classification.json"
 command_log_path = run_dir / "raw" / "command-log.jsonl"
 claude_result_path = run_dir / "raw" / "claudecode-result.json"
+failure_result_path = run_dir / "raw" / "failure-result.json"
 files_touched_path = run_dir / "raw" / "files-touched.txt"
 replay_result_path = run_dir / "generated" / "replay-result.json"
 
@@ -93,6 +94,7 @@ classification = load_json(classification_path, {
     "risk_level": "low",
 })
 raw_claude_result = load_json(claude_result_path, {})
+failure_result = load_json(failure_result_path, {})
 
 
 def valid_claudecode_result(value):
@@ -201,6 +203,21 @@ green_commands = [
 ]
 red_exit_codes = [item.get("exit_code") for item in red_commands if isinstance(item.get("exit_code"), int)]
 green_exit_codes = [item.get("exit_code") for item in green_commands if isinstance(item.get("exit_code"), int)]
+failed_command_items = [
+    item for item in command_log
+    if isinstance(item.get("exit_code"), int) and item.get("exit_code") != 0
+]
+green_failed = any(isinstance(code, int) and code != 0 for code in green_exit_codes)
+failure_present = bool(failure_result) or "RUN_FAILED" in event_types or green_failed
+selected_failure = failure_result if isinstance(failure_result, dict) else {}
+if not selected_failure and failed_command_items:
+    item = failed_command_items[-1]
+    selected_failure = {
+        "failed_phase": item.get("phase", ""),
+        "failed_command": item.get("command", ""),
+        "failed_exit_code": item.get("exit_code"),
+        "reason": "command exited non-zero",
+    }
 
 red_not_applicable_reason = (
     claude_result.get("matt_evidence", {}).get("red_not_applicable_reason")
@@ -240,6 +257,8 @@ for work_order in work_orders:
     work_order["status"] = "blocked" if claude_result.get("blocked") else claude_result.get("status", work_order.get("status", "completed"))
     if work_order["status"] == "partial":
         work_order["status"] = "failed"
+    if failure_present:
+        work_order["status"] = "failed"
     work_order["files"] = sorted(dict.fromkeys(work_order.get("files", []) + files_touched))
     work_order.setdefault("retries", 0)
     if skill_evidence:
@@ -276,9 +295,14 @@ scale = classification.get("scale", "S")
 tests_pass = green_ok if required_matt_skill == "tdd" else all(int(item.get("exit_code", 0)) == 0 for item in command_log)
 evidence_present = tdd_sequence_verified if required_matt_skill == "tdd" else bool(command_log or claude_result)
 acceptance_complete = bool(claude_result.get("status") == "completed" and evidence_present and tests_pass)
+if failure_present:
+    tests_pass = False
+    acceptance_complete = False
 status_color = "yellow" if any(int(item.get("exit_code", 0)) != 0 for item in command_log) else "green"
 if not acceptance_complete:
     status_color = "red" if claude_result.get("blocked") else "yellow"
+if failure_present:
+    status_color = "red"
 
 source_files = [
     rel(manifest_path),
@@ -293,6 +317,8 @@ if files_touched_path.exists():
     source_files.append(rel(files_touched_path))
 if replay_result_path.exists():
     source_files.append(rel(replay_result_path))
+if failure_result_path.exists():
+    source_files.append(rel(failure_result_path))
 
 codex_deferred = claude_result.get("codex_deferred", {}) if isinstance(claude_result.get("codex_deferred"), dict) else {}
 codex_required = scale == "L"
@@ -304,6 +330,11 @@ if codex_required and not codex_is_deferred:
 
 state = {
     "run_id": manifest.get("run_id", run_dir.name),
+    "status": "failed" if failure_present else "completed" if acceptance_complete else "partial",
+    "failed_phase": selected_failure.get("failed_phase", ""),
+    "failed_command": selected_failure.get("failed_command", ""),
+    "failed_exit_code": selected_failure.get("failed_exit_code"),
+    "failure_reason": first_nonempty(selected_failure.get("reason"), selected_failure.get("failure_reason"), ""),
     "project": manifest.get("project", run_dir.parent.parent.name),
     "mode": manifest.get("requested_mode", "auto_run"),
     "current_gate": "Gate 8: generated evidence report",
@@ -328,7 +359,7 @@ state = {
     },
     "acceptance": {
         "complete": acceptance_complete,
-        "final_decision": "ACCEPTED" if acceptance_complete else "PARTIAL",
+        "final_decision": "ACCEPTED" if acceptance_complete else "FAIL" if failure_present else "PARTIAL",
     },
     "approval_gates": {
         "commit_approved": False,
@@ -354,9 +385,9 @@ state = {
             "codex_review": "不需要" if not codex_required else ("deferred" if codex_is_deferred else "UNKNOWN"),
             "approval": "未请求",
         },
-        "largest_risk": "TDD RED is expected failure and must be interpreted through command_log_summary",
+        "largest_risk": first_nonempty(selected_failure.get("reason"), "TDD RED is expected failure and must be interpreted through command_log_summary") if failure_present else "TDD RED is expected failure and must be interpreted through command_log_summary",
         "needs_user_decision": False,
-        "next_action": "Review generated/final-report.md; commit/push still requires approval",
+        "next_action": "Review generated/final-report.md and repair the failed command" if failure_present else "Review generated/final-report.md; commit/push still requires approval",
     },
     "stage_updates": [
         {
@@ -374,8 +405,8 @@ state = {
             "owner": "Hermes",
             "status": "completed",
             "evidence": "raw/command-log.jsonl",
-            "blocking": False,
-            "failure_owner": "Expected TDD RED" if any(int(item.get("exit_code", 0)) != 0 for item in command_log) else "",
+            "blocking": bool(failure_present),
+            "failure_owner": "Harness command execution" if failure_present else "Expected TDD RED" if any(int(item.get("exit_code", 0)) != 0 for item in command_log) else "",
         },
         {
             "item": "ClaudeCode result contract",
@@ -399,7 +430,7 @@ state = {
                 "planned": True,
                 "used": True,
                 "evidence": "run-manifest.json + generated/run-state.json",
-                "verdict": "PASS",
+                "verdict": "FAIL" if failure_present else "PASS",
             }
         ],
         "claudecode_skills": [
@@ -467,6 +498,7 @@ state = {
         "claudecode_result": "raw/claudecode-result.json" if claude_result_path.exists() else "",
         "claudecode_result_contains_acceptance": isinstance(raw_claude_result, dict) and "acceptance" in raw_claude_result,
         "claudecode_result_contract_valid": bool(claude_contract_valid),
+        "failure_result": "raw/failure-result.json" if failure_result_path.exists() else "",
     },
     "state_source": "generated",
     "provenance": {
@@ -486,6 +518,9 @@ if [[ -s "$RUN_DIR/events.jsonl" ]]; then
   EVENT_ARTIFACTS=(--artifact raw/command-log.jsonl)
   if [[ -f "$RUN_DIR/raw/claudecode-result.json" ]]; then
     EVENT_ARTIFACTS+=(--artifact raw/claudecode-result.json)
+  fi
+  if [[ -f "$RUN_DIR/raw/failure-result.json" ]]; then
+    EVENT_ARTIFACTS+=(--artifact raw/failure-result.json)
   fi
   "$SCRIPT_DIR/append-event.sh" \
     --run-dir "$RUN_DIR" \
@@ -523,7 +558,10 @@ state["event_chain"] = {
     "event_types": event_types,
 }
 state["replay_result"] = replay
-state["provenance"]["source_files"] = sorted(set(state["provenance"].get("source_files", []) + ["events.jsonl", "state.json", "generated/replay-result.json"]))
+extra_sources = ["events.jsonl", "state.json", "generated/replay-result.json"]
+if (run_dir / "raw" / "failure-result.json").exists():
+    extra_sources.append("raw/failure-result.json")
+state["provenance"]["source_files"] = sorted(set(state["provenance"].get("source_files", []) + extra_sources))
 
 run_state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 PY

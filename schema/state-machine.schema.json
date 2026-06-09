@@ -7,11 +7,46 @@
   "properties": {
     "states": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "enum": [
+          "NONE",
+          "RUN_INITIALIZED",
+          "CLASSIFIED",
+          "INTAKE_RECORDED",
+          "WORK_ORDER_CREATED",
+          "CLAUDECODE_DELEGATED",
+          "RED_RECORDED",
+          "GREEN_RECORDED",
+          "CLAUDECODE_RESULT_RECORDED",
+          "FAILED",
+          "RUN_STATE_GENERATED",
+          "POLICY_CHECKED",
+          "FINAL_REPORT_GENERATED",
+          "APPROVAL_PENDING",
+          "COMPLETED"
+        ]
+      }
     },
     "events": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "enum": [
+          "RUN_INIT",
+          "CLASSIFICATION_RECORDED",
+          "INTAKE_RECORDED",
+          "WORK_ORDER_CREATED",
+          "CLAUDECODE_DELEGATED",
+          "COMMAND_RECORDED_RED",
+          "COMMAND_RECORDED_GREEN",
+          "CLAUDECODE_RESULT_RECORDED",
+          "RUN_FAILED",
+          "RUN_STATE_GENERATED",
+          "POLICY_CHECKED",
+          "FINAL_REPORT_GENERATED",
+          "APPROVAL_RECORDED",
+          "RUN_COMPLETED"
+        ]
+      }
     },
     "forbidden_transitions": {
       "type": "array",

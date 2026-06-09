@@ -31,7 +31,7 @@ if [[ -z "$RUN_DIR" || -z "$EVENT_TYPE" || -z "$STATE_AFTER" ]]; then
   exit 1
 fi
 
-python3 - "$RUN_DIR" "$EVENT_TYPE" "$STATE_AFTER" "${ARTIFACTS[@]}" <<'PY'
+python3 - "$RUN_DIR" "$EVENT_TYPE" "$STATE_AFTER" "${ARTIFACTS[@]:-}" <<'PY'
 import json
 import pathlib
 import sys
@@ -109,10 +109,13 @@ if event_type == "FINAL_REPORT_GENERATED" and "POLICY_CHECKED" not in seen:
 if event_type == "COMMAND_RECORDED_GREEN" and scale in {"M", "L"} and "COMMAND_RECORDED_RED" not in seen:
     fail("M/L GREEN requires prior RED")
 if event_type == "RUN_STATE_GENERATED" and scale in {"M", "L"}:
-    required = {"INTAKE_RECORDED", "WORK_ORDER_CREATED", "CLAUDECODE_DELEGATED", "COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN", "CLAUDECODE_RESULT_RECORDED"}
-    missing = sorted(required - seen)
-    if missing:
-        fail("M/L run-state missing required events: " + ",".join(missing))
+    if "RUN_FAILED" not in seen:
+        required = {"INTAKE_RECORDED", "WORK_ORDER_CREATED", "CLAUDECODE_DELEGATED", "COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN", "CLAUDECODE_RESULT_RECORDED"}
+        missing = sorted(required - seen)
+        if missing:
+            fail("M/L run-state missing required events: " + ",".join(missing))
+if event_type == "RUN_COMPLETED" and "RUN_FAILED" in seen:
+    fail("failed run cannot be completed")
 
 print("PASS")
 PY
