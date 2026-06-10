@@ -681,7 +681,7 @@ Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is
 
 ---
 
-## v0.5.1 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 Experimental Plugin Wrapper
 
 v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
 plugin wrapper around the existing v0.4 Bash harness scripts.
@@ -697,10 +697,25 @@ v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
 It does not install into real `~/.hermes/plugins` by default.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
-It does not implement hooks or memory provider.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
 
+v0.5.2 adds prototype hook handlers for:
+
+- `pre_tool_call`
+- `post_tool_call`
+- `on_session_end`
+- `on_session_finalize`
+- `subagent_stop`
+
+These hooks are source-only, experimental, and non-blocking. They log JSONL
+records only when `HERMES_EVIDENCE_HOOK_LOG_DIR` is set, redact secret-like
+keys and values, and must not enforce policy or stop user commands. They do not
+implement a memory provider and do not capture official ClaudeCode/Codex/OpenCode
+output. The old `dev-pipeline-orchestrator` skill remains the user-facing
+development entrypoint.
+
 The wrapper is validated with source-only smoke tests and temp-HOME discovery
-under `/tmp`. It is not installed to real `~/.hermes/plugins` by the v0.5.1
-installer path.
+under `/tmp`. It is not installed to real `~/.hermes/plugins` by the installer
+path. v0.5.2 does not claim production runtime hook payload compatibility;
+payload shape remains UNKNOWN until a future Hermes runtime probe.

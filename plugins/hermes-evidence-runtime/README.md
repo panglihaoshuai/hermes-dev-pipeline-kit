@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1/v0.5.2 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -17,10 +17,24 @@ v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
 It does not install into real `~/.hermes/plugins` by default.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
-It does not implement hooks or memory provider.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
 
-The plugin is intended for source-only and temporary-home smoke validation in
-v0.5.1. Do not install it into a real `~/.hermes/plugins` directory until a
-separate install flow and rollback plan are reviewed.
+v0.5.2 adds prototype hook handlers:
+
+- `pre_tool_call`
+- `post_tool_call`
+- `on_session_end`
+- `on_session_finalize`
+- `subagent_stop`
+
+The hooks are non-blocking and observational only. They write
+`hooks.jsonl` only when `HERMES_EVIDENCE_HOOK_LOG_DIR` is set. They redact
+secret-like keys and values before logging. They do not enforce commit/push
+guards, do not implement a memory provider, do not replace old skills, and do
+not capture official ClaudeCode/Codex/OpenCode output yet.
+
+The plugin is intended for source-only and temporary-home smoke validation. Do
+not install it into a real `~/.hermes/plugins` directory until a separate
+install flow and rollback plan are reviewed. Real Hermes runtime hook payload
+shape remains UNKNOWN until a future runtime probe.

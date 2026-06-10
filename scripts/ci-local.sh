@@ -191,6 +191,8 @@ main() {
   bash scripts/smoke/smoke-s-level-driver-failure.sh
   bash scripts/smoke/smoke-plugin-wrapper.sh
   bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
+  bash scripts/smoke/smoke-plugin-hooks-source.sh
+  bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

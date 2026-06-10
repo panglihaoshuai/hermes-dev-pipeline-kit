@@ -10,7 +10,7 @@ EVIDENCE_DOCTOR_SCHEMA = {
             "type": "string",
             "enum": ["source"],
             "default": "source",
-            "description": "Only source mode is supported in v0.5.1.",
+            "description": "Only source mode is supported by the experimental plugin wrapper.",
         }
     },
 }

@@ -130,7 +130,7 @@ def evidence_doctor(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     payload = payload or {}
     mode = payload.get("mode", "source")
     if mode != "source":
-        raise WrapperError("v0.5.1 evidence_doctor only supports mode=source")
+        raise WrapperError("evidence_doctor only supports mode=source")
 
     script = _require_script("doctor.sh")
     fake_home = pathlib.Path(tempfile.mkdtemp(prefix="hermes-evidence-doctor-home-")).resolve()
@@ -147,6 +147,15 @@ def evidence_doctor(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         "exit_code": result["exit_code"],
         "stdout_path": result["stdout_path"],
         "stderr_path": result["stderr_path"],
+        "plugin_checks": {
+            "hooks_module": (PLUGIN_DIR / "hooks.py").is_file(),
+            "hook_source_smoke": (KIT_ROOT / "scripts" / "smoke" / "smoke-plugin-hooks-source.sh").is_file(),
+            "hook_discovery_smoke": (
+                KIT_ROOT / "scripts" / "smoke" / "smoke-plugin-hooks-discovery-temp-home.sh"
+            ).is_file(),
+            "hooks_prototype_only": True,
+            "memory_provider": False,
+        },
     }
 
 

@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import schemas
+from . import hooks, schemas
 from .tools import (
     evidence_active_run_status,
     evidence_doctor,
     evidence_drive_s_run,
     evidence_run_init,
 )
+
+HOOK_REGISTRATION_RESULTS: list[dict[str, Any]] = []
 
 
 def _register_tool(
@@ -42,12 +44,40 @@ def _register_tool(
     ctx.register_tool(name, func)
 
 
+def _register_hook(ctx: Any, name: str, func: Any) -> None:
+    result = {
+        "hook": name,
+        "registered": False,
+        "reason": "",
+    }
+
+    register_hook = getattr(ctx, "register_hook", None)
+    if not callable(register_hook):
+        result["reason"] = "ctx.register_hook_unavailable"
+        HOOK_REGISTRATION_RESULTS.append(result)
+        return
+
+    try:
+        register_hook(name, func)
+        result["registered"] = True
+        result["reason"] = "registered"
+    except Exception as exc:
+        result["reason"] = f"{type(exc).__name__}: {exc}"
+    HOOK_REGISTRATION_RESULTS.append(result)
+
+
+def get_hook_registration_results() -> list[dict[str, Any]]:
+    return [dict(item) for item in HOOK_REGISTRATION_RESULTS]
+
+
 def register(ctx: Any) -> None:
     """Hermes plugin registration entrypoint.
 
-    v0.5.1 intentionally registers tools only. Hooks, memory providers, and
-    skill replacement are out of scope for this experimental wrapper.
+    Tools wrap the existing Bash harness. v0.5.2 hook registration is
+    experimental, non-blocking, and best-effort. Memory providers and skill
+    replacement are out of scope.
     """
+    HOOK_REGISTRATION_RESULTS.clear()
     _register_tool(
         ctx,
         "evidence_doctor",
@@ -76,3 +106,12 @@ def register(ctx: Any) -> None:
         schemas.EVIDENCE_DRIVE_S_RUN_SCHEMA,
         "Drive an S-level evidence run by wrapping scripts/drive-s-run.sh.",
     )
+
+    for hook_name, hook_func in (
+        ("pre_tool_call", hooks.pre_tool_call),
+        ("post_tool_call", hooks.post_tool_call),
+        ("on_session_end", hooks.on_session_end),
+        ("on_session_finalize", hooks.on_session_finalize),
+        ("subagent_stop", hooks.subagent_stop),
+    ):
+        _register_hook(ctx, hook_name, hook_func)
