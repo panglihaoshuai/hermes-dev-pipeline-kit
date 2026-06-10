@@ -541,6 +541,152 @@ print("false")
 PY
 }
 
+jworker_result_contract_present_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+contract = d.get("worker_result_contract") or {}
+worker_results = d.get("worker_results") or []
+event_types = (d.get("event_chain") or {}).get("event_types") or []
+required = contract.get("required") is True or "WORKER_RESULT_RECORDED" in event_types
+
+if not required:
+    print("false")
+    sys.exit(0)
+
+if worker_results:
+    print("false")
+    sys.exit(0)
+
+if str(contract.get("deferred_reason", "")).strip():
+    print("false")
+    sys.exit(0)
+
+print("true")
+PY
+}
+
+jworker_acceptance_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+raw = d.get("raw_evidence") or {}
+if raw.get("worker_result_acceptance_complete") is True:
+    print("true")
+    sys.exit(0)
+
+for item in d.get("worker_results") or []:
+    if isinstance(item, dict) and item.get("worker_acceptance_complete") is True:
+        print("true")
+        sys.exit(0)
+
+for item in d.get("worker_result_violations") or []:
+    if isinstance(item, dict) and "acceptance.complete=true" in str(item.get("violation", "")):
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
+jworker_deferred_consistency_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+for item in d.get("worker_results") or []:
+    if not isinstance(item, dict):
+        continue
+    deferred = item.get("deferred") is True or item.get("status") == "deferred" or item.get("review_verdict") == "DEFERRED"
+    if deferred and not str(item.get("deferred_reason", "")).strip():
+        print("true")
+        sys.exit(0)
+
+for item in d.get("worker_result_violations") or []:
+    if isinstance(item, dict) and "deferred worker result missing reason" in str(item.get("violation", "")):
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
+jcodex_worker_deferred_pass_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+for item in d.get("worker_results") or []:
+    if not isinstance(item, dict) or item.get("worker") != "codex":
+        continue
+    deferred = item.get("deferred") is True or item.get("status") == "deferred"
+    if deferred and item.get("review_verdict") == "PASS":
+        print("true")
+        sys.exit(0)
+
+for item in d.get("worker_result_violations") or []:
+    if isinstance(item, dict) and "deferred worker result reported PASS" in str(item.get("violation", "")):
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
+jworker_raw_output_tracked_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import pathlib
+import sys
+
+state_path = pathlib.Path(sys.argv[1]).resolve()
+with state_path.open(encoding="utf-8") as f:
+    d = json.load(f)
+
+worker_results = [item for item in (d.get("worker_results") or []) if isinstance(item, dict)]
+if not worker_results:
+    print("false")
+    sys.exit(0)
+
+sources = set((d.get("provenance") or {}).get("source_files") or [])
+generated_parent = state_path.parent.name == "generated"
+run_dir = state_path.parent.parent if generated_parent else None
+
+for item in worker_results:
+    raw_output = str(item.get("raw_output_path", "") or "")
+    if not raw_output:
+        print("true")
+        sys.exit(0)
+    if raw_output not in sources:
+        print("true")
+        sys.exit(0)
+    if generated_parent and not (run_dir / raw_output).is_file():
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
 jskill_trace_violation() {
   # Returns 'true' when skill trace/evidence policy is violated.
   local file="$1"
@@ -1451,6 +1597,46 @@ print('')
     record "codex-deferred-pass" "FAIL"
   else
     record "codex-deferred-pass" "PASS"
+  fi
+
+  local worker_result_missing_bad
+  worker_result_missing_bad=$(jworker_result_contract_present_violation "$f")
+  if [[ "$worker_result_missing_bad" == "true" ]]; then
+    record "worker-result-contract-present" "FAIL"
+  else
+    record "worker-result-contract-present" "PASS"
+  fi
+
+  local worker_acceptance_bad
+  worker_acceptance_bad=$(jworker_acceptance_violation "$f")
+  if [[ "$worker_acceptance_bad" == "true" ]]; then
+    record "worker-must-not-write-acceptance" "FAIL"
+  else
+    record "worker-must-not-write-acceptance" "PASS"
+  fi
+
+  local worker_deferred_bad
+  worker_deferred_bad=$(jworker_deferred_consistency_violation "$f")
+  if [[ "$worker_deferred_bad" == "true" ]]; then
+    record "worker-result-deferred-consistency" "FAIL"
+  else
+    record "worker-result-deferred-consistency" "PASS"
+  fi
+
+  local codex_worker_deferred_pass_bad
+  codex_worker_deferred_pass_bad=$(jcodex_worker_deferred_pass_violation "$f")
+  if [[ "$codex_worker_deferred_pass_bad" == "true" ]]; then
+    record "codex-deferred-no-pass" "FAIL"
+  else
+    record "codex-deferred-no-pass" "PASS"
+  fi
+
+  local worker_raw_output_bad
+  worker_raw_output_bad=$(jworker_raw_output_tracked_violation "$f")
+  if [[ "$worker_raw_output_bad" == "true" ]]; then
+    record "worker-raw-output-tracked" "FAIL"
+  else
+    record "worker-raw-output-tracked" "PASS"
   fi
 
   local failed_run_bad

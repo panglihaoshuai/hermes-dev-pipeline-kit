@@ -58,6 +58,19 @@ check_core_executable() {
     fi
 }
 
+check_core_dir() {
+    local label="$1"
+    local path="$2"
+    if [[ -d "$path" ]]; then
+        echo "  PASS  $label"
+        core_pass=$((core_pass + 1))
+    else
+        echo "  FAIL  $label"
+        echo "        ($path — directory not found)"
+        core_fail=$((core_fail + 1))
+    fi
+}
+
 # --- Header ------------------------------------------------------------------
 
 echo "========================================"
@@ -156,17 +169,21 @@ check_core "replay-run.sh" "$KIT_ROOT/scripts/replay-run.sh"
 check_core "run-init.sh" "$KIT_ROOT/scripts/run-init.sh"
 check_core "record-command.sh" "$KIT_ROOT/scripts/record-command.sh"
 check_core "drive-s-run.sh" "$KIT_ROOT/scripts/drive-s-run.sh"
-check_core "generate-run-state.sh" "$KIT_ROOT/scripts/generate-run-state.sh"
-check_core "final-report.sh" "$KIT_ROOT/scripts/final-report.sh"
-check_core "fail-run.sh" "$KIT_ROOT/scripts/fail-run.sh"
-check_core "smoke-generated-run-state.sh" "$KIT_ROOT/scripts/smoke/smoke-generated-run-state.sh"
+    check_core "generate-run-state.sh" "$KIT_ROOT/scripts/generate-run-state.sh"
+    check_core "final-report.sh" "$KIT_ROOT/scripts/final-report.sh"
+    check_core "fail-run.sh" "$KIT_ROOT/scripts/fail-run.sh"
+    check_core "validate-worker-result.sh" "$KIT_ROOT/scripts/validate-worker-result.sh"
+    check_core "record-worker-result.sh" "$KIT_ROOT/scripts/record-worker-result.sh"
+    check_core "smoke-generated-run-state.sh" "$KIT_ROOT/scripts/smoke/smoke-generated-run-state.sh"
 check_core "smoke-failure-finalization.sh" "$KIT_ROOT/scripts/smoke/smoke-failure-finalization.sh"
 check_core "smoke-state-machine-medium.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-medium.sh"
 check_core "smoke-state-machine-tamper.sh" "$KIT_ROOT/scripts/smoke/smoke-state-machine-tamper.sh"
 check_core "smoke-plugin-wrapper.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-wrapper.sh"
 check_core "smoke-plugin-discovery-temp-home.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-discovery-temp-home.sh"
-check_core "smoke-plugin-hooks-source.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-hooks-source.sh"
-check_core "smoke-plugin-hooks-discovery-temp-home.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh"
+    check_core "smoke-plugin-hooks-source.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-hooks-source.sh"
+    check_core "smoke-plugin-hooks-discovery-temp-home.sh" "$KIT_ROOT/scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh"
+    check_core "smoke-worker-result-contract.sh" "$KIT_ROOT/scripts/smoke/smoke-worker-result-contract.sh"
+    check_core "smoke-worker-result-invalid-acceptance.sh" "$KIT_ROOT/scripts/smoke/smoke-worker-result-invalid-acceptance.sh"
 check_core "run-manifest.schema.json" "$KIT_ROOT/schema/run-manifest.schema.json"
 check_core "command-log.schema.json" "$KIT_ROOT/schema/command-log.schema.json"
 check_core "claudecode-result.schema.json" "$KIT_ROOT/schema/claudecode-result.schema.json"
@@ -175,8 +192,10 @@ check_core "event.schema.json" "$KIT_ROOT/schema/event.schema.json"
 check_core "state.schema.json" "$KIT_ROOT/schema/state.schema.json"
 check_core "state-machine.schema.json" "$KIT_ROOT/schema/state-machine.schema.json"
 check_core "replay-result.schema.json" "$KIT_ROOT/schema/replay-result.schema.json"
-check_core "artifact-manifest.schema.json" "$KIT_ROOT/schema/artifact-manifest.schema.json"
-check_core "protocols/claude-delegation-protocol.md" "$KIT_ROOT/protocols/claude-delegation-protocol.md"
+    check_core "artifact-manifest.schema.json" "$KIT_ROOT/schema/artifact-manifest.schema.json"
+    check_core "worker-result.schema.json" "$KIT_ROOT/schema/worker-result.schema.json"
+    check_core_dir "examples/worker-results directory" "$KIT_ROOT/examples/worker-results"
+    check_core "protocols/claude-delegation-protocol.md" "$KIT_ROOT/protocols/claude-delegation-protocol.md"
 check_core "docs/agent-install.md" "$KIT_ROOT/docs/agent-install.md"
 
 echo ""

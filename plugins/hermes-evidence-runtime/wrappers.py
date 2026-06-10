@@ -92,6 +92,17 @@ def _extract_overall(stdout: str) -> str:
     return "PASS" if "final status: PASS" in stdout else "FAIL"
 
 
+def _extract_json(stdout: str) -> dict[str, Any]:
+    text = stdout.strip()
+    if not text:
+        return {}
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def _project_from_run_dir(run_dir: pathlib.Path) -> pathlib.Path:
     if run_dir.parent.name != ".hermes-runs":
         raise WrapperError("run_dir must be inside <project>/.hermes-runs/<run-id>")
@@ -335,3 +346,59 @@ def evidence_drive_s_run(payload: dict[str, Any]) -> dict[str, Any]:
         "stdout_path": result["stdout_path"],
         "stderr_path": result["stderr_path"],
     }
+
+
+def evidence_validate_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
+    worker_result_path = _as_path(payload.get("worker_result_path"), "worker_result_path")
+    script = _require_script("validate-worker-result.sh")
+    result = _run_script(
+        ["bash", str(script), "--worker-result", str(worker_result_path)],
+        cwd=KIT_ROOT,
+    )
+    parsed = _extract_json(result["stdout"])
+    if not parsed:
+        parsed = {
+            "ok": result["exit_code"] == 0,
+            "verdict": "PASS" if result["exit_code"] == 0 else "FAIL",
+        }
+    else:
+        parsed["ok"] = bool(parsed.get("ok")) and result["exit_code"] == 0
+    parsed.update({
+        "script": "scripts/validate-worker-result.sh",
+        "exit_code": result["exit_code"],
+        "stdout_path": result["stdout_path"],
+        "stderr_path": result["stderr_path"],
+    })
+    return parsed
+
+
+def evidence_record_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
+    run_dir = _as_path(payload.get("run_dir"), "run_dir")
+    worker_result_path = _as_path(payload.get("worker_result_path"), "worker_result_path")
+    script = _require_script("record-worker-result.sh")
+    args = [
+        "bash",
+        str(script),
+        "--run-dir",
+        str(run_dir),
+        "--worker-result",
+        str(worker_result_path),
+    ]
+    if payload.get("raw_output_path"):
+        args.extend(["--raw-output", str(_as_path(payload.get("raw_output_path"), "raw_output_path"))])
+    result = _run_script(args, cwd=KIT_ROOT)
+    parsed = _extract_json(result["stdout"])
+    if not parsed:
+        parsed = {
+            "ok": result["exit_code"] == 0,
+            "verdict": "PASS" if result["exit_code"] == 0 else "FAIL",
+        }
+    else:
+        parsed["ok"] = bool(parsed.get("ok")) and result["exit_code"] == 0
+    parsed.update({
+        "script": "scripts/record-worker-result.sh",
+        "exit_code": result["exit_code"],
+        "stdout_path": result["stdout_path"],
+        "stderr_path": result["stderr_path"],
+    })
+    return parsed

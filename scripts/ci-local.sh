@@ -193,6 +193,8 @@ main() {
   bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
   bash scripts/smoke/smoke-plugin-hooks-source.sh
   bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  bash scripts/smoke/smoke-worker-result-contract.sh
+  bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json
@@ -206,11 +208,23 @@ main() {
   json_check schema/state-machine.schema.json
   json_check schema/replay-result.schema.json
   json_check schema/artifact-manifest.schema.json
+  json_check schema/worker-result.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do
     json_check "$f"
   done
+  for f in examples/worker-results/*.json; do
+    json_check "$f"
+  done
+
+  section "Worker result fixtures"
+  bash scripts/validate-worker-result.sh examples/worker-results/good-claudecode-result.json
+  bash scripts/validate-worker-result.sh examples/worker-results/good-codex-deferred-result.json
+  expect_fail "bad-worker-acceptance-complete" \
+    bash scripts/validate-worker-result.sh examples/worker-results/bad-worker-acceptance-complete.json
+  expect_fail "bad-codex-deferred-pass" \
+    bash scripts/validate-worker-result.sh examples/worker-results/bad-codex-deferred-pass.json
 
   security_scan
 

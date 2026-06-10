@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.5.3",
+  "work_order_id": "WO-REVIEW-1",
+  "worker": "codex",
+  "worker_skill": "codex-review-gate",
+  "status": "deferred",
+  "result_type": "review",
+  "raw_output_path": "raw/worker/WO-REVIEW-1.raw.txt",
+  "structured_output_path": "raw/worker/WO-REVIEW-1.worker-result.json",
+  "files_touched": [],
+  "commands_run": [],
+  "evidence_refs": [],
+  "review": {
+    "verdict": "PASS",
+    "summary": "Invalid fixture: deferred Codex review cannot report PASS.",
+    "blocking_findings": []
+  },
+  "deferred": {
+    "is_deferred": true,
+    "reason": "Invalid fixture: deferred Codex review cannot also pass."
+  },
+  "notes": "Invalid fixture: deferred Codex review is incorrectly reported as PASS."
+}

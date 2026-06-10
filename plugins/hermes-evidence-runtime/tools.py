@@ -51,3 +51,11 @@ def evidence_run_init(args: Any = None, **kwargs: Any) -> str:
 
 def evidence_drive_s_run(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_drive_s_run, args, **kwargs)
+
+
+def evidence_validate_worker_result(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_validate_worker_result, args, **kwargs)
+
+
+def evidence_record_worker_result(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_worker_result, args, **kwargs)

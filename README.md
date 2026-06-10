@@ -47,7 +47,7 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 
 - [免责声明 / Disclaimer](#免责声明--disclaimer)
 - [这是什么](#这是什么)
-- [v0.1 vs v0.5.2](#v01-vs-v052)
+- [v0.1 vs v0.5.3](#v01-vs-v053)
 - [角色分工](#角色分工)
 - [前置条件](#前置条件)
 - [安装前须知](#安装前须知)
@@ -78,7 +78,7 @@ hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完�
 
 整个流程有 9+ 个 Gate，每个 Gate 有明确的输入/输出/通过标准。
 
-## v0.1 vs v0.5.2
+## v0.1 vs v0.5.3
 
 | 版本 | 状态 | 说明 |
 |------|------|------|
@@ -88,6 +88,7 @@ hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完�
 | v0.4 | ✅ | + hash-linked event/state replay harness |
 | v0.5.1 | experimental | + source-only Hermes plugin wrapper around existing Bash scripts |
 | v0.5.2 | prototype | + non-blocking source-only hook probes behind `HERMES_EVIDENCE_HOOK_LOG_DIR` |
+| v0.5.3 | prototype | + worker result contract adapter around simulated worker output |
 
 本项目是 **harness kit**，不是完整 runtime。它提供：
 - 可安装的 Hermes skill 文件和模板
@@ -116,7 +117,7 @@ bash scripts/final-report.sh <run-dir>/generated/run-state.json
 
 ---
 
-## v0.5.1 / v0.5.2 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 Experimental Plugin Wrapper
 
 v0.5.1 adds a source-only experimental Hermes plugin wrapper at
 `plugins/hermes-evidence-runtime`.
@@ -127,6 +128,11 @@ It registers four machine-readable tools around the existing Bash harness:
 - `evidence_active_run_status`
 - `evidence_run_init`
 - `evidence_drive_s_run`
+
+v0.5.3 adds two machine-readable worker result adapter tools:
+
+- `evidence_validate_worker_result`
+- `evidence_record_worker_result`
 
 v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
@@ -154,6 +160,19 @@ uses `HERMES_HOME` to verify Hermes CLI discovery without touching real HOME.
 The v0.5.2 hook discovery smoke uses `/tmp/hermes-plugin-hooks-discovery-home`;
 real runtime hook payload shape remains UNKNOWN until a future interactive
 Hermes runtime probe.
+
+v0.5.3 adds a Worker Result Contract Adapter prototype. It validates and records
+simulated worker result JSON into `raw/worker/` and links that evidence into the
+hash-linked event chain, generated run-state, policy-check output, and final
+report. Worker results are evidence only:
+
+- worker result JSON must not set `acceptance.complete=true`;
+- deferred Codex worker results must not claim `PASS`;
+- raw worker output must be tracked through provenance;
+- final acceptance remains owned by Hermes/Codex gates and policy-check.
+
+v0.5.3 still does not call real ClaudeCode, Codex, or OpenCode. It does not
+claim official ClaudeCode/Codex/OpenCode output capture.
 
 ---
 
@@ -524,7 +543,7 @@ Policy fixtures are examples for policy validation only. Runtime validation requ
 
 ---
 
-## v0.5.1 / v0.5.2 Plugin Wrapper Boundary
+## v0.5.1 / v0.5.2 / v0.5.3 Plugin Wrapper Boundary
 
 `plugins/hermes-evidence-runtime` is an experimental wrapper around the existing
 v0.4 Bash harness scripts. It is not a new runtime and does not rewrite the
@@ -534,6 +553,7 @@ state machine.
 - v0.5.2 hooks are prototype-only, non-blocking probes.
 - It does not implement a memory provider.
 - It does not replace the existing dev-pipeline-orchestrator skill.
+- v0.5.3 worker result adapter validates simulated worker result contracts only.
 - It does not capture official ClaudeCode/Codex/OpenCode output yet.
 - It is not installed to real `~/.hermes/plugins` by `scripts/install.sh`.
 - Its smoke tests use source-only import and temp-HOME plugin discovery under `/tmp`.

@@ -38,6 +38,18 @@ Policy fixtures under `examples/policy/` are still useful unit tests, but they
 must be reported as policy fixture validation, not true runtime behavior
 validation.
 
+### v0.5.3 — Worker result contract adapter prototype
+
+Starting in v0.5.3, worker outputs can be recorded as explicit
+`raw/worker/*.worker-result.json` evidence. The worker result contract is
+validated by `scripts/validate-worker-result.sh` and recorded by
+`scripts/record-worker-result.sh`.
+
+This is not official ClaudeCode/Codex/OpenCode capture. It is a conservative
+adapter for simulated or caller-supplied worker output. Worker results cannot
+write final acceptance; `acceptance.complete=true` inside worker result JSON is
+invalid.
+
 ## Schema
 
 The JSON report schema is located at:
@@ -106,6 +118,10 @@ invocation unless Hermes or ClaudeCode expose machine-readable runtime traces.
 If `display_language` is `zh-CN`, `current_phase_label` is required by policy-check. If clarification questions exist, `clarification_trace.why_questions_are_needed` is required.
 
 The Markdown report must include a Chinese `技能使用证据` table explaining which Hermes/gstack skills, ClaudeCode Matt skills, Codex gates, and local validation tools were planned, used, skipped, and evidenced.
+
+If worker result evidence exists, the Markdown report must include
+`Worker Result Evidence`, showing worker, work_order_id, status, result_type,
+review verdict, raw output path, and whether the worker attempted acceptance.
 
 ## Owner Summary, Stage Updates, Responsibility Trace, and Approval Inbox
 
@@ -211,6 +227,11 @@ The following checks are mandatory for all pipeline runs:
 | codex-deferred-consistency | - | warn | block |
 | self-improvement-side-effect | block | block | block |
 | tdd-red-evidence | - | block | block |
+| worker-result-contract-present | when required | block | block |
+| worker-must-not-write-acceptance | block | block | block |
+| worker-result-deferred-consistency | block | block | block |
+| codex-deferred-no-pass | block | block | block |
+| worker-raw-output-tracked | when present | block | block |
 
 ## Not mandatory yet
 
@@ -235,3 +256,21 @@ Required v0.4 report facts:
 - failed gates.
 
 If replay or policy-check fails, the report must not render the run as PASS. Process evidence is more important than result prose.
+
+## v0.5.3 Worker Result Evidence Rules
+
+Worker result evidence is optional for older runs. Once a run records
+`WORKER_RESULT_RECORDED` or sets `worker_result_contract.required=true`,
+policy-check requires either worker result evidence or an explicit deferred
+reason.
+
+Required worker result properties are defined in
+`schema/worker-result.schema.json`.
+
+Worker result hard boundaries:
+
+- worker result JSON must not include `acceptance.complete=true`;
+- deferred worker results require `deferred.reason`;
+- deferred Codex worker results must not report `review.verdict=PASS`;
+- raw worker output paths must exist and appear in provenance source files;
+- final acceptance remains owned by harness policy and Codex/Hermes gates.

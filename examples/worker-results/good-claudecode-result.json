@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.5.3",
+  "work_order_id": "WO-1",
+  "worker": "claude-code",
+  "worker_skill": "mattpocock/tdd",
+  "status": "completed",
+  "result_type": "implementation",
+  "raw_output_path": "raw/worker/WO-1.raw.txt",
+  "structured_output_path": "raw/worker/WO-1.worker-result.json",
+  "files_touched": [
+    "src/todo.js",
+    "test.js"
+  ],
+  "commands_run": [
+    "node test.js"
+  ],
+  "evidence_refs": [
+    "raw/command-log.jsonl",
+    "raw/claudecode-result.json"
+  ],
+  "review": {
+    "verdict": "UNKNOWN",
+    "summary": "Implementation evidence captured; review gate remains outside worker ownership.",
+    "blocking_findings": []
+  },
+  "deferred": {
+    "is_deferred": false,
+    "reason": ""
+  },
+  "notes": "Worker completed implementation evidence. Final acceptance remains owned by Hermes/Codex gates."
+}

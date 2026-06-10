@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/hermes-dev-pipeline-kit/worker-result.schema.json",
+  "title": "Hermes Worker Result Contract",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "work_order_id",
+    "worker",
+    "worker_skill",
+    "status",
+    "result_type",
+    "raw_output_path",
+    "structured_output_path",
+    "files_touched",
+    "commands_run",
+    "evidence_refs",
+    "review",
+    "deferred",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.5.3"
+    },
+    "work_order_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "worker": {
+      "type": "string",
+      "enum": ["claude-code", "codex", "opencode", "hermes", "unknown"]
+    },
+    "worker_skill": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "partial", "blocked", "failed", "deferred"]
+    },
+    "result_type": {
+      "type": "string",
+      "enum": ["implementation", "review", "diagnostic", "plan", "unknown"]
+    },
+    "raw_output_path": {
+      "type": "string"
+    },
+    "structured_output_path": {
+      "type": "string"
+    },
+    "files_touched": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commands_run": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["verdict", "summary", "blocking_findings"],
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": ["PASS", "PARTIAL", "FAIL", "DEFERRED", "UNKNOWN"]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "blocking_findings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "deferred": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["is_deferred", "reason"],
+      "properties": {
+        "is_deferred": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "acceptance": {
+      "type": "object",
+      "description": "Worker results must not claim final acceptance. acceptance.complete=true is rejected by validator and policy."
+    }
+  }
+}

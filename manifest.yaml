@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.5.2
+version: 0.5.3
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -17,6 +17,8 @@ entrypoints:
   replay_run: scripts/replay-run.sh
   run_init: scripts/run-init.sh
   record_command: scripts/record-command.sh
+  validate_worker_result: scripts/validate-worker-result.sh
+  record_worker_result: scripts/record-worker-result.sh
   drive_s_run: scripts/drive-s-run.sh
   generate_run_state: scripts/generate-run-state.sh
   final_report: scripts/final-report.sh
@@ -26,6 +28,8 @@ entrypoints:
   plugin_discovery_smoke: scripts/smoke/smoke-plugin-discovery-temp-home.sh
   plugin_hooks_source_smoke: scripts/smoke/smoke-plugin-hooks-source.sh
   plugin_hooks_discovery_smoke: scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
+  worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   uninstall: scripts/uninstall.sh
   manifest: manifest.yaml
 
@@ -43,7 +47,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.5.2
+      version: 0.5.3
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: false
       description: >
@@ -51,14 +55,17 @@ plugins:
         harness scripts. v0.5.2 also includes prototype non-blocking hook probes
         that log only when HERMES_EVIDENCE_HOOK_LOG_DIR is set. It does not
         implement a memory provider, replacement skills, or official
-        ClaudeCode/Codex/OpenCode output capture. It is source-validated and
-        temp-HOME discovery validated, but is not installed into real
-        ~/.hermes/plugins by default.
+        ClaudeCode/Codex/OpenCode output capture. v0.5.3 adds worker result
+        contract adapter tools for simulated worker output only. It is
+        source-validated and temp-HOME discovery validated, but is not installed
+        into real ~/.hermes/plugins by default.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
         - evidence_run_init
         - evidence_drive_s_run
+        - evidence_validate_worker_result
+        - evidence_record_worker_result
       provides_hooks:
         - pre_tool_call
         - post_tool_call
@@ -128,7 +135,7 @@ safety:
     - "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
     - "~/.hermes/skills/software-development/dev-pipeline-report"
   installer_does_not_modify:
-    - "~/.hermes/plugins"  # v0.5.2 plugin wrapper is source-only / experimental
+    - "~/.hermes/plugins"  # v0.5.3 plugin wrapper is source-only / experimental
     - "~/.claude/CLAUDE.md"  # only warns, never writes
     - "~/.claude/settings.json"
     - "any business project"

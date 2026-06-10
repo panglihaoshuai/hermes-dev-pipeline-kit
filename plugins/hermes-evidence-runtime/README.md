@@ -8,6 +8,8 @@ This plugin registers tools that wrap the existing Bash evidence harness:
 - `evidence_active_run_status` reads project-local run metadata
 - `evidence_run_init` wraps `scripts/run-init.sh`
 - `evidence_drive_s_run` wraps `scripts/drive-s-run.sh`
+- `evidence_validate_worker_result` wraps `scripts/validate-worker-result.sh`
+- `evidence_record_worker_result` wraps `scripts/record-worker-result.sh`
 
 The tools return machine-readable JSON strings.
 
@@ -38,3 +40,9 @@ The plugin is intended for source-only and temporary-home smoke validation. Do
 not install it into a real `~/.hermes/plugins` directory until a separate
 install flow and rollback plan are reviewed. Real Hermes runtime hook payload
 shape remains UNKNOWN until a future runtime probe.
+
+v0.5.3 adds a Worker Result Contract Adapter prototype. It validates and records
+simulated worker result JSON into the existing Bash harness evidence directory.
+It does not call real ClaudeCode, Codex, or OpenCode. It does not claim official
+worker output capture. Worker results are raw evidence only; they cannot set
+`acceptance.complete=true` and cannot replace Hermes/Codex final gates.

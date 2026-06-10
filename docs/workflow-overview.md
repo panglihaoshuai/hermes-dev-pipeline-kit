@@ -54,6 +54,9 @@ scripts/final-report.sh generates the owner report
     WO-1.json
   raw/
     claudecode-result.json
+    worker/
+      WO-1.worker-result.json
+      WO-1.raw.txt
     command-log.jsonl
     files-touched.txt
     stdout/
@@ -71,8 +74,38 @@ True runtime behavior validation requires:
 
 - `raw/command-log.jsonl` emitted by `scripts/record-command.sh`;
 - `raw/claudecode-result.json` following `schema/claudecode-result.schema.json`;
+- optional `raw/worker/*.worker-result.json` following `schema/worker-result.schema.json`;
 - `generated/run-state.json` emitted by `scripts/generate-run-state.sh`;
 - provenance source files linking generated state back to raw evidence.
+
+## v0.5.3 Worker Result Contract Adapter
+
+v0.5.3 adds a conservative adapter for worker result evidence:
+
+```text
+simulated worker raw output
+  -> worker-result.json
+  -> scripts/validate-worker-result.sh
+  -> scripts/record-worker-result.sh
+  -> WORKER_RESULT_RECORDED event
+  -> generated/run-state.json
+  -> policy-check + final-report
+```
+
+The adapter does not call real ClaudeCode, Codex, or OpenCode. It does not claim
+official worker output capture. It only gives the existing Bash harness a
+machine-readable contract for worker outputs that are explicitly supplied by a
+caller or smoke test.
+
+Worker result rules:
+
+- worker results are raw evidence, not final acceptance;
+- `acceptance.complete=true` inside worker result JSON is invalid;
+- `codex` worker results with deferred status must not report `PASS`;
+- if a worker result records `raw_output_path`, the path must exist and appear in
+  provenance source files;
+- if `WORKER_RESULT_RECORDED` appears in the event chain, policy-check requires
+  worker result evidence or an explicit deferred reason.
 
 ---
 
@@ -681,7 +714,7 @@ Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is
 
 ---
 
-## v0.5.1 / v0.5.2 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 Experimental Plugin Wrapper
 
 v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
 plugin wrapper around the existing v0.4 Bash harness scripts.
@@ -692,6 +725,11 @@ The wrapper exposes four machine-readable tools:
 - `evidence_active_run_status`
 - `evidence_run_init`
 - `evidence_drive_s_run`
+
+v0.5.3 adds two worker result adapter tools:
+
+- `evidence_validate_worker_result`
+- `evidence_record_worker_result`
 
 v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
@@ -719,3 +757,10 @@ The wrapper is validated with source-only smoke tests and temp-HOME discovery
 under `/tmp`. It is not installed to real `~/.hermes/plugins` by the installer
 path. v0.5.2 does not claim production runtime hook payload compatibility;
 payload shape remains UNKNOWN until a future Hermes runtime probe.
+
+v0.5.3 worker result tools wrap the existing Bash harness only. They validate
+and record simulated worker result contracts into `raw/worker/`, then the
+harness links those files into event replay, generated run-state, policy-check,
+and final-report output. They do not call real ClaudeCode/Codex/OpenCode, do not
+replace built-in ClaudeCode/Codex/OpenCode skills, do not implement a memory
+provider, and do not replace the existing `dev-pipeline-orchestrator` skill.

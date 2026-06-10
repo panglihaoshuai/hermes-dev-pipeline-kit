@@ -177,6 +177,30 @@ for item in skill_trace.get("codex_gates", []):
     )
 lines.append("")
 
+lines.append("## Worker Result Evidence")
+lines.append("")
+worker_results = state.get("worker_results", [])
+if worker_results:
+    lines.append("| worker | work_order_id | status | result_type | review_verdict | raw_output_path | attempted_acceptance |")
+    lines.append("|---|---|---|---|---|---|---:|")
+    for item in worker_results:
+        lines.append(
+            f"| {item.get('worker', '')} | {item.get('work_order_id', '')} | "
+            f"{item.get('status', '')} | {item.get('result_type', '')} | "
+            f"{item.get('review_verdict', '')} | {item.get('raw_output_path', '')} | "
+            f"{item.get('worker_attempted_acceptance', False)} |"
+        )
+else:
+    lines.append("- 无 worker result evidence。")
+
+violations = state.get("worker_result_violations", [])
+if violations:
+    lines.append("")
+    lines.append("- worker result violations:")
+    for item in violations:
+        lines.append(f"  - {item.get('path', '')}: {item.get('violation', '')}")
+lines.append("")
+
 lines.append("## 责任归因")
 lines.append("")
 lines.append("| item | owner | status | evidence | blocking |")

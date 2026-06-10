@@ -9,7 +9,9 @@ from .tools import (
     evidence_active_run_status,
     evidence_doctor,
     evidence_drive_s_run,
+    evidence_record_worker_result,
     evidence_run_init,
+    evidence_validate_worker_result,
 )
 
 HOOK_REGISTRATION_RESULTS: list[dict[str, Any]] = []
@@ -105,6 +107,20 @@ def register(ctx: Any) -> None:
         evidence_drive_s_run,
         schemas.EVIDENCE_DRIVE_S_RUN_SCHEMA,
         "Drive an S-level evidence run by wrapping scripts/drive-s-run.sh.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_validate_worker_result",
+        evidence_validate_worker_result,
+        schemas.EVIDENCE_VALIDATE_WORKER_RESULT_SCHEMA,
+        "Validate a v0.5.3 worker result contract JSON file.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_worker_result",
+        evidence_record_worker_result,
+        schemas.EVIDENCE_RECORD_WORKER_RESULT_SCHEMA,
+        "Record a validated v0.5.3 worker result into an evidence run.",
     )
 
     for hook_name, hook_func in (

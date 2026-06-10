@@ -65,3 +65,35 @@ EVIDENCE_DRIVE_S_RUN_SCHEMA = {
         "red_not_applicable_reason": {"type": "string"},
     },
 }
+
+EVIDENCE_VALIDATE_WORKER_RESULT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["worker_result_path"],
+    "properties": {
+        "worker_result_path": {
+            "type": "string",
+            "description": "Path to a v0.5.3 worker-result JSON file.",
+        }
+    },
+}
+
+EVIDENCE_RECORD_WORKER_RESULT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "worker_result_path"],
+    "properties": {
+        "run_dir": {
+            "type": "string",
+            "description": "Evidence run directory.",
+        },
+        "worker_result_path": {
+            "type": "string",
+            "description": "Path to a v0.5.3 worker-result JSON file.",
+        },
+        "raw_output_path": {
+            "type": "string",
+            "description": "Optional path to raw worker output to copy into the run.",
+        },
+    },
+}

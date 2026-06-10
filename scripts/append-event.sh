@@ -66,6 +66,7 @@ STATE_FOR_EVENT = {
     "COMMAND_RECORDED_RED": "RED_RECORDED",
     "COMMAND_RECORDED_GREEN": "GREEN_RECORDED",
     "CLAUDECODE_RESULT_RECORDED": "CLAUDECODE_RESULT_RECORDED",
+    "WORKER_RESULT_RECORDED": "WORKER_RESULT_RECORDED",
     "RUN_STATE_GENERATED": "RUN_STATE_GENERATED",
     "POLICY_CHECKED": "POLICY_CHECKED",
     "FINAL_REPORT_GENERATED": "FINAL_REPORT_GENERATED",
@@ -147,7 +148,7 @@ def transition_allowed(state_before, event_type, events):
         return (event_type == "RUN_INIT", "RUN_INIT required from NONE")
     if event_type == "RUN_INIT":
         return False, "RUN_INIT can only occur once from NONE"
-    if event_type in seen and event_type not in {"COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN"}:
+    if event_type in seen and event_type not in {"COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN", "WORKER_RESULT_RECORDED"}:
         return False, f"duplicate event_type {event_type}"
 
     if event_type == "CLASSIFICATION_RECORDED":
@@ -170,6 +171,11 @@ def transition_allowed(state_before, event_type, events):
         return (state_before in {"CLASSIFIED", "RED_RECORDED"}, "S GREEN must follow classification or RED")
     if event_type == "CLAUDECODE_RESULT_RECORDED":
         return (state_before == "GREEN_RECORDED", "ClaudeCode result must follow GREEN")
+    if event_type == "WORKER_RESULT_RECORDED":
+        return (
+            state_before in {"GREEN_RECORDED", "CLAUDECODE_RESULT_RECORDED", "WORKER_RESULT_RECORDED"},
+            "worker result must follow GREEN, ClaudeCode result, or prior worker result",
+        )
     if event_type == "RUN_STATE_GENERATED":
         if "RUN_FAILED" in seen:
             return (state_before == "FAILED", "failed run-state must follow RUN_FAILED")
@@ -178,10 +184,13 @@ def transition_allowed(state_before, event_type, events):
             missing = sorted(required - seen)
             if missing:
                 return False, f"M/L run-state missing required events: {','.join(missing)}"
-            return (state_before == "CLAUDECODE_RESULT_RECORDED", "M/L run-state must follow ClaudeCode result")
+            return (
+                state_before in {"CLAUDECODE_RESULT_RECORDED", "WORKER_RESULT_RECORDED"},
+                "M/L run-state must follow ClaudeCode result or worker result",
+            )
         return (
             "COMMAND_RECORDED_GREEN" in seen
-            and state_before in {"GREEN_RECORDED", "CLAUDECODE_RESULT_RECORDED"},
+            and state_before in {"GREEN_RECORDED", "CLAUDECODE_RESULT_RECORDED", "WORKER_RESULT_RECORDED"},
             "S run-state must follow GREEN or ClaudeCode result",
         )
     if event_type == "POLICY_CHECKED":

@@ -145,6 +145,55 @@
         }
       }
     },
+    "worker_results": {
+      "type": "array",
+      "description": "Harness-derived summaries of raw/worker/*.worker-result.json contracts. Worker results are evidence only and cannot mark final acceptance complete.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "work_order_id": { "type": "string" },
+          "worker": { "type": "string" },
+          "worker_skill": { "type": "string" },
+          "status": { "type": "string" },
+          "result_type": { "type": "string" },
+          "review_verdict": { "type": "string" },
+          "blocking_findings": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "deferred": { "type": "boolean" },
+          "deferred_reason": { "type": "string" },
+          "raw_output_path": { "type": "string" },
+          "structured_output_path": { "type": "string" },
+          "worker_attempted_acceptance": { "type": "boolean" },
+          "worker_acceptance_complete": { "type": "boolean" }
+        }
+      }
+    },
+    "worker_result_contract": {
+      "type": "object",
+      "description": "Policy metadata for whether worker result evidence is required for this run.",
+      "additionalProperties": false,
+      "properties": {
+        "required": { "type": "boolean" },
+        "deferred_reason": { "type": "string" },
+        "source": { "type": "string" }
+      }
+    },
+    "worker_result_violations": {
+      "type": "array",
+      "description": "Harness-detected worker result contract violations.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "violation": { "type": "string" }
+        }
+      }
+    },
     "owner_summary": {
       "type": "object",
       "description": "Chinese owner-facing executive summary for the project owner / final approver.",
@@ -224,7 +273,7 @@
           "item": { "type": "string" },
           "owner": {
             "type": "string",
-            "enum": ["用户", "Owner", "Hermes", "ClaudeCode", "Codex", "项目历史债"]
+            "enum": ["用户", "Owner", "Hermes", "ClaudeCode", "Codex", "worker adapters", "项目历史债"]
           },
           "status": { "type": "string" },
           "evidence": { "type": "string" },
@@ -389,7 +438,7 @@
         "final_decision": {
           "type": "string",
           "description": "Final acceptance decision.",
-          "enum": ["ACCEPTED", "NOT_ACCEPTED", "PARTIAL", "BLOCKED"]
+          "enum": ["ACCEPTED", "NOT_ACCEPTED", "PARTIAL", "BLOCKED", "FAIL"]
         }
       }
     },
@@ -755,7 +804,13 @@
         "classification": { "type": "string" },
         "command_log": { "type": "string" },
         "claudecode_result": { "type": "string" },
-        "claudecode_result_contains_acceptance": { "type": "boolean" }
+        "claudecode_result_contains_acceptance": { "type": "boolean" },
+        "worker_results": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "worker_result_contains_acceptance": { "type": "boolean" },
+        "worker_result_acceptance_complete": { "type": "boolean" }
       }
     },
     "state_source": {

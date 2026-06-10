@@ -12,6 +12,7 @@ Reads:
   work-orders/*.json
   raw/command-log.jsonl
   raw/claudecode-result.json
+  raw/worker/*.worker-result.json
   raw/files-touched.txt
 
 Writes:
@@ -86,6 +87,7 @@ claude_result_path = run_dir / "raw" / "claudecode-result.json"
 failure_result_path = run_dir / "raw" / "failure-result.json"
 files_touched_path = run_dir / "raw" / "files-touched.txt"
 replay_result_path = run_dir / "generated" / "replay-result.json"
+worker_result_paths = sorted((run_dir / "raw" / "worker").glob("*.worker-result.json"))
 
 manifest = load_json(manifest_path, {})
 classification = load_json(classification_path, {
@@ -154,6 +156,66 @@ if events_path.exists():
     for line in events_path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             event_types.append(json.loads(line).get("event_type", ""))
+
+
+def worker_acceptance_complete(value):
+    if not isinstance(value, dict):
+        return False
+    acceptance = value.get("acceptance")
+    return isinstance(acceptance, dict) and acceptance.get("complete") is True
+
+
+def worker_deferred_summary(value):
+    if not isinstance(value, dict):
+        return {"is_deferred": False, "reason": ""}
+    deferred = value.get("deferred")
+    if not isinstance(deferred, dict):
+        return {"is_deferred": value.get("status") == "deferred", "reason": ""}
+    return {
+        "is_deferred": bool(deferred.get("is_deferred") or value.get("status") == "deferred"),
+        "reason": str(deferred.get("reason", "") or ""),
+    }
+
+
+worker_results = []
+worker_result_violations = []
+for path in worker_result_paths:
+    raw_worker = load_json(path, {})
+    review = raw_worker.get("review") if isinstance(raw_worker.get("review"), dict) else {}
+    deferred = worker_deferred_summary(raw_worker)
+    attempted_acceptance = isinstance(raw_worker, dict) and "acceptance" in raw_worker
+    acceptance_complete = worker_acceptance_complete(raw_worker)
+    if acceptance_complete:
+        worker_result_violations.append({
+            "path": rel(path),
+            "violation": "worker result attempted acceptance.complete=true",
+        })
+    if deferred["is_deferred"] and not deferred["reason"].strip():
+        worker_result_violations.append({
+            "path": rel(path),
+            "violation": "deferred worker result missing reason",
+        })
+    if deferred["is_deferred"] and review.get("verdict") == "PASS":
+        worker_result_violations.append({
+            "path": rel(path),
+            "violation": "deferred worker result reported PASS",
+        })
+    worker_results.append({
+        "path": rel(path),
+        "work_order_id": raw_worker.get("work_order_id", ""),
+        "worker": raw_worker.get("worker", ""),
+        "worker_skill": raw_worker.get("worker_skill", ""),
+        "status": raw_worker.get("status", ""),
+        "result_type": raw_worker.get("result_type", ""),
+        "review_verdict": review.get("verdict", ""),
+        "blocking_findings": review.get("blocking_findings", []) if isinstance(review.get("blocking_findings"), list) else [],
+        "deferred": deferred["is_deferred"],
+        "deferred_reason": deferred["reason"],
+        "raw_output_path": raw_worker.get("raw_output_path", ""),
+        "structured_output_path": raw_worker.get("structured_output_path", ""),
+        "worker_attempted_acceptance": attempted_acceptance,
+        "worker_acceptance_complete": acceptance_complete,
+    })
 
 command_log = []
 if command_log_path.exists():
@@ -295,13 +357,14 @@ scale = classification.get("scale", "S")
 tests_pass = green_ok if required_matt_skill == "tdd" else all(int(item.get("exit_code", 0)) == 0 for item in command_log)
 evidence_present = tdd_sequence_verified if required_matt_skill == "tdd" else bool(command_log or claude_result)
 acceptance_complete = bool(claude_result.get("status") == "completed" and evidence_present and tests_pass)
-if failure_present:
+worker_policy_failure = bool(worker_result_violations)
+if failure_present or worker_policy_failure:
     tests_pass = False
     acceptance_complete = False
 status_color = "yellow" if any(int(item.get("exit_code", 0)) != 0 for item in command_log) else "green"
 if not acceptance_complete:
     status_color = "red" if claude_result.get("blocked") else "yellow"
-if failure_present:
+if failure_present or worker_policy_failure:
     status_color = "red"
 
 source_files = [
@@ -321,6 +384,15 @@ if failure_result_path.exists():
     source_files.append(rel(failure_result_path))
 for path in sorted((run_dir / "raw" / "commands").glob("*.json")):
     source_files.append(rel(path))
+for path in worker_result_paths:
+    source_files.append(rel(path))
+    worker_data = load_json(path, {})
+    for key in ("raw_output_path", "structured_output_path"):
+        value = worker_data.get(key, "")
+        if isinstance(value, str) and value:
+            candidate = run_dir / value
+            if candidate.exists() and candidate.is_file():
+                source_files.append(rel(candidate))
 
 codex_deferred = claude_result.get("codex_deferred", {}) if isinstance(claude_result.get("codex_deferred"), dict) else {}
 codex_required = scale == "L"
@@ -332,7 +404,7 @@ if codex_required and not codex_is_deferred:
 
 state = {
     "run_id": manifest.get("run_id", run_dir.name),
-    "status": "failed" if failure_present else "completed" if acceptance_complete else "partial",
+    "status": "failed" if failure_present or worker_policy_failure else "completed" if acceptance_complete else "partial",
     "failed_phase": selected_failure.get("failed_phase", ""),
     "failed_command": selected_failure.get("failed_command", ""),
     "failed_exit_code": selected_failure.get("failed_exit_code"),
@@ -342,6 +414,13 @@ state = {
     "current_gate": "Gate 8: generated evidence report",
     "classification": classification,
     "work_orders": work_orders,
+    "worker_results": worker_results,
+    "worker_result_contract": {
+        "required": bool(worker_results or "WORKER_RESULT_RECORDED" in event_types),
+        "deferred_reason": "",
+        "source": "raw/worker/*.worker-result.json",
+    },
+    "worker_result_violations": worker_result_violations,
     "allowed_files": files_touched,
     "forbidden_files": [".env", "secrets.json", "~/.hermes", "~/.claude"],
     "modified_files": files_touched,
@@ -361,7 +440,7 @@ state = {
     },
     "acceptance": {
         "complete": acceptance_complete,
-        "final_decision": "ACCEPTED" if acceptance_complete else "FAIL" if failure_present else "PARTIAL",
+        "final_decision": "ACCEPTED" if acceptance_complete else "FAIL" if failure_present or worker_policy_failure else "PARTIAL",
     },
     "approval_gates": {
         "commit_approved": False,
@@ -387,9 +466,9 @@ state = {
             "codex_review": "不需要" if not codex_required else ("deferred" if codex_is_deferred else "UNKNOWN"),
             "approval": "未请求",
         },
-        "largest_risk": first_nonempty(selected_failure.get("reason"), "TDD RED is expected failure and must be interpreted through command_log_summary") if failure_present else "TDD RED is expected failure and must be interpreted through command_log_summary",
+            "largest_risk": first_nonempty(selected_failure.get("reason"), "worker result contract violation") if failure_present or worker_policy_failure else "TDD RED is expected failure and must be interpreted through command_log_summary",
         "needs_user_decision": False,
-        "next_action": "Review generated/final-report.md and repair the failed command" if failure_present else "Review generated/final-report.md; commit/push still requires approval",
+            "next_action": "Review generated/final-report.md and repair the failed evidence contract" if failure_present or worker_policy_failure else "Review generated/final-report.md; commit/push still requires approval",
     },
     "stage_updates": [
         {
@@ -418,6 +497,14 @@ state = {
             "blocking": not bool(claude_result),
             "failure_owner": "" if claude_result else "ClaudeCode",
         },
+        {
+            "item": "worker result contract",
+            "owner": "worker adapters",
+            "status": "completed" if worker_results else "not-recorded",
+            "evidence": ", ".join(item.get("path", "") for item in worker_results) if worker_results else "missing",
+            "blocking": bool(worker_result_violations),
+            "failure_owner": "worker" if worker_result_violations else "",
+        },
     ],
     "approval_inbox": [],
     "baseline_debt": [],
@@ -432,7 +519,7 @@ state = {
                 "planned": True,
                 "used": True,
                 "evidence": "run-manifest.json + generated/run-state.json",
-                "verdict": "FAIL" if failure_present else "PASS",
+                "verdict": "FAIL" if failure_present or worker_policy_failure else "PASS",
             }
         ],
         "claudecode_skills": [
@@ -504,6 +591,9 @@ state = {
         "claudecode_result": "raw/claudecode-result.json" if claude_result_path.exists() else "",
         "claudecode_result_contains_acceptance": isinstance(raw_claude_result, dict) and "acceptance" in raw_claude_result,
         "claudecode_result_contract_valid": bool(claude_contract_valid),
+        "worker_results": [item.get("path", "") for item in worker_results],
+        "worker_result_contains_acceptance": any(item.get("worker_attempted_acceptance") for item in worker_results),
+        "worker_result_acceptance_complete": any(item.get("worker_acceptance_complete") for item in worker_results),
         "failure_result": "raw/failure-result.json" if failure_result_path.exists() else "",
     },
     "state_source": "generated",
@@ -528,6 +618,9 @@ if [[ -s "$RUN_DIR/events.jsonl" ]]; then
   if [[ -f "$RUN_DIR/raw/failure-result.json" ]]; then
     EVENT_ARTIFACTS+=(--artifact raw/failure-result.json)
   fi
+  while IFS= read -r worker_artifact; do
+    EVENT_ARTIFACTS+=(--artifact "$worker_artifact")
+  done < <(cd "$RUN_DIR" && find raw/worker -type f \( -name "*.worker-result.json" -o -name "*.raw.txt" -o -name "*.structured.json" \) 2>/dev/null | sort)
   if [[ ${#EVENT_ARTIFACTS[@]} -gt 0 ]]; then
     "$SCRIPT_DIR/append-event.sh" \
       --run-dir "$RUN_DIR" \
@@ -575,6 +668,9 @@ state["replay_result"] = replay
 extra_sources = ["events.jsonl", "state.json", "generated/replay-result.json"]
 if (run_dir / "raw" / "failure-result.json").exists():
     extra_sources.append("raw/failure-result.json")
+for path in sorted((run_dir / "raw" / "worker").glob("*")):
+    if path.is_file():
+        extra_sources.append(str(path.relative_to(run_dir)))
 state["provenance"]["source_files"] = sorted(set(state["provenance"].get("source_files", []) + extra_sources))
 
 run_state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
