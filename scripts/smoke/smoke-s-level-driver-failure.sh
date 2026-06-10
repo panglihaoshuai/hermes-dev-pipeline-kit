@@ -55,12 +55,17 @@ if [[ "$DRIVER_EXIT" -eq 0 ]]; then
 fi
 
 test -f "$RUN_DIR/raw/failure-result.json"
+test -f "$RUN_DIR/raw/commands/cmd-0001.json"
 test -f "$RUN_DIR/generated/run-state.json"
 test -f "$RUN_DIR/generated/replay-result.json"
 test -f "$RUN_DIR/generated/policy-result.json"
 test -f "$RUN_DIR/generated/final-report.md"
 
 grep -q '"event_type":"COMMAND_RECORDED_GREEN"' "$RUN_DIR/events.jsonl"
+if grep '"event_type":"COMMAND_RECORDED_GREEN"' "$RUN_DIR/events.jsonl" | grep -q "raw/command-log.jsonl"; then
+  echo "FAIL: command event must not hash raw/command-log.jsonl"
+  exit 1
+fi
 grep -q '"event_type":"RUN_FAILED"' "$RUN_DIR/events.jsonl"
 grep -q '"event_type":"RUN_STATE_GENERATED"' "$RUN_DIR/events.jsonl"
 grep -q '"event_type":"POLICY_CHECKED"' "$RUN_DIR/events.jsonl"

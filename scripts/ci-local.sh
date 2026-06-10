@@ -179,6 +179,7 @@ main() {
   bash scripts/smoke/smoke-generated-run-state.sh
   bash scripts/smoke/smoke-installed-evidence-harness.sh
   bash scripts/smoke/smoke-real-task-medium.sh
+  bash scripts/smoke/smoke-command-log-append-replay.sh
   bash scripts/smoke/smoke-state-machine-medium.sh
   bash scripts/smoke/smoke-state-machine-tamper.sh
   bash scripts/smoke/smoke-failure-finalization.sh

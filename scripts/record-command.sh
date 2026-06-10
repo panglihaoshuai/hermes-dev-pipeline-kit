@@ -47,7 +47,7 @@ if [[ ! -d "$RUN_DIR/raw" ]]; then
   exit 1
 fi
 
-mkdir -p "$RUN_DIR/raw/stdout" "$RUN_DIR/raw/stderr"
+mkdir -p "$RUN_DIR/raw/commands" "$RUN_DIR/raw/stdout" "$RUN_DIR/raw/stderr"
 LOG="$RUN_DIR/raw/command-log.jsonl"
 touch "$LOG"
 
@@ -63,8 +63,11 @@ if [[ -z "$STEP_ID" ]]; then
 fi
 
 SAFE_STEP="$(printf "%s" "$STEP_ID" | tr -c 'A-Za-z0-9_.-' '_')"
-STDOUT_REL="raw/stdout/${SEQ}-${SAFE_STEP}.out"
-STDERR_REL="raw/stderr/${SEQ}-${SAFE_STEP}.err"
+COMMAND_ID="$(printf "cmd-%04d" "$SEQ")"
+COMMAND_RECORD_REL="raw/commands/${COMMAND_ID}.json"
+COMMAND_RECORD_PATH="$RUN_DIR/$COMMAND_RECORD_REL"
+STDOUT_REL="raw/stdout/${COMMAND_ID}.out"
+STDERR_REL="raw/stderr/${COMMAND_ID}.err"
 STDOUT_PATH="$RUN_DIR/$STDOUT_REL"
 STDERR_PATH="$RUN_DIR/$STDERR_REL"
 
@@ -84,6 +87,7 @@ ENDED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 RUN_DIR="$RUN_DIR" \
 SEQ="$SEQ" \
+COMMAND_ID="$COMMAND_ID" \
 STEP_ID="$STEP_ID" \
 PHASE="$PHASE" \
 COMMAND_DISPLAY="$COMMAND_DISPLAY" \
@@ -91,14 +95,18 @@ CWD="$CWD" \
 STARTED_AT="$STARTED_AT" \
 ENDED_AT="$ENDED_AT" \
 EXIT_CODE="$EXIT_CODE" \
+COMMAND_RECORD_REL="$COMMAND_RECORD_REL" \
+COMMAND_RECORD_PATH="$COMMAND_RECORD_PATH" \
 STDOUT_REL="$STDOUT_REL" \
 STDERR_REL="$STDERR_REL" \
 python3 - <<'PY' >> "$LOG"
 import json
 import os
+import pathlib
 
 record = {
     "seq": int(os.environ["SEQ"]),
+    "command_id": os.environ["COMMAND_ID"],
     "step_id": os.environ["STEP_ID"],
     "phase": os.environ["PHASE"],
     "command": os.environ["COMMAND_DISPLAY"],
@@ -108,10 +116,13 @@ record = {
     "exit_code": int(os.environ["EXIT_CODE"]),
     "passed": int(os.environ["EXIT_CODE"]) == 0,
     "failure": int(os.environ["EXIT_CODE"]) != 0,
+    "command_record_path": os.environ["COMMAND_RECORD_REL"],
     "stdout_path": os.environ["STDOUT_REL"],
     "stderr_path": os.environ["STDERR_REL"],
 }
-print(json.dumps(record, ensure_ascii=False, separators=(",", ":")))
+payload = json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+pathlib.Path(os.environ["COMMAND_RECORD_PATH"]).write_text(payload + "\n", encoding="utf-8")
+print(payload)
 PY
 
 PHASE_UPPER="$(printf "%s" "$PHASE" | tr '[:lower:]' '[:upper:]')"
@@ -128,7 +139,7 @@ if [[ -f "$RUN_DIR/events.jsonl" && ( "$PHASE_UPPER" == "RED" || "$PHASE_UPPER" 
     --event-type "$EVENT_TYPE" \
     --actor harness \
     --state-after "$STATE_AFTER" \
-    --artifact raw/command-log.jsonl \
+    --artifact "$COMMAND_RECORD_REL" \
     --artifact "$STDOUT_REL" \
     --artifact "$STDERR_REL" >/dev/null
 fi

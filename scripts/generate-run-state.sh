@@ -319,6 +319,8 @@ if replay_result_path.exists():
     source_files.append(rel(replay_result_path))
 if failure_result_path.exists():
     source_files.append(rel(failure_result_path))
+for path in sorted((run_dir / "raw" / "commands").glob("*.json")):
+    source_files.append(rel(path))
 
 codex_deferred = claude_result.get("codex_deferred", {}) if isinstance(claude_result.get("codex_deferred"), dict) else {}
 codex_required = scale == "L"
@@ -495,6 +497,10 @@ state = {
         "run_manifest": "run-manifest.json",
         "classification": "classification.json",
         "command_log": "raw/command-log.jsonl",
+        "command_records": [
+            rel(path)
+            for path in sorted((run_dir / "raw" / "commands").glob("*.json"))
+        ],
         "claudecode_result": "raw/claudecode-result.json" if claude_result_path.exists() else "",
         "claudecode_result_contains_acceptance": isinstance(raw_claude_result, dict) and "acceptance" in raw_claude_result,
         "claudecode_result_contract_valid": bool(claude_contract_valid),
@@ -515,19 +521,27 @@ print(out)
 PY
 
 if [[ -s "$RUN_DIR/events.jsonl" ]]; then
-  EVENT_ARTIFACTS=(--artifact raw/command-log.jsonl)
+  EVENT_ARTIFACTS=()
   if [[ -f "$RUN_DIR/raw/claudecode-result.json" ]]; then
     EVENT_ARTIFACTS+=(--artifact raw/claudecode-result.json)
   fi
   if [[ -f "$RUN_DIR/raw/failure-result.json" ]]; then
     EVENT_ARTIFACTS+=(--artifact raw/failure-result.json)
   fi
-  "$SCRIPT_DIR/append-event.sh" \
-    --run-dir "$RUN_DIR" \
-    --event-type RUN_STATE_GENERATED \
-    --actor harness \
-    --state-after RUN_STATE_GENERATED \
-    "${EVENT_ARTIFACTS[@]}" >/dev/null
+  if [[ ${#EVENT_ARTIFACTS[@]} -gt 0 ]]; then
+    "$SCRIPT_DIR/append-event.sh" \
+      --run-dir "$RUN_DIR" \
+      --event-type RUN_STATE_GENERATED \
+      --actor harness \
+      --state-after RUN_STATE_GENERATED \
+      "${EVENT_ARTIFACTS[@]}" >/dev/null
+  else
+    "$SCRIPT_DIR/append-event.sh" \
+      --run-dir "$RUN_DIR" \
+      --event-type RUN_STATE_GENERATED \
+      --actor harness \
+      --state-after RUN_STATE_GENERATED >/dev/null
+  fi
 
   "$SCRIPT_DIR/replay-run.sh" "$RUN_DIR" >/dev/null
 

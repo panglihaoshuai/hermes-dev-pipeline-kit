@@ -35,7 +35,12 @@ if [[ -z "$RUN_DIR" || -z "$EVENT_TYPE" || -z "$ACTOR" || -z "$STATE_AFTER" ]]; 
   exit 1
 fi
 
-python3 - "$RUN_DIR" "$EVENT_TYPE" "$ACTOR" "$STATE_AFTER" "${ARTIFACTS[@]}" <<'PY'
+PY_ARGS=("$RUN_DIR" "$EVENT_TYPE" "$ACTOR" "$STATE_AFTER")
+if [[ ${#ARTIFACTS[@]} -gt 0 ]]; then
+  PY_ARGS+=("${ARTIFACTS[@]}")
+fi
+
+python3 - "${PY_ARGS[@]}" <<'PY'
 import hashlib
 import json
 import pathlib
@@ -174,7 +179,11 @@ def transition_allowed(state_before, event_type, events):
             if missing:
                 return False, f"M/L run-state missing required events: {','.join(missing)}"
             return (state_before == "CLAUDECODE_RESULT_RECORDED", "M/L run-state must follow ClaudeCode result")
-        return ("COMMAND_RECORDED_GREEN" in seen and state_before == "GREEN_RECORDED", "S run-state must follow GREEN")
+        return (
+            "COMMAND_RECORDED_GREEN" in seen
+            and state_before in {"GREEN_RECORDED", "CLAUDECODE_RESULT_RECORDED"},
+            "S run-state must follow GREEN or ClaudeCode result",
+        )
     if event_type == "POLICY_CHECKED":
         return (state_before == "RUN_STATE_GENERATED", "policy must follow generated run-state")
     if event_type == "FINAL_REPORT_GENERATED":

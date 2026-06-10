@@ -11,7 +11,8 @@ Validates:
   - seq is contiguous
   - prev_event_hash links to the prior event_hash
   - event_hash equals sha256(canonical_json(event_without_event_hash))
-  - artifact_hashes match current artifact bytes
+  - artifact_hashes match current immutable artifact bytes
+  - raw/command-log.jsonl append-only index matches raw/commands/*.json
   - basic state transitions are valid
 
 Writes:
@@ -130,7 +131,6 @@ prev_hash = ""
 state = "NONE"
 seen = set()
 last_hash = ""
-command_event_count = 0
 
 if not events:
     failures.append("events.jsonl missing or empty")
@@ -146,20 +146,19 @@ for expected_seq, event in enumerate(events, 1):
     expected_hash = canonical_hash(without_hash)
     if event_hash != expected_hash:
         failures.append(f"{event_type}: event_hash mismatch")
-    if event_type in {"COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN"}:
-        command_event_count += 1
     artifact_hashes = event.get("artifact_hashes") or {}
+    if event_type in {"COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN"}:
+        if not any(str(path).startswith("raw/commands/") and str(path).endswith(".json") for path in artifact_hashes):
+            failures.append(f"{event_type}: missing immutable per-command record artifact")
     for rel_path, expected_artifact_hash in artifact_hashes.items():
         artifact_path = run_dir / rel_path
         if not artifact_path.exists() or not artifact_path.is_file():
             failures.append(f"{event_type}: artifact missing: {rel_path}")
             continue
         if rel_path == "raw/command-log.jsonl" and event_type in {"COMMAND_RECORDED_RED", "COMMAND_RECORDED_GREEN"}:
-            lines = artifact_path.read_text(encoding="utf-8").splitlines()
-            payload = ("\n".join(lines[:command_event_count]) + "\n").encode("utf-8")
-            actual_hash = hashlib.sha256(payload).hexdigest()
-        else:
-            actual_hash = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+            failures.append(f"{event_type}: command event must reference immutable per-command artifacts, not raw/command-log.jsonl")
+            continue
+        actual_hash = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
         if actual_hash != expected_artifact_hash:
             failures.append(f"{event_type}: artifact hash mismatch: {rel_path}")
     transition_failure = check_transition(state, event, seen)
@@ -181,9 +180,60 @@ if recorded_state:
 
 command_log_path = run_dir / "raw" / "command-log.jsonl"
 if command_log_path.exists():
-    line_count = len([line for line in command_log_path.read_text(encoding="utf-8").splitlines() if line.strip()])
-    if line_count != command_event_count:
-        failures.append(f"raw/command-log.jsonl line count {line_count} != command event count {command_event_count}")
+    command_records = []
+    for line_no, line in enumerate(command_log_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            command_records.append((line_no, json.loads(line)))
+        except json.JSONDecodeError as exc:
+            failures.append(f"raw/command-log.jsonl line {line_no}: invalid JSON: {exc}")
+
+    indexed_paths = []
+    has_immutable_records = any(
+        isinstance(record, dict) and record.get("command_record_path")
+        for _, record in command_records
+    )
+    if has_immutable_records:
+        for line_no, record in command_records:
+            if not isinstance(record, dict):
+                failures.append(f"raw/command-log.jsonl line {line_no}: record is not an object")
+                continue
+            command_id = record.get("command_id")
+            command_record_rel = record.get("command_record_path")
+            stdout_rel = record.get("stdout_path")
+            stderr_rel = record.get("stderr_path")
+            if not command_id:
+                failures.append(f"raw/command-log.jsonl line {line_no}: missing command_id")
+            if not command_record_rel:
+                failures.append(f"raw/command-log.jsonl line {line_no}: missing command_record_path")
+                continue
+            command_record_path = run_dir / command_record_rel
+            indexed_paths.append(command_record_rel)
+            if not command_record_path.exists() or not command_record_path.is_file():
+                failures.append(f"raw/command-log.jsonl line {line_no}: command record missing: {command_record_rel}")
+                continue
+            try:
+                command_record = json.loads(command_record_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                failures.append(f"{command_record_rel}: invalid JSON: {exc}")
+                continue
+            if command_record != record:
+                failures.append(f"{command_record_rel}: command record does not match command-log index line {line_no}")
+            if stdout_rel and not (run_dir / stdout_rel).is_file():
+                failures.append(f"{command_record_rel}: stdout missing: {stdout_rel}")
+            if stderr_rel and not (run_dir / stderr_rel).is_file():
+                failures.append(f"{command_record_rel}: stderr missing: {stderr_rel}")
+
+        actual_paths = sorted(
+            str(path.relative_to(run_dir))
+            for path in (run_dir / "raw" / "commands").glob("*.json")
+        )
+        if sorted(indexed_paths) != actual_paths:
+            failures.append(
+                "raw/command-log.jsonl command record index mismatch: "
+                f"indexed {len(indexed_paths)} != files {len(actual_paths)}"
+            )
 
 result = {
     "replay_pass": not failures,

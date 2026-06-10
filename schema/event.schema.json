@@ -79,10 +79,12 @@
     "timestamp": { "type": "string", "minLength": 1 },
     "artifact_paths": {
       "type": "array",
+      "description": "Immutable artifacts bound to this event. Command events must reference raw/commands/<command-id>.json plus stdout/stderr, not the append-only raw/command-log.jsonl index.",
       "items": { "type": "string" }
     },
     "artifact_hashes": {
       "type": "object",
+      "description": "Full-file sha256 hashes for immutable event artifacts.",
       "additionalProperties": {
         "type": "string",
         "pattern": "^[a-f0-9]{64}$"

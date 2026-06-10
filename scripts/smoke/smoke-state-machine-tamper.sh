@@ -40,10 +40,10 @@ EOF
 "$REPO_ROOT/scripts/generate-run-state.sh" "$RUN_DIR" >/dev/null
 "$REPO_ROOT/scripts/replay-run.sh" "$RUN_DIR" >/dev/null
 
-printf '\n# tampered\n' >> "$RUN_DIR/raw/command-log.jsonl"
+printf '\n' >> "$RUN_DIR/raw/commands/cmd-0001.json"
 
 if "$REPO_ROOT/scripts/replay-run.sh" "$RUN_DIR" >/dev/null 2>&1; then
-  echo "FAIL: replay-run should fail after command-log tampering"
+  echo "FAIL: replay-run should fail after immutable command record tampering"
   exit 1
 fi
 

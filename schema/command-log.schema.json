@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "seq",
+    "command_id",
     "step_id",
     "phase",
     "command",
@@ -13,12 +14,19 @@
     "started_at",
     "ended_at",
     "exit_code",
+    "passed",
+    "failure",
+    "command_record_path",
     "stdout_path",
     "stderr_path"
   ],
   "additionalProperties": false,
   "properties": {
     "seq": { "type": "integer", "minimum": 1 },
+    "command_id": {
+      "type": "string",
+      "pattern": "^cmd-[0-9]{4,}$"
+    },
     "step_id": { "type": "string", "minLength": 1 },
     "phase": { "type": "string" },
     "command": { "type": "string", "minLength": 1 },
@@ -26,6 +34,12 @@
     "started_at": { "type": "string", "minLength": 1 },
     "ended_at": { "type": "string", "minLength": 1 },
     "exit_code": { "type": "integer" },
+    "passed": { "type": "boolean" },
+    "failure": { "type": "boolean" },
+    "command_record_path": {
+      "type": "string",
+      "pattern": "^raw/commands/cmd-[0-9]{4,}\\.json$"
+    },
     "stdout_path": { "type": "string", "minLength": 1 },
     "stderr_path": { "type": "string", "minLength": 1 }
   }

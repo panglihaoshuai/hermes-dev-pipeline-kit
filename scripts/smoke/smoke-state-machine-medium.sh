@@ -157,6 +157,8 @@ EOF
 test -f "$RUN_DIR/events.jsonl"
 test -f "$RUN_DIR/state.json"
 test -f "$RUN_DIR/raw/command-log.jsonl"
+test -f "$RUN_DIR/raw/commands/cmd-0001.json"
+test -f "$RUN_DIR/raw/commands/cmd-0002.json"
 test -f "$RUN_DIR/raw/claudecode-result.json"
 test -f "$RUN_DIR/generated/run-state.json"
 test -f "$RUN_DIR/generated/replay-result.json"
@@ -165,6 +167,10 @@ test -f "$RUN_DIR/generated/final-report.md"
 grep -q '"event_chain"' "$RUN_DIR/generated/run-state.json"
 grep -q '"last_event_hash"' "$RUN_DIR/generated/run-state.json"
 grep -Eq "Overall:[[:space:]]+PASS" "$TMP_ROOT/policy.out"
+if grep '"event_type":"COMMAND_RECORDED_' "$RUN_DIR/events.jsonl" | grep -q "raw/command-log.jsonl"; then
+  echo "FAIL: command events must not hash raw/command-log.jsonl"
+  exit 1
+fi
 
 python3 - "$RUN_DIR/events.jsonl" "$RUN_DIR/generated/run-state.json" "$RUN_DIR/generated/replay-result.json" <<'PY'
 import json
