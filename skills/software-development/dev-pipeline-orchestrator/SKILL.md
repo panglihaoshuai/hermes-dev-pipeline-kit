@@ -63,6 +63,7 @@ Required installed script names:
 
 - `run-init.sh`
 - `record-command.sh`
+- `drive-s-run.sh`
 - `generate-run-state.sh`
 - `final-report.sh`
 - `policy-check.sh`
@@ -91,6 +92,7 @@ Required v0.4 installed script names:
 - `replay-run.sh`
 - `run-init.sh`
 - `record-command.sh`
+- `drive-s-run.sh`
 - `generate-run-state.sh`
 - `final-report.sh`
 - `policy-check.sh`
@@ -125,6 +127,23 @@ For smoke and calibration tasks:
 - do not introduce npm, pip, or global dependency installs just to pass a smoke;
 - if a dependency is missing, classify it as an environment failure and finalize the run as failed;
 - missing dependency evidence must appear in `raw/failure-result.json`, `generated/run-state.json`, and `generated/final-report.md`.
+
+## S-level Runtime Driver Rule
+
+After `CLASSIFICATION_RECORDED`, `CLASSIFIED` is not a terminal state.
+
+For S-level `auto_run` tasks, Hermes must not stop after classification.
+Hermes must either:
+
+1. invoke `drive-s-run.sh`, or
+2. explicitly perform the equivalent sequence:
+   `record-command.sh` -> `generate-run-state.sh` -> `policy-check.sh` -> `final-report.sh`
+
+If the command fails, Hermes must invoke `fail-run.sh` and still generate a failed `run-state`, `policy-result`, and `final-report`.
+
+If an S-level run stops at `CLASSIFIED`, the final verdict must be `FAIL` or `PARTIAL`.
+
+S-level `auto_run` must not leave the work order pending without command evidence.
 
 ## Hermes Delegation Protocol
 
@@ -1104,6 +1123,7 @@ The skill supports three modes:
 - split work orders
 - run Codex plan review when required
 - execute approved work orders through ClaudeCode
+- for S-level auto_run tasks, invoke `drive-s-run.sh` or the equivalent sequence so classification is not terminal
 - run Hermes verification after each work order
 - run Codex diff review when required
 - run `dev-pipeline-report`

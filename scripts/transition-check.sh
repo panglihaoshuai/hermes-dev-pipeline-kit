@@ -20,7 +20,12 @@ while [[ $# -gt 0 ]]; do
     --run-dir) RUN_DIR="${2:-}"; shift 2 ;;
     --event-type) EVENT_TYPE="${2:-}"; shift 2 ;;
     --state-after) STATE_AFTER="${2:-}"; shift 2 ;;
-    --artifact) ARTIFACTS+=("${2:-}"); shift 2 ;;
+    --artifact)
+      if [[ -n "${2:-}" ]]; then
+        ARTIFACTS+=("$2")
+      fi
+      shift 2
+      ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Error: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -31,7 +36,12 @@ if [[ -z "$RUN_DIR" || -z "$EVENT_TYPE" || -z "$STATE_AFTER" ]]; then
   exit 1
 fi
 
-python3 - "$RUN_DIR" "$EVENT_TYPE" "$STATE_AFTER" "${ARTIFACTS[@]:-}" <<'PY'
+PY_ARGS=("$RUN_DIR" "$EVENT_TYPE" "$STATE_AFTER")
+if [[ ${#ARTIFACTS[@]} -gt 0 ]]; then
+  PY_ARGS+=("${ARTIFACTS[@]}")
+fi
+
+python3 - "${PY_ARGS[@]}" <<'PY'
 import json
 import pathlib
 import sys

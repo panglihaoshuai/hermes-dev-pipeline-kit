@@ -84,6 +84,7 @@ ENTRYPOINT_FILES=(
   "scripts/ci-local.sh"
   "scripts/run-init.sh"
   "scripts/record-command.sh"
+  "scripts/drive-s-run.sh"
   "scripts/generate-run-state.sh"
   "scripts/final-report.sh"
   "scripts/uninstall.sh"

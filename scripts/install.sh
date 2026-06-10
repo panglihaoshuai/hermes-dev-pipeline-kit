@@ -49,6 +49,7 @@ HARNESS_SCRIPT_NAMES=(
     "replay-run.sh"
     "run-init.sh"
     "record-command.sh"
+    "drive-s-run.sh"
     "generate-run-state.sh"
     "final-report.sh"
     "policy-check.sh"

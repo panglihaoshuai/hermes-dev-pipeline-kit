@@ -22,7 +22,7 @@ HOME="$TMP_HOME" bash "$REPO_ROOT/scripts/install.sh" --yes >/tmp/hermes-install
 
 BIN="$TMP_HOME/.hermes/skills/software-development/dev-pipeline-orchestrator/bin"
 
-for script in append-event.sh transition-check.sh replay-run.sh run-init.sh record-command.sh generate-run-state.sh final-report.sh policy-check.sh; do
+for script in append-event.sh transition-check.sh replay-run.sh run-init.sh record-command.sh drive-s-run.sh generate-run-state.sh final-report.sh policy-check.sh fail-run.sh; do
   if [[ ! -x "$BIN/$script" ]]; then
     echo "FAIL: installed $script missing or not executable at $BIN/$script"
     exit 1

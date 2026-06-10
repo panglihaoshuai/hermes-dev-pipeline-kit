@@ -108,6 +108,9 @@ if [[ -d "$HERMES_SKILLS_DIR/software-development/dev-pipeline-orchestrator" ]];
         "installed record-command.sh" \
         "$INSTALLED_ORCHESTRATOR/bin/record-command.sh"
     check_core_executable \
+        "installed drive-s-run.sh" \
+        "$INSTALLED_ORCHESTRATOR/bin/drive-s-run.sh"
+    check_core_executable \
         "installed generate-run-state.sh" \
         "$INSTALLED_ORCHESTRATOR/bin/generate-run-state.sh"
     check_core_executable \
@@ -145,6 +148,7 @@ check_core "transition-check.sh" "$KIT_ROOT/scripts/transition-check.sh"
 check_core "replay-run.sh" "$KIT_ROOT/scripts/replay-run.sh"
 check_core "run-init.sh" "$KIT_ROOT/scripts/run-init.sh"
 check_core "record-command.sh" "$KIT_ROOT/scripts/record-command.sh"
+check_core "drive-s-run.sh" "$KIT_ROOT/scripts/drive-s-run.sh"
 check_core "generate-run-state.sh" "$KIT_ROOT/scripts/generate-run-state.sh"
 check_core "final-report.sh" "$KIT_ROOT/scripts/final-report.sh"
 check_core "fail-run.sh" "$KIT_ROOT/scripts/fail-run.sh"

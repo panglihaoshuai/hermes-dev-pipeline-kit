@@ -182,6 +182,8 @@ main() {
   bash scripts/smoke/smoke-state-machine-medium.sh
   bash scripts/smoke/smoke-state-machine-tamper.sh
   bash scripts/smoke/smoke-failure-finalization.sh
+  bash scripts/smoke/smoke-s-level-driver.sh
+  bash scripts/smoke/smoke-s-level-driver-failure.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

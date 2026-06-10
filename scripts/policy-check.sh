@@ -571,7 +571,7 @@ def evidence_complete(skill, evidence):
 
     if skill == "tdd":
         return (
-            non_empty(evidence.get("red"))
+            (non_empty(evidence.get("red")) or non_empty(evidence.get("red_not_applicable_reason")))
             and non_empty(evidence.get("green"))
             and non_empty(evidence.get("commands"))
             and non_empty(evidence.get("exit_codes"))

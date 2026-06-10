@@ -17,6 +17,7 @@ entrypoints:
   replay_run: scripts/replay-run.sh
   run_init: scripts/run-init.sh
   record_command: scripts/record-command.sh
+  drive_s_run: scripts/drive-s-run.sh
   generate_run_state: scripts/generate-run-state.sh
   final_report: scripts/final-report.sh
   fail_run: scripts/fail-run.sh
