@@ -98,6 +98,10 @@ main() {
   bash -n scripts/smoke/*.sh
   echo "PASS: bash syntax"
 
+  section "Plugin wrapper syntax"
+  python3 -m py_compile plugins/hermes-evidence-runtime/*.py
+  echo "PASS: plugin wrapper Python compile"
+
   section "Manifest"
   bash scripts/check-manifest.sh
 
@@ -185,6 +189,8 @@ main() {
   bash scripts/smoke/smoke-failure-finalization.sh
   bash scripts/smoke/smoke-s-level-driver.sh
   bash scripts/smoke/smoke-s-level-driver-failure.sh
+  bash scripts/smoke/smoke-plugin-wrapper.sh
+  bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

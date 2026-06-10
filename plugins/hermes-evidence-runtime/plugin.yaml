@@ -1,0 +1,12 @@
+name: hermes-evidence-runtime
+version: 0.5.1
+description: >
+  Experimental Hermes plugin wrapper for hermes-dev-pipeline-kit evidence
+  harness scripts. This plugin registers tools only; it does not implement
+  hooks, a memory provider, or replacement skills.
+provides_tools:
+  - evidence_doctor
+  - evidence_active_run_status
+  - evidence_run_init
+  - evidence_drive_s_run
+provides_hooks: []

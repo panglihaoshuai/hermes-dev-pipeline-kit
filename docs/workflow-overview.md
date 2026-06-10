@@ -678,3 +678,29 @@ prev_event_hash = previous event_hash
 ```
 
 Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is tamper-evident, not tamper-proof: a local writer can delete or rewrite a run, but replay detects mismatched hashes, broken links, invalid transitions, and changed artifacts within the submitted run.
+
+---
+
+## v0.5.1 Experimental Plugin Wrapper
+
+v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
+plugin wrapper around the existing v0.4 Bash harness scripts.
+
+The wrapper exposes four machine-readable tools:
+
+- `evidence_doctor`
+- `evidence_active_run_status`
+- `evidence_run_init`
+- `evidence_drive_s_run`
+
+v0.5.1 plugin wrapper is experimental.
+It is source-validated and temp-HOME discovery validated.
+It does not install into real `~/.hermes/plugins` by default.
+It does not replace built-in ClaudeCode/Codex/OpenCode skills.
+It does not implement hooks or memory provider.
+It does not replace the existing dev-pipeline-orchestrator skill.
+It does not capture official ClaudeCode/Codex/OpenCode output yet.
+
+The wrapper is validated with source-only smoke tests and temp-HOME discovery
+under `/tmp`. It is not installed to real `~/.hermes/plugins` by the v0.5.1
+installer path.
