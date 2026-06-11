@@ -50,6 +50,19 @@ adapter for simulated or caller-supplied worker output. Worker results cannot
 write final acceptance; `acceptance.complete=true` inside worker result JSON is
 invalid.
 
+### v0.5.4 — Worker output normalizer prototype
+
+Starting in v0.5.4, caller-supplied or simulated worker output can be normalized
+through `scripts/normalize-worker-result.sh` before being recorded as a v0.5.3
+worker result contract.
+
+The normalizer supports `claude-code`, `codex`, `opencode`, and `raw` adapters.
+The `raw` adapter maps to `worker=unknown` for schema compatibility.
+
+This is not official ClaudeCode/Codex/OpenCode capture. It does not invoke real
+workers, does not inspect real session stores, does not implement a memory
+provider, and does not replace `dev-pipeline-orchestrator`.
+
 ## Schema
 
 The JSON report schema is located at:
@@ -274,3 +287,14 @@ Worker result hard boundaries:
 - deferred Codex worker results must not report `review.verdict=PASS`;
 - raw worker output paths must exist and appear in provenance source files;
 - final acceptance remains owned by harness policy and Codex/Hermes gates.
+
+## v0.5.4 Worker Normalizer Rules
+
+`scripts/normalize-worker-result.sh` must produce JSON that passes
+`scripts/validate-worker-result.sh`. The output must not include final
+acceptance, must include raw output provenance fields, and must clearly preserve
+the boundary that worker output is evidence only.
+
+`scripts/simulate-worker-output.sh` exists only for smoke tests. Its output is
+explicitly marked `simulated: true` and must not be described as official worker
+capture.

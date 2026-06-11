@@ -97,3 +97,52 @@ EVIDENCE_RECORD_WORKER_RESULT_SCHEMA = {
         },
     },
 }
+
+EVIDENCE_NORMALIZE_WORKER_RESULT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "worker",
+        "worker_skill",
+        "work_order_id",
+        "status",
+        "result_type",
+        "raw_output_path",
+        "out_path",
+    ],
+    "properties": {
+        "worker": {
+            "type": "string",
+            "enum": ["claude-code", "codex", "opencode", "raw"],
+            "description": "Worker adapter to normalize. raw maps to worker=unknown in the v0.5.3 contract.",
+        },
+        "worker_skill": {
+            "type": "string",
+            "description": "Worker skill or mode that produced the output.",
+        },
+        "work_order_id": {
+            "type": "string",
+            "description": "Work order id associated with this worker output.",
+        },
+        "status": {
+            "type": "string",
+            "enum": ["completed", "partial", "blocked", "failed", "deferred"],
+        },
+        "result_type": {
+            "type": "string",
+            "enum": ["implementation", "review", "diagnostic", "plan", "unknown"],
+        },
+        "raw_output_path": {
+            "type": "string",
+            "description": "Path to caller-supplied raw worker output.",
+        },
+        "structured_output_path": {
+            "type": "string",
+            "description": "Optional path to caller-supplied structured JSON output.",
+        },
+        "out_path": {
+            "type": "string",
+            "description": "Destination worker-result JSON path.",
+        },
+    },
+}

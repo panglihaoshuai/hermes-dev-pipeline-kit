@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1/v0.5.2 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.5.4 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -10,6 +10,7 @@ This plugin registers tools that wrap the existing Bash evidence harness:
 - `evidence_drive_s_run` wraps `scripts/drive-s-run.sh`
 - `evidence_validate_worker_result` wraps `scripts/validate-worker-result.sh`
 - `evidence_record_worker_result` wraps `scripts/record-worker-result.sh`
+- `evidence_normalize_worker_result` wraps `scripts/normalize-worker-result.sh`
 
 The tools return machine-readable JSON strings.
 
@@ -46,3 +47,14 @@ simulated worker result JSON into the existing Bash harness evidence directory.
 It does not call real ClaudeCode, Codex, or OpenCode. It does not claim official
 worker output capture. Worker results are raw evidence only; they cannot set
 `acceptance.complete=true` and cannot replace Hermes/Codex final gates.
+
+v0.5.4 adds an Official Worker Wrapper Prototype normalizer. The name describes
+the target integration lane, not completed official capture. It normalizes
+caller-supplied or simulated `claude-code`, `codex`, `opencode`, and `raw`
+adapter output into the existing v0.5.3 worker-result contract.
+
+v0.5.4 does not invoke real ClaudeCode, Codex, or OpenCode. It does not parse
+real provider session stores. It does not implement a memory provider and does
+not add any production hook dependency. It does not replace built-in
+ClaudeCode/Codex/OpenCode skills or the existing `dev-pipeline-orchestrator`
+skill.

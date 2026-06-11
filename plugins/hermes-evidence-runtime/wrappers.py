@@ -402,3 +402,65 @@ def evidence_record_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
         "stderr_path": result["stderr_path"],
     })
     return parsed
+
+
+def evidence_normalize_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
+    worker = payload.get("worker")
+    if worker not in {"claude-code", "codex", "opencode", "raw"}:
+        raise WrapperError("worker must be one of claude-code, codex, opencode, raw")
+    worker_skill = payload.get("worker_skill")
+    if not isinstance(worker_skill, str) or not worker_skill.strip():
+        raise WrapperError("worker_skill must be a non-empty string")
+    work_order_id = payload.get("work_order_id")
+    if not isinstance(work_order_id, str) or not work_order_id.strip():
+        raise WrapperError("work_order_id must be a non-empty string")
+    status = payload.get("status")
+    if status not in {"completed", "partial", "blocked", "failed", "deferred"}:
+        raise WrapperError("status must be completed, partial, blocked, failed, or deferred")
+    result_type = payload.get("result_type")
+    if result_type not in {"implementation", "review", "diagnostic", "plan", "unknown"}:
+        raise WrapperError("result_type must be implementation, review, diagnostic, plan, or unknown")
+
+    raw_output_path = _as_path(payload.get("raw_output_path"), "raw_output_path")
+    out_path = _as_path(payload.get("out_path"), "out_path")
+    script = _require_script("normalize-worker-result.sh")
+    args = [
+        "bash",
+        str(script),
+        "--worker",
+        str(worker),
+        "--worker-skill",
+        worker_skill,
+        "--work-order-id",
+        work_order_id,
+        "--status",
+        str(status),
+        "--result-type",
+        str(result_type),
+        "--raw-output",
+        str(raw_output_path),
+        "--out",
+        str(out_path),
+    ]
+    if payload.get("structured_output_path"):
+        args.extend([
+            "--structured-output",
+            str(_as_path(payload.get("structured_output_path"), "structured_output_path")),
+        ])
+
+    result = _run_script(args, cwd=KIT_ROOT)
+    parsed = _extract_json(result["stdout"])
+    if not parsed:
+        parsed = {
+            "ok": result["exit_code"] == 0,
+            "verdict": "PASS" if result["exit_code"] == 0 else "FAIL",
+        }
+    else:
+        parsed["ok"] = bool(parsed.get("ok")) and result["exit_code"] == 0
+    parsed.update({
+        "script": "scripts/normalize-worker-result.sh",
+        "exit_code": result["exit_code"],
+        "stdout_path": result["stdout_path"],
+        "stderr_path": result["stderr_path"],
+    })
+    return parsed

@@ -195,6 +195,8 @@ main() {
   bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
+  bash scripts/smoke/smoke-worker-normalizer.sh
+  bash scripts/smoke/smoke-worker-normalizer-to-run-state.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

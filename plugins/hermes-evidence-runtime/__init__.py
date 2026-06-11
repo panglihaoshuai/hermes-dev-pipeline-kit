@@ -9,6 +9,7 @@ from .tools import (
     evidence_active_run_status,
     evidence_doctor,
     evidence_drive_s_run,
+    evidence_normalize_worker_result,
     evidence_record_worker_result,
     evidence_run_init,
     evidence_validate_worker_result,
@@ -121,6 +122,13 @@ def register(ctx: Any) -> None:
         evidence_record_worker_result,
         schemas.EVIDENCE_RECORD_WORKER_RESULT_SCHEMA,
         "Record a validated v0.5.3 worker result into an evidence run.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_normalize_worker_result",
+        evidence_normalize_worker_result,
+        schemas.EVIDENCE_NORMALIZE_WORKER_RESULT_SCHEMA,
+        "Normalize caller-supplied worker output into a v0.5.3 worker result contract JSON.",
     )
 
     for hook_name, hook_func in (

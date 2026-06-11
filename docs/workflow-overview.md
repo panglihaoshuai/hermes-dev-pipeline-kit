@@ -107,6 +107,29 @@ Worker result rules:
 - if `WORKER_RESULT_RECORDED` appears in the event chain, policy-check requires
   worker result evidence or an explicit deferred reason.
 
+## v0.5.4 Worker Output Normalizer Prototype
+
+v0.5.4 adds a conservative normalizer lane before the v0.5.3 worker result
+contract:
+
+```text
+caller-supplied or simulated worker output
+  -> scripts/normalize-worker-result.sh
+  -> worker-result.json
+  -> scripts/validate-worker-result.sh
+  -> scripts/record-worker-result.sh
+  -> generated/run-state.json
+```
+
+Supported adapter names are `claude-code`, `codex`, `opencode`, and `raw`.
+The `raw` adapter maps to `worker=unknown` to stay compatible with
+`schema/worker-result.schema.json`.
+
+This is not official ClaudeCode/Codex/OpenCode capture. It does not invoke real
+workers, parse provider session stores, implement a memory provider, add a
+production hook dependency, or replace the existing `dev-pipeline-orchestrator`
+skill.
+
 ---
 
 ## Gate 0: Intake + Classification
@@ -714,7 +737,7 @@ Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is
 
 ---
 
-## v0.5.1 / v0.5.2 / v0.5.3 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 Experimental Plugin Wrapper
 
 v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
 plugin wrapper around the existing v0.4 Bash harness scripts.
@@ -730,6 +753,10 @@ v0.5.3 adds two worker result adapter tools:
 
 - `evidence_validate_worker_result`
 - `evidence_record_worker_result`
+
+v0.5.4 adds one worker output normalizer tool:
+
+- `evidence_normalize_worker_result`
 
 v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
@@ -764,3 +791,9 @@ harness links those files into event replay, generated run-state, policy-check,
 and final-report output. They do not call real ClaudeCode/Codex/OpenCode, do not
 replace built-in ClaudeCode/Codex/OpenCode skills, do not implement a memory
 provider, and do not replace the existing `dev-pipeline-orchestrator` skill.
+
+v0.5.4 normalizer tools also wrap the existing Bash harness only. They transform
+caller-supplied or simulated raw/structured worker output into the v0.5.3
+worker-result contract. They do not invoke real workers, do not parse official
+provider session stores, do not add production hook enforcement, and do not
+claim official ClaudeCode/Codex/OpenCode capture.
