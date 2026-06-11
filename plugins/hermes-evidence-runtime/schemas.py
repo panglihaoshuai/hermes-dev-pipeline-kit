@@ -140,9 +140,43 @@ EVIDENCE_NORMALIZE_WORKER_RESULT_SCHEMA = {
             "type": "string",
             "description": "Optional path to caller-supplied structured JSON output.",
         },
+        "invocation_json_path": {
+            "type": "string",
+            "description": "Optional path to invocation.json from invoke-worker-dry-run.sh.",
+        },
         "out_path": {
             "type": "string",
             "description": "Destination worker-result JSON path.",
+        },
+    },
+}
+
+EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["worker", "out_dir"],
+    "properties": {
+        "worker": {
+            "type": "string",
+            "enum": ["claude-code", "codex", "opencode", "raw"],
+        },
+        "out_dir": {
+            "type": "string",
+            "description": "Output directory under /tmp for raw.txt, structured.json, and invocation.json.",
+        },
+        "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 60,
+        },
+        "allow_real_invocation": {
+            "type": "boolean",
+            "default": False,
+            "description": "When false, no real worker CLI is invoked.",
+        },
+        "prompt_file": {
+            "type": "string",
+            "description": "Optional prompt file for real dry-run invocation.",
         },
     },
 }

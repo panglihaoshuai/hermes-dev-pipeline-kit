@@ -1,11 +1,12 @@
 name: hermes-evidence-runtime
-version: 0.5.4
+version: 0.5.5
 description: >
   Experimental Hermes plugin wrapper for hermes-dev-pipeline-kit evidence
   harness scripts. This plugin registers machine-readable tools around existing
   scripts; existing hook probes are source-only and non-blocking. v0.5.4 adds a
-  worker output normalizer tool. It does not implement a memory provider,
-  replacement skills, or official worker output capture.
+  worker output normalizer tool. v0.5.5 adds an explicit worker dry-run wrapper
+  whose real invocation lane is disabled by default. It does not implement a
+  memory provider, replacement skills, or official worker output capture.
 provides_tools:
   - evidence_doctor
   - evidence_active_run_status
@@ -14,6 +15,7 @@ provides_tools:
   - evidence_validate_worker_result
   - evidence_record_worker_result
   - evidence_normalize_worker_result
+  - evidence_invoke_worker_dry_run
 provides_hooks:
   - pre_tool_call
   - post_tool_call

@@ -197,6 +197,8 @@ main() {
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
   bash scripts/smoke/smoke-worker-normalizer-to-run-state.sh
+  bash scripts/smoke/smoke-worker-dry-run-disabled.sh
+  bash scripts/smoke/smoke-worker-dry-run-to-run-state.sh
 
   section "JSON parse"
   json_check schema/run-state.schema.json

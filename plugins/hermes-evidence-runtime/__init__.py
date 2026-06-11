@@ -9,6 +9,7 @@ from .tools import (
     evidence_active_run_status,
     evidence_doctor,
     evidence_drive_s_run,
+    evidence_invoke_worker_dry_run,
     evidence_normalize_worker_result,
     evidence_record_worker_result,
     evidence_run_init,
@@ -129,6 +130,13 @@ def register(ctx: Any) -> None:
         evidence_normalize_worker_result,
         schemas.EVIDENCE_NORMALIZE_WORKER_RESULT_SCHEMA,
         "Normalize caller-supplied worker output into a v0.5.3 worker result contract JSON.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_invoke_worker_dry_run",
+        evidence_invoke_worker_dry_run,
+        schemas.EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA,
+        "Invoke or explicitly skip a timeout-bound worker dry-run and write machine-readable evidence.",
     )
 
     for hook_name, hook_func in (

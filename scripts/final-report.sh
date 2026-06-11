@@ -181,13 +181,23 @@ lines.append("## Worker Result Evidence")
 lines.append("")
 worker_results = state.get("worker_results", [])
 if worker_results:
-    lines.append("| worker | work_order_id | status | result_type | review_verdict | raw_output_path | attempted_acceptance |")
-    lines.append("|---|---|---|---|---|---|---:|")
+    lines.append("| worker | work_order_id | status | result_type | review_verdict | real invocation | skipped reason | invocation path | raw output | structured output | attempted_acceptance |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---:|")
     for item in worker_results:
+        real_invocation = item.get("real_invocation")
+        if real_invocation is True:
+            real_text = "yes"
+        elif real_invocation is False:
+            real_text = "no"
+        else:
+            real_text = "unknown"
         lines.append(
             f"| {item.get('worker', '')} | {item.get('work_order_id', '')} | "
             f"{item.get('status', '')} | {item.get('result_type', '')} | "
-            f"{item.get('review_verdict', '')} | {item.get('raw_output_path', '')} | "
+            f"{item.get('review_verdict', '')} | {real_text} | "
+            f"{item.get('skipped_reason', '')} | {item.get('invocation_path', '')} | "
+            f"{item.get('invocation_raw_output_path') or item.get('raw_output_path', '')} | "
+            f"{item.get('invocation_structured_output_path') or item.get('structured_output_path', '')} | "
             f"{item.get('worker_attempted_acceptance', False)} |"
         )
 else:

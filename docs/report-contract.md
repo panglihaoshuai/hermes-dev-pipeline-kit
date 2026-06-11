@@ -63,6 +63,25 @@ This is not official ClaudeCode/Codex/OpenCode capture. It does not invoke real
 workers, does not inspect real session stores, does not implement a memory
 provider, and does not replace `dev-pipeline-orchestrator`.
 
+### v0.5.5 — Explicit worker dry-run invocation prototype
+
+Starting in v0.5.5, `scripts/invoke-worker-dry-run.sh` can write explicit
+invocation evidence:
+
+- `raw.txt`
+- `structured.json`
+- `invocation.json`
+
+Real invocation is optional and disabled by default. When invocation is skipped,
+the normalized worker result must preserve `real_invocation=false` and a
+non-empty `skipped_reason`. If a worker result claims `real_invocation=true`,
+policy requires invocation evidence to be present in provenance.
+
+Default CI uses disabled/skipped invocation only. Optional real dry-run requires
+`HERMES_EVIDENCE_ALLOW_REAL_WORKER_DRY_RUN=1`. This still does not claim
+official ClaudeCode/Codex/OpenCode capture. Harness owns final acceptance;
+workers own result evidence only.
+
 ## Schema
 
 The JSON report schema is located at:
@@ -298,3 +317,17 @@ the boundary that worker output is evidence only.
 `scripts/simulate-worker-output.sh` exists only for smoke tests. Its output is
 explicitly marked `simulated: true` and must not be described as official worker
 capture.
+
+## v0.5.5 Worker Invocation Rules
+
+`scripts/invoke-worker-dry-run.sh` must produce machine-readable
+`invocation.json`, `raw.txt`, and `structured.json`. `policy-check.sh` must
+validate:
+
+- skipped invocation is not described as official real capture;
+- real invocation claims include `invocation.json` evidence;
+- worker results still cannot write final acceptance;
+- skipped invocation includes `skipped_reason`.
+
+`final-report.sh` must show real invocation status, skipped reason, invocation
+path, raw output path, and structured output path in `Worker Result Evidence`.

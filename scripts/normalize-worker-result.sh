@@ -12,6 +12,7 @@ Usage: normalize-worker-result.sh \
   --result-type <implementation|review|diagnostic|plan|unknown> \
   --raw-output <path> \
   [--structured-output <path>] \
+  [--invocation-json <path>] \
   --out <worker-result.json>
 
 Normalizes caller-supplied worker output into the v0.5.3 worker result contract.
@@ -27,6 +28,7 @@ STATUS=""
 RESULT_TYPE=""
 RAW_OUTPUT=""
 STRUCTURED_OUTPUT=""
+INVOCATION_JSON=""
 OUT=""
 
 while [[ $# -gt 0 ]]; do
@@ -38,6 +40,7 @@ while [[ $# -gt 0 ]]; do
     --result-type) RESULT_TYPE="${2:-}"; shift 2 ;;
     --raw-output) RAW_OUTPUT="${2:-}"; shift 2 ;;
     --structured-output) STRUCTURED_OUTPUT="${2:-}"; shift 2 ;;
+    --invocation-json) INVOCATION_JSON="${2:-}"; shift 2 ;;
     --out) OUT="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Error: unknown argument: $1" >&2; usage >&2; exit 1 ;;
@@ -74,19 +77,25 @@ if [[ -n "$STRUCTURED_OUTPUT" && ! -f "$STRUCTURED_OUTPUT" ]]; then
   exit 1
 fi
 
+if [[ -n "$INVOCATION_JSON" && ! -f "$INVOCATION_JSON" ]]; then
+  echo "Error: invocation JSON not found: $INVOCATION_JSON" >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$(dirname "$OUT")"
 
-python3 - "$WORKER" "$WORKER_SKILL" "$WORK_ORDER_ID" "$STATUS" "$RESULT_TYPE" "$RAW_OUTPUT" "$STRUCTURED_OUTPUT" "$OUT" <<'PY'
+python3 - "$WORKER" "$WORKER_SKILL" "$WORK_ORDER_ID" "$STATUS" "$RESULT_TYPE" "$RAW_OUTPUT" "$STRUCTURED_OUTPUT" "$INVOCATION_JSON" "$OUT" <<'PY'
 import json
 import pathlib
 import re
 import sys
 from typing import Any
 
-worker_arg, worker_skill, work_order_id, status, result_type, raw_output, structured_output, out_path = sys.argv[1:]
+worker_arg, worker_skill, work_order_id, status, result_type, raw_output, structured_output, invocation_json, out_path = sys.argv[1:]
 raw_path = pathlib.Path(raw_output).expanduser().resolve()
 structured_path = pathlib.Path(structured_output).expanduser().resolve() if structured_output else None
+invocation_path = pathlib.Path(invocation_json).expanduser().resolve() if invocation_json else None
 out = pathlib.Path(out_path).expanduser().resolve()
 
 
@@ -119,6 +128,7 @@ def safe_id(value: str) -> str:
 
 
 structured = load_structured(structured_path)
+invocation = load_structured(invocation_path)
 safe_work_order_id = safe_id(work_order_id)
 contract_worker = "unknown" if worker_arg == "raw" else worker_arg
 
@@ -128,6 +138,15 @@ evidence_refs = list_of_strings(structured.get("evidence_refs"))
 
 if not evidence_refs:
     evidence_refs = [f"raw/worker/{safe_work_order_id}.raw.txt"]
+
+if invocation:
+    for rel_path in (
+        f"raw/worker/{safe_work_order_id}.invocation.json",
+        f"raw/worker/{safe_work_order_id}.raw.txt",
+        f"raw/worker/{safe_work_order_id}.structured.json",
+    ):
+        if rel_path not in evidence_refs:
+            evidence_refs.append(rel_path)
 
 review = structured.get("review") if isinstance(structured.get("review"), dict) else {}
 verdict = review.get("verdict") if review.get("verdict") in {"PASS", "PARTIAL", "FAIL", "DEFERRED", "UNKNOWN"} else "UNKNOWN"
@@ -151,6 +170,18 @@ notes_parts = [
     "This is caller-supplied or simulated worker evidence, not official worker capture.",
     "Worker result cannot claim final acceptance.",
 ]
+real_invocation = invocation.get("real_invocation") if invocation else structured.get("real_invocation")
+if not isinstance(real_invocation, bool):
+    real_invocation = None
+skipped_reason = ""
+if invocation and isinstance(invocation.get("skipped_reason"), str):
+    skipped_reason = invocation["skipped_reason"]
+elif isinstance(structured.get("skipped_reason"), str):
+    skipped_reason = structured["skipped_reason"]
+if real_invocation is False and skipped_reason:
+    notes_parts.append(f"real_invocation=false; skipped_reason={skipped_reason}")
+elif real_invocation is True:
+    notes_parts.append("real_invocation=true")
 if worker_arg == "raw":
     notes_parts.append("Raw adapter input mapped to worker=unknown to preserve v0.5.3 schema compatibility.")
 
@@ -164,6 +195,11 @@ result = {
     "result_type": result_type,
     "raw_output_path": f"raw/worker/{safe_work_order_id}.raw.txt",
     "structured_output_path": f"raw/worker/{safe_work_order_id}.structured.json",
+    "invocation_path": f"raw/worker/{safe_work_order_id}.invocation.json" if invocation else "",
+    "invocation_raw_output_path": f"raw/worker/{safe_work_order_id}.raw.txt" if invocation else "",
+    "invocation_structured_output_path": f"raw/worker/{safe_work_order_id}.structured.json" if invocation else "",
+    "real_invocation": real_invocation,
+    "skipped_reason": skipped_reason,
     "files_touched": files_touched,
     "commands_run": commands_run,
     "evidence_refs": evidence_refs,
@@ -181,6 +217,7 @@ result = {
         "version": "0.5.4",
         "source_raw_output_path": str(raw_path),
         "source_structured_output_path": str(structured_path) if structured_path else "",
+        "source_invocation_path": str(invocation_path) if invocation_path else "",
         "simulated": bool(structured.get("simulated") is True),
     },
 }
@@ -195,6 +232,9 @@ print(json.dumps({
     "worker_result_path": str(out),
     "raw_output_path": str(raw_path),
     "structured_output_path": str(structured_path) if structured_path else "",
+    "invocation_path": str(invocation_path) if invocation_path else "",
+    "real_invocation": real_invocation,
+    "skipped_reason": skipped_reason,
     "simulated": bool(structured.get("simulated") is True),
 }, ensure_ascii=False, sort_keys=True))
 PY

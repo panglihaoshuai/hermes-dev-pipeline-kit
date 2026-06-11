@@ -177,12 +177,39 @@ def worker_deferred_summary(value):
     }
 
 
+def worker_invocation_summary(value):
+    if not isinstance(value, dict):
+        return {
+            "real_invocation": None,
+            "skipped_reason": "",
+            "invocation_path": "",
+            "raw_output_path": "",
+            "structured_output_path": "",
+            "evidence_refs": [],
+        }
+    evidence_refs = value.get("evidence_refs")
+    if not isinstance(evidence_refs, list):
+        evidence_refs = []
+    real_invocation = value.get("real_invocation")
+    if not isinstance(real_invocation, bool):
+        real_invocation = None
+    return {
+        "real_invocation": real_invocation,
+        "skipped_reason": str(value.get("skipped_reason", "") or ""),
+        "invocation_path": str(value.get("invocation_path", "") or ""),
+        "raw_output_path": str(value.get("invocation_raw_output_path", "") or value.get("raw_output_path", "") or ""),
+        "structured_output_path": str(value.get("invocation_structured_output_path", "") or value.get("structured_output_path", "") or ""),
+        "evidence_refs": [str(item) for item in evidence_refs if str(item).strip()],
+    }
+
+
 worker_results = []
 worker_result_violations = []
 for path in worker_result_paths:
     raw_worker = load_json(path, {})
     review = raw_worker.get("review") if isinstance(raw_worker.get("review"), dict) else {}
     deferred = worker_deferred_summary(raw_worker)
+    invocation = worker_invocation_summary(raw_worker)
     attempted_acceptance = isinstance(raw_worker, dict) and "acceptance" in raw_worker
     acceptance_complete = worker_acceptance_complete(raw_worker)
     if acceptance_complete:
@@ -200,6 +227,17 @@ for path in worker_result_paths:
             "path": rel(path),
             "violation": "deferred worker result reported PASS",
         })
+    if invocation["real_invocation"] is True:
+        if not invocation["invocation_path"].strip():
+            worker_result_violations.append({
+                "path": rel(path),
+                "violation": "real worker invocation missing invocation.json evidence",
+            })
+    if invocation["real_invocation"] is False and not invocation["skipped_reason"].strip():
+        worker_result_violations.append({
+            "path": rel(path),
+            "violation": "skipped worker invocation missing skipped_reason",
+        })
     worker_results.append({
         "path": rel(path),
         "work_order_id": raw_worker.get("work_order_id", ""),
@@ -213,6 +251,12 @@ for path in worker_result_paths:
         "deferred_reason": deferred["reason"],
         "raw_output_path": raw_worker.get("raw_output_path", ""),
         "structured_output_path": raw_worker.get("structured_output_path", ""),
+        "real_invocation": invocation["real_invocation"],
+        "skipped_reason": invocation["skipped_reason"],
+        "invocation_path": invocation["invocation_path"],
+        "invocation_raw_output_path": invocation["raw_output_path"],
+        "invocation_structured_output_path": invocation["structured_output_path"],
+        "evidence_refs": invocation["evidence_refs"],
         "worker_attempted_acceptance": attempted_acceptance,
         "worker_acceptance_complete": acceptance_complete,
     })
@@ -387,6 +431,11 @@ for path in sorted((run_dir / "raw" / "commands").glob("*.json")):
 for path in worker_result_paths:
     source_files.append(rel(path))
     worker_data = load_json(path, {})
+    for value in worker_data.get("evidence_refs", []) if isinstance(worker_data.get("evidence_refs"), list) else []:
+        if isinstance(value, str) and value:
+            candidate = run_dir / value
+            if candidate.exists() and candidate.is_file():
+                source_files.append(rel(candidate))
     for key in ("raw_output_path", "structured_output_path"):
         value = worker_data.get(key, "")
         if isinstance(value, str) and value:
@@ -620,7 +669,7 @@ if [[ -s "$RUN_DIR/events.jsonl" ]]; then
   fi
   while IFS= read -r worker_artifact; do
     EVENT_ARTIFACTS+=(--artifact "$worker_artifact")
-  done < <(cd "$RUN_DIR" && find raw/worker -type f \( -name "*.worker-result.json" -o -name "*.raw.txt" -o -name "*.structured.json" \) 2>/dev/null | sort)
+  done < <(cd "$RUN_DIR" && find raw/worker -type f \( -name "*.worker-result.json" -o -name "*.raw.txt" -o -name "*.structured.json" -o -name "*.invocation.json" \) 2>/dev/null | sort)
   if [[ ${#EVENT_ARTIFACTS[@]} -gt 0 ]]; then
     "$SCRIPT_DIR/append-event.sh" \
       --run-dir "$RUN_DIR" \

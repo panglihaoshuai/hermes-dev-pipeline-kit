@@ -130,6 +130,28 @@ workers, parse provider session stores, implement a memory provider, add a
 production hook dependency, or replace the existing `dev-pipeline-orchestrator`
 skill.
 
+## v0.5.5 Real Worker Dry-run / Explicit Invocation Prototype
+
+v0.5.5 adds an explicit invocation wrapper around the existing Bash harness:
+
+```text
+scripts/invoke-worker-dry-run.sh
+  -> raw.txt
+  -> structured.json
+  -> invocation.json
+  -> scripts/normalize-worker-result.sh
+  -> scripts/record-worker-result.sh
+  -> generated/run-state.json
+```
+
+Real invocation is optional and disabled by default. Default CI uses only
+disabled/skipped invocation evidence. Optional real worker dry-run requires
+`HERMES_EVIDENCE_ALLOW_REAL_WORKER_DRY_RUN=1` and remains timeout-bound,
+non-interactive, and `/tmp` scoped.
+
+This still does not claim official ClaudeCode/Codex/OpenCode capture. Harness
+policy owns final acceptance. Workers own result evidence only.
+
 ---
 
 ## Gate 0: Intake + Classification
@@ -737,7 +759,7 @@ Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is
 
 ---
 
-## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 Experimental Plugin Wrapper
 
 v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
 plugin wrapper around the existing v0.4 Bash harness scripts.
@@ -757,6 +779,10 @@ v0.5.3 adds two worker result adapter tools:
 v0.5.4 adds one worker output normalizer tool:
 
 - `evidence_normalize_worker_result`
+
+v0.5.5 adds one explicit worker dry-run tool:
+
+- `evidence_invoke_worker_dry_run`
 
 v0.5.1 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
@@ -797,3 +823,10 @@ caller-supplied or simulated raw/structured worker output into the v0.5.3
 worker-result contract. They do not invoke real workers, do not parse official
 provider session stores, do not add production hook enforcement, and do not
 claim official ClaudeCode/Codex/OpenCode capture.
+
+v0.5.5 dry-run tools wrap `scripts/invoke-worker-dry-run.sh`. Real invocation is
+disabled unless explicitly requested, and the default CI path records skipped
+invocation evidence only. Optional real dry-runs do not install plugins, do not
+modify `~/.claude` or `~/.hermes`, do not commit/push/open PRs, and must not be
+described as official worker integration unless a real invocation actually
+happened.

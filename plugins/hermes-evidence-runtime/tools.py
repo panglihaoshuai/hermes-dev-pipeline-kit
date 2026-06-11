@@ -63,3 +63,7 @@ def evidence_record_worker_result(args: Any = None, **kwargs: Any) -> str:
 
 def evidence_normalize_worker_result(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_normalize_worker_result, args, **kwargs)
+
+
+def evidence_invoke_worker_dry_run(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_invoke_worker_dry_run, args, **kwargs)

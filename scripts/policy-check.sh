@@ -687,6 +687,84 @@ print("false")
 PY
 }
 
+jworker_invocation_truthfulness_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+for item in d.get("worker_results") or []:
+    if not isinstance(item, dict):
+        continue
+    real_invocation = item.get("real_invocation")
+    if real_invocation is False and item.get("official_worker_capture") is True:
+        print("true")
+        sys.exit(0)
+print("false")
+PY
+}
+
+jworker_invocation_evidence_present_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import pathlib
+import sys
+
+state_path = pathlib.Path(sys.argv[1]).resolve()
+with state_path.open(encoding="utf-8") as f:
+    d = json.load(f)
+
+sources = set((d.get("provenance") or {}).get("source_files") or [])
+generated_parent = state_path.parent.name == "generated"
+run_dir = state_path.parent.parent if generated_parent else None
+
+for item in d.get("worker_results") or []:
+    if not isinstance(item, dict) or item.get("real_invocation") is not True:
+        continue
+    invocation_path = str(item.get("invocation_path", "") or "")
+    if not invocation_path:
+        print("true")
+        sys.exit(0)
+    if invocation_path not in sources:
+        print("true")
+        sys.exit(0)
+    if generated_parent and not (run_dir / invocation_path).is_file():
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
+jworker_invocation_skipped_consistency_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+for item in d.get("worker_results") or []:
+    if not isinstance(item, dict):
+        continue
+    if item.get("real_invocation") is False and not str(item.get("skipped_reason", "")).strip():
+        print("true")
+        sys.exit(0)
+
+for item in d.get("worker_result_violations") or []:
+    if isinstance(item, dict) and "skipped worker invocation missing skipped_reason" in str(item.get("violation", "")):
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
 jskill_trace_violation() {
   # Returns 'true' when skill trace/evidence policy is violated.
   local file="$1"
@@ -1614,6 +1692,11 @@ print('')
   else
     record "worker-must-not-write-acceptance" "PASS"
   fi
+  if [[ "$worker_acceptance_bad" == "true" ]]; then
+    record "worker-invocation-no-acceptance" "FAIL"
+  else
+    record "worker-invocation-no-acceptance" "PASS"
+  fi
 
   local worker_deferred_bad
   worker_deferred_bad=$(jworker_deferred_consistency_violation "$f")
@@ -1637,6 +1720,30 @@ print('')
     record "worker-raw-output-tracked" "FAIL"
   else
     record "worker-raw-output-tracked" "PASS"
+  fi
+
+  local worker_invocation_truth_bad
+  worker_invocation_truth_bad=$(jworker_invocation_truthfulness_violation "$f")
+  if [[ "$worker_invocation_truth_bad" == "true" ]]; then
+    record "worker-invocation-truthfulness" "FAIL"
+  else
+    record "worker-invocation-truthfulness" "PASS"
+  fi
+
+  local worker_invocation_evidence_bad
+  worker_invocation_evidence_bad=$(jworker_invocation_evidence_present_violation "$f")
+  if [[ "$worker_invocation_evidence_bad" == "true" ]]; then
+    record "worker-invocation-evidence-present" "FAIL"
+  else
+    record "worker-invocation-evidence-present" "PASS"
+  fi
+
+  local worker_invocation_skipped_bad
+  worker_invocation_skipped_bad=$(jworker_invocation_skipped_consistency_violation "$f")
+  if [[ "$worker_invocation_skipped_bad" == "true" ]]; then
+    record "worker-invocation-skipped-consistency" "FAIL"
+  else
+    record "worker-invocation-skipped-consistency" "PASS"
   fi
 
   local failed_run_bad

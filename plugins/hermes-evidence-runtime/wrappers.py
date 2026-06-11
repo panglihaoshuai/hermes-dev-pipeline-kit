@@ -447,6 +447,11 @@ def evidence_normalize_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
             "--structured-output",
             str(_as_path(payload.get("structured_output_path"), "structured_output_path")),
         ])
+    if payload.get("invocation_json_path"):
+        args.extend([
+            "--invocation-json",
+            str(_as_path(payload.get("invocation_json_path"), "invocation_json_path")),
+        ])
 
     result = _run_script(args, cwd=KIT_ROOT)
     parsed = _extract_json(result["stdout"])
@@ -459,6 +464,57 @@ def evidence_normalize_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
         parsed["ok"] = bool(parsed.get("ok")) and result["exit_code"] == 0
     parsed.update({
         "script": "scripts/normalize-worker-result.sh",
+        "exit_code": result["exit_code"],
+        "stdout_path": result["stdout_path"],
+        "stderr_path": result["stderr_path"],
+    })
+    return parsed
+
+
+def evidence_invoke_worker_dry_run(payload: dict[str, Any]) -> dict[str, Any]:
+    worker = payload.get("worker")
+    if worker not in {"claude-code", "codex", "opencode", "raw"}:
+        raise WrapperError("worker must be one of claude-code, codex, opencode, raw")
+    out_dir = _as_path(payload.get("out_dir"), "out_dir")
+    timeout_seconds = payload.get("timeout_seconds", 60)
+    if not isinstance(timeout_seconds, int) or timeout_seconds < 1:
+        raise WrapperError("timeout_seconds must be a positive integer")
+    allow_real_invocation = payload.get("allow_real_invocation", False)
+    if not isinstance(allow_real_invocation, bool):
+        raise WrapperError("allow_real_invocation must be boolean")
+
+    script = _require_script("invoke-worker-dry-run.sh")
+    args = [
+        "bash",
+        str(script),
+        "--worker",
+        str(worker),
+        "--out-dir",
+        str(out_dir),
+        "--timeout-seconds",
+        str(timeout_seconds),
+        "--allow-real-invocation",
+        "yes" if allow_real_invocation else "no",
+    ]
+    if payload.get("prompt_file"):
+        args.extend(["--prompt-file", str(_as_path(payload.get("prompt_file"), "prompt_file"))])
+
+    result = _run_script(args, cwd=KIT_ROOT)
+    parsed = _extract_json(result["stdout"])
+    if not parsed:
+        parsed = {
+            "ok": result["exit_code"] == 0,
+            "worker": worker,
+            "real_invocation": False,
+            "invocation_path": str(out_dir / "invocation.json"),
+            "raw_output_path": str(out_dir / "raw.txt"),
+            "structured_output_path": str(out_dir / "structured.json"),
+            "skipped_reason": "wrapper failed before parsing script output",
+        }
+    else:
+        parsed["ok"] = bool(parsed.get("ok")) and result["exit_code"] == 0
+    parsed.update({
+        "script": "scripts/invoke-worker-dry-run.sh",
         "exit_code": result["exit_code"],
         "stdout_path": result["stdout_path"],
         "stderr_path": result["stderr_path"],

@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1-v0.5.4 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.5.5 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -11,6 +11,7 @@ This plugin registers tools that wrap the existing Bash evidence harness:
 - `evidence_validate_worker_result` wraps `scripts/validate-worker-result.sh`
 - `evidence_record_worker_result` wraps `scripts/record-worker-result.sh`
 - `evidence_normalize_worker_result` wraps `scripts/normalize-worker-result.sh`
+- `evidence_invoke_worker_dry_run` wraps `scripts/invoke-worker-dry-run.sh`
 
 The tools return machine-readable JSON strings.
 
@@ -58,3 +59,18 @@ real provider session stores. It does not implement a memory provider and does
 not add any production hook dependency. It does not replace built-in
 ClaudeCode/Codex/OpenCode skills or the existing `dev-pipeline-orchestrator`
 skill.
+
+v0.5.5 adds a Real Worker Dry-run / Explicit Invocation Prototype. It writes
+`raw.txt`, `structured.json`, and `invocation.json`. Real invocation is optional
+and disabled by default. Default CI exercises only disabled/skipped invocation
+evidence. Optional real dry-run requires:
+
+```bash
+HERMES_EVIDENCE_ALLOW_REAL_WORKER_DRY_RUN=1 bash scripts/smoke/smoke-worker-dry-run-real-optional.sh
+```
+
+v0.5.5 still does not claim official ClaudeCode/Codex/OpenCode capture. It does
+not install the plugin into real `~/.hermes/plugins`, does not modify
+`~/.claude/CLAUDE.md`, does not implement a memory provider, and does not
+replace the existing `dev-pipeline-orchestrator` skill. Harness gates own final
+acceptance; worker wrappers own result evidence only.
