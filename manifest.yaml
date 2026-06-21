@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.5.5
+version: 0.6.0
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -55,7 +55,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.5.5
+      version: 0.6.0
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: false
       description: >
@@ -68,9 +68,10 @@ plugins:
         normalizer for caller-supplied or simulated worker output. v0.5.5 adds
         an explicit worker dry-run wrapper; real invocation is optional and
         disabled by default, and default CI records skipped invocation evidence
-        only. It still does not claim official worker capture. It is
-        source-validated and temp-HOME discovery validated, but is not installed
-        into real ~/.hermes/plugins by default.
+        only. v0.6 proves plugin enablement and evidence tool callability only.
+        It still does not claim official capture of worker output. It is not installed
+        into real ~/.hermes/plugins by default; live plugin enablement is a
+        separate explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
@@ -149,7 +150,7 @@ safety:
     - "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
     - "~/.hermes/skills/software-development/dev-pipeline-report"
   installer_does_not_modify:
-    - "~/.hermes/plugins"  # v0.5.5 plugin wrapper is source-only / experimental
+    - "~/.hermes/plugins"  # installer does not install the experimental plugin wrapper
     - "~/.claude/CLAUDE.md"  # only warns, never writes
     - "~/.claude/settings.json"
     - "any business project"

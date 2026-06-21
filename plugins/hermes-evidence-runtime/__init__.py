@@ -28,6 +28,19 @@ def _register_tool(
 ) -> None:
     """Register against known Hermes plugin API shapes without hard-coding one."""
     try:
+        ctx.register_tool(
+            name=name,
+            toolset="evidence_runtime",
+            schema=schema,
+            handler=func,
+            description=description,
+            emoji="🧾",
+        )
+        return
+    except TypeError:
+        pass
+
+    try:
         ctx.register_tool(name, func, schema=schema, description=description)
         return
     except TypeError:

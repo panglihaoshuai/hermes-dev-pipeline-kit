@@ -14,8 +14,53 @@ from typing import Any
 
 
 PLUGIN_DIR = pathlib.Path(__file__).resolve().parent
-KIT_ROOT = PLUGIN_DIR.parents[1]
-SCRIPTS_DIR = KIT_ROOT / "scripts"
+
+
+def _candidate_script_dirs() -> list[pathlib.Path]:
+    candidates: list[pathlib.Path] = []
+
+    env_root = os.environ.get("HERMES_DEV_PIPELINE_KIT_ROOT")
+    if env_root:
+        candidates.append(pathlib.Path(env_root).expanduser().resolve() / "scripts")
+
+    if len(PLUGIN_DIR.parents) > 1:
+        candidates.append(PLUGIN_DIR.parents[1] / "scripts")
+
+    cwd = pathlib.Path.cwd().resolve()
+    candidates.append(cwd / "scripts")
+    for parent in cwd.parents:
+        candidates.append(parent / "scripts")
+
+    hermes_home = pathlib.Path(os.environ.get("HERMES_HOME", "~/.hermes")).expanduser().resolve()
+    candidates.append(
+        hermes_home
+        / "skills"
+        / "software-development"
+        / "dev-pipeline-orchestrator"
+        / "bin"
+    )
+
+    unique: list[pathlib.Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate)
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def _default_scripts_dir() -> pathlib.Path:
+    for candidate in _candidate_script_dirs():
+        if (candidate / "run-init.sh").is_file() or (candidate / "doctor.sh").is_file():
+            return candidate
+    if len(PLUGIN_DIR.parents) > 1:
+        return PLUGIN_DIR.parents[1] / "scripts"
+    return PLUGIN_DIR / "scripts"
+
+
+SCRIPTS_DIR = _default_scripts_dir()
+KIT_ROOT = SCRIPTS_DIR.parent
 
 
 class WrapperError(ValueError):
@@ -29,10 +74,19 @@ def _as_path(value: Any, field: str) -> pathlib.Path:
 
 
 def _require_script(name: str) -> pathlib.Path:
-    path = SCRIPTS_DIR / name
-    if not path.is_file():
-        raise WrapperError(f"required script not found: {path}")
-    return path
+    checked = []
+    for scripts_dir in _candidate_script_dirs():
+        path = scripts_dir / name
+        checked.append(str(path))
+        if path.is_file():
+            return path
+    raise WrapperError(f"required script not found: {name}; checked: {', '.join(checked)}")
+
+
+def _kit_root_for_script(script: pathlib.Path) -> pathlib.Path:
+    if script.parent.name in {"scripts", "bin"}:
+        return script.parent.parent
+    return KIT_ROOT
 
 
 def _output_dir() -> pathlib.Path:
@@ -147,7 +201,8 @@ def evidence_doctor(payload: dict[str, Any] | None = None) -> dict[str, Any]:
     fake_home = pathlib.Path(tempfile.mkdtemp(prefix="hermes-evidence-doctor-home-")).resolve()
     env = os.environ.copy()
     env["HOME"] = str(fake_home)
-    result = _run_script(["bash", str(script)], cwd=KIT_ROOT, env=env)
+    kit_root = _kit_root_for_script(script)
+    result = _run_script(["bash", str(script)], cwd=kit_root, env=env)
     verdict = _extract_overall(result["stdout"])
     shutil.rmtree(fake_home, ignore_errors=True)
 
@@ -160,9 +215,9 @@ def evidence_doctor(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         "stderr_path": result["stderr_path"],
         "plugin_checks": {
             "hooks_module": (PLUGIN_DIR / "hooks.py").is_file(),
-            "hook_source_smoke": (KIT_ROOT / "scripts" / "smoke" / "smoke-plugin-hooks-source.sh").is_file(),
+            "hook_source_smoke": (kit_root / "scripts" / "smoke" / "smoke-plugin-hooks-source.sh").is_file(),
             "hook_discovery_smoke": (
-                KIT_ROOT / "scripts" / "smoke" / "smoke-plugin-hooks-discovery-temp-home.sh"
+                kit_root / "scripts" / "smoke" / "smoke-plugin-hooks-discovery-temp-home.sh"
             ).is_file(),
             "hooks_prototype_only": True,
             "memory_provider": False,
@@ -278,7 +333,7 @@ def evidence_run_init(payload: dict[str, Any]) -> dict[str, Any]:
     if payload.get("project"):
         args.extend(["--project", str(payload["project"])])
 
-    result = _run_script(args, cwd=KIT_ROOT)
+    result = _run_script(args, cwd=_kit_root_for_script(script))
     run_dir_text = result["stdout"].strip().splitlines()[-1] if result["stdout"].strip() else ""
     run_dir = pathlib.Path(run_dir_text).expanduser().resolve() if run_dir_text else None
     if result["exit_code"] == 0 and run_dir and run_dir.is_dir():
@@ -324,7 +379,7 @@ def evidence_drive_s_run(payload: dict[str, Any]) -> dict[str, Any]:
     for item in payload.get("files_touched") or []:
         args.extend(["--files-touched", str(item)])
 
-    result = _run_script(args, cwd=KIT_ROOT)
+    result = _run_script(args, cwd=_kit_root_for_script(script))
     verdict = "PASS" if "final status: PASS" in result["stdout"] else "FAIL"
     run_state_path = run_dir / "generated" / "run-state.json"
     policy_result_path = run_dir / "generated" / "policy-result.json"
@@ -353,7 +408,7 @@ def evidence_validate_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
     script = _require_script("validate-worker-result.sh")
     result = _run_script(
         ["bash", str(script), "--worker-result", str(worker_result_path)],
-        cwd=KIT_ROOT,
+        cwd=_kit_root_for_script(script),
     )
     parsed = _extract_json(result["stdout"])
     if not parsed:
@@ -386,7 +441,7 @@ def evidence_record_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
     ]
     if payload.get("raw_output_path"):
         args.extend(["--raw-output", str(_as_path(payload.get("raw_output_path"), "raw_output_path"))])
-    result = _run_script(args, cwd=KIT_ROOT)
+    result = _run_script(args, cwd=_kit_root_for_script(script))
     parsed = _extract_json(result["stdout"])
     if not parsed:
         parsed = {
@@ -453,7 +508,7 @@ def evidence_normalize_worker_result(payload: dict[str, Any]) -> dict[str, Any]:
             str(_as_path(payload.get("invocation_json_path"), "invocation_json_path")),
         ])
 
-    result = _run_script(args, cwd=KIT_ROOT)
+    result = _run_script(args, cwd=_kit_root_for_script(script))
     parsed = _extract_json(result["stdout"])
     if not parsed:
         parsed = {
@@ -499,7 +554,7 @@ def evidence_invoke_worker_dry_run(payload: dict[str, Any]) -> dict[str, Any]:
     if payload.get("prompt_file"):
         args.extend(["--prompt-file", str(_as_path(payload.get("prompt_file"), "prompt_file"))])
 
-    result = _run_script(args, cwd=KIT_ROOT)
+    result = _run_script(args, cwd=_kit_root_for_script(script))
     parsed = _extract_json(result["stdout"])
     if not parsed:
         parsed = {
