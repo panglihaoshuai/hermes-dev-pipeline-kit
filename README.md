@@ -46,6 +46,7 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 ## 目录
 
 - [免责声明 / Disclaimer](#免责声明--disclaimer)
+- [Architecture / Operating Model](#architecture--operating-model)
 - [这是什么](#这是什么)
 - [v0.1 vs v0.5.5](#v01-vs-v055)
 - [角色分工](#角色分工)
@@ -63,6 +64,16 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 - [简短提示词协议](#简短提示词协议)
 - [卸载](#卸载)
 - [License](#license)
+
+---
+
+## Architecture / Operating Model
+
+- [Operating Model](docs/operating-model.md)
+- [Skill Routing Map](docs/skill-routing-map.md)
+- [Dev Pipeline Gates](docs/gates.md)
+- [Harness Evolution Lessons](docs/harness-evolution-lessons.md)
+- [Plugin Runtime Roadmap](docs/plugin-runtime-roadmap.md)
 
 ---
 
