@@ -185,13 +185,16 @@ Current boundary:
 - `hermes-evidence-runtime` plugin source exists.
 - An installed copy may exist.
 - Plugin discoverable is not plugin enabled.
-- Active `evidence_*` tool calls: NO EVIDENCE FOUND unless listed and invoked by
-  the active Hermes runtime.
-- Hook payloads: UNKNOWN until captured.
+- v0.6 proved active `evidence_*` tool calls only when the active Hermes runtime
+  lists and invokes the plugin tools.
+- v0.7 proves log-only hook observation only for the hooks actually captured:
+  `pre_tool_call` and `post_tool_call` through the Hermes
+  `model_tools.handle_function_call` path.
+- Other hook payloads remain UNKNOWN until separately captured.
 - Worker CLI exists is not worker integrated.
 - B档 remains human-auditable.
-- C档 remains incomplete until plugin enablement or harness artifact generation is
-  proven for the run.
+- C档 remains incomplete until plugin tool/hook evidence or harness artifact
+  generation is proven for the run.
 
 ## Failure Modes
 
@@ -205,5 +208,6 @@ Current boundary:
 | B档 lacks minimum evidence | Downgrade to PARTIAL and record missing evidence |
 | C档 lacks plugin/harness artifacts | C档 FAIL or BLOCKED |
 | Plugin discoverable but not enabled | Do not claim complete runtime status |
+| Hook source exists but hook was not captured | Do not claim hook runtime coverage |
 | Worker CLI exists but was not invoked/captured | Do not claim worker integrated |
 | Global config or memory changed unexpectedly | Fail Self-Improvement Side Effect Gate |

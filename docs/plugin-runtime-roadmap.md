@@ -2,7 +2,7 @@
 
 ## Current State
 
-Current v0.6 boundary:
+Current v0.7 boundary:
 
 - `hermes-evidence-runtime` plugin source exists.
 - An installed copy exists in some local environments.
@@ -12,8 +12,11 @@ Current v0.6 boundary:
 - v0.6 status: plugin enabled and evidence tools callable when the active
   Hermes runtime lists the `evidence_runtime` toolset and invokes the tool
   handlers successfully.
-- Hook payloads: UNKNOWN until captured in source-only, temp-HOME, or live
-  log-only probes.
+- v0.7 target: selected Hermes hook payloads captured in log-only mode.
+- v0.7 status: `pre_tool_call` and `post_tool_call` were verified through a
+  real Hermes runtime smoke using the local `model_tools.handle_function_call`
+  path. Other registered hooks remain simulated-only or untriggered unless
+  separately proven.
 - Worker dry-run is explicit and disabled by default.
 - Official ClaudeCode/Codex/OpenCode capture is not implemented.
 - The plugin does not implement a memory provider.
@@ -144,12 +147,13 @@ Policies to enforce in C档:
 | E0 | source-only plugin smoke | Python compile and wrapper function calls from source |
 | E1 | temp HOME enablement | plugin enabled in temp HOME only |
 | E2 | `evidence_*` tools callable | active Hermes lists and calls tools successfully |
-| E3 | hook payload capture log-only | hook JSONL with redaction and no enforcement |
+| E3 | hook payload capture log-only | v0.7 real smoke captured `pre_tool_call` and `post_tool_call`; other hooks require separate evidence |
 | E4 | C档 dry-run with generated artifacts | run-state, policy-result, final-report generated |
 | E5 | selective enforcement | narrow pre_tool_call blocks with proven payload shape |
 
-Do not skip from discoverable plugin to enforcement. v0.6 stops at E2 and does
-not prove hook enforcement, worker capture, or C档 readiness.
+Do not skip from discoverable plugin to enforcement. v0.7 stops at selected
+log-only observation and does not prove policy blocking, worker capture, or C档
+readiness.
 
 ## Log-only Before Enforcement
 

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/hermes-dev-pipeline-kit/hook-event.schema.json",
+  "title": "Hermes Evidence Runtime Hook Event",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "plugin_version",
+    "event_id",
+    "hook_name",
+    "captured_at",
+    "capture_mode",
+    "session",
+    "tool",
+    "payload",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.7.0"
+    },
+    "plugin_version": {
+      "type": "string"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hook_name": {
+      "type": "string",
+      "enum": [
+        "pre_tool_call",
+        "post_tool_call",
+        "on_session_start",
+        "on_session_end",
+        "on_session_finalize",
+        "subagent_stop",
+        "pre_gateway_dispatch",
+        "pre_approval_request",
+        "post_approval_response"
+      ]
+    },
+    "captured_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capture_mode": {
+      "type": "string",
+      "enum": [
+        "real_runtime",
+        "simulated_test"
+      ]
+    },
+    "session": {
+      "type": "object",
+      "required": [
+        "session_id_hash",
+        "run_id"
+      ],
+      "properties": {
+        "session_id_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "run_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "tool": {
+      "type": "object",
+      "required": [
+        "name",
+        "call_id_hash"
+      ],
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "call_id_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "keys_observed",
+        "redacted"
+      ],
+      "properties": {
+        "keys_observed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redacted": {
+          "type": [
+            "object",
+            "array",
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "captured_by",
+        "source",
+        "log_only"
+      ],
+      "properties": {
+        "captured_by": {
+          "const": "hermes-evidence-runtime"
+        },
+        "source": {
+          "const": "Hermes hook callback"
+        },
+        "log_only": {
+          "const": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

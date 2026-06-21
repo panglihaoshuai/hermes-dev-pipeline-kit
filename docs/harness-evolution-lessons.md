@@ -126,6 +126,16 @@ The v0.5.5 boundary is still strict:
 - hook payloads are not proven until captured in a real or temp-HOME runtime;
 - worker dry-run is not official ClaudeCode/Codex/OpenCode capture.
 
+The v0.7 boundary is narrower and evidence-based:
+
+- `pre_tool_call` and `post_tool_call` were captured through a real Hermes
+  runtime smoke using the local `model_tools.handle_function_call` path;
+- selected hook payloads are logged only when
+  `HERMES_EVIDENCE_HOOK_LOG_DIR` is set;
+- captured payloads must be redacted, non-mutating, and fail-open;
+- untriggered hooks remain unproven and must not be counted as runtime
+  coverage.
+
 Permanent lesson:
 
 ```text
@@ -180,5 +190,6 @@ Design response:
 12. C档 is machine-verifiable and requires generated state, policy output, and
     final report artifacts.
 13. Worker CLI exists does not mean worker integrated.
-14. Hook source exists does not mean hook payloads are proven.
+14. Hook source exists does not mean hook payloads are proven; only captured
+    hooks with trigger-path evidence count.
 15. Harness policy owns acceptance; worker outputs are evidence only.

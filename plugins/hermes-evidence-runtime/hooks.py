@@ -1,7 +1,8 @@
-"""Prototype non-blocking Hermes hooks for the evidence runtime plugin.
+"""Log-only Hermes hook payload capture for hermes-evidence-runtime.
 
-These hooks are observational only. They never enforce policy, never block a
-tool call, and only write local JSONL when HERMES_EVIDENCE_HOOK_LOG_DIR is set.
+v0.7 hooks are observation-only. They must not block, mutate, approve, reject,
+or synthesize tool results. Any handler failure must fail open so normal Hermes
+runtime behavior continues unchanged.
 """
 
 from __future__ import annotations
@@ -9,93 +10,22 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-import re
+import time
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from .redaction import hash_text, safe_serialize
 
-SENSITIVE_KEY_RE = re.compile(
-    r"API_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|OPENAI|ANTHROPIC|GH_TOKEN|"
-    r"authorization|cookie|session|bearer",
-    re.IGNORECASE,
-)
-SENSITIVE_VALUE_RE = re.compile(
-    r"bearer\s+[a-z0-9._-]+|sk-[a-z0-9._-]+|gh[pousr]_[a-z0-9_]+|"
-    r"xox[baprs]-[a-z0-9-]+",
-    re.IGNORECASE,
-)
-MAX_STRING = 300
-MAX_ITEMS = 40
-MAX_DEPTH = 4
+
+SCHEMA_VERSION = "0.7.0"
+PLUGIN_VERSION = "0.7.0"
+LOG_FILE_NAME = "hook-events.jsonl"
+SUMMARY_FILE_NAME = "hook-summary.json"
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-def _is_sensitive_key(key: Any) -> bool:
-    return isinstance(key, str) and bool(SENSITIVE_KEY_RE.search(key))
-
-
-def _is_sensitive_value(value: Any) -> bool:
-    return isinstance(value, str) and bool(SENSITIVE_VALUE_RE.search(value))
-
-
-def _truncate(value: str) -> str:
-    if len(value) <= MAX_STRING:
-        return value
-    return value[:MAX_STRING] + "...[truncated]"
-
-
-def _safe_env(value: Any, warnings: list[str]) -> dict[str, Any] | str:
-    if not isinstance(value, dict):
-        warnings.append("env_payload_not_mapping")
-        return "[ENV_VALUE_OMITTED]"
-
-    safe: dict[str, Any] = {}
-    for index, (key, item) in enumerate(value.items()):
-        if index >= MAX_ITEMS:
-            warnings.append("env_payload_truncated")
-            break
-        key_text = str(key)
-        if _is_sensitive_key(key_text) or _is_sensitive_value(item):
-            safe[key_text] = "[REDACTED]"
-        else:
-            safe[key_text] = "[ENV_VALUE_OMITTED]"
-    warnings.append("env_values_omitted")
-    return safe
-
-
-def _safe_value(value: Any, warnings: list[str], *, key: str | None = None, depth: int = 0) -> Any:
-    if key and _is_sensitive_key(key):
-        return "[REDACTED]"
-    if key and key.lower() in {"env", "environment"}:
-        return _safe_env(value, warnings)
-    if _is_sensitive_value(value):
-        return "[REDACTED]"
-    if value is None or isinstance(value, (bool, int, float)):
-        return value
-    if isinstance(value, str):
-        return _truncate(value)
-    if depth >= MAX_DEPTH:
-        warnings.append("payload_depth_truncated")
-        return f"[{type(value).__name__}_OMITTED]"
-    if isinstance(value, dict):
-        safe: dict[str, Any] = {}
-        for index, (item_key, item_value) in enumerate(value.items()):
-            if index >= MAX_ITEMS:
-                warnings.append("payload_mapping_truncated")
-                break
-            key_text = str(item_key)
-            safe[key_text] = _safe_value(item_value, warnings, key=key_text, depth=depth + 1)
-        return safe
-    if isinstance(value, (list, tuple, set)):
-        items = list(value)
-        if len(items) > MAX_ITEMS:
-            warnings.append("payload_sequence_truncated")
-        return [_safe_value(item, warnings, depth=depth + 1) for item in items[:MAX_ITEMS]]
-
-    return _truncate(repr(value))
 
 
 def _payload_from_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -105,31 +35,157 @@ def _payload_from_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[st
     return payload
 
 
-def _record_hook(hook: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
-    warnings: list[str] = []
+def _capture_mode() -> str:
+    raw = os.environ.get("HERMES_EVIDENCE_HOOK_CAPTURE_MODE", "simulated_test")
+    if raw == "real_runtime":
+        return "real_runtime"
+    return "simulated_test"
+
+
+def _session_hash(payload: dict[str, Any]) -> str | None:
+    for key in (
+        "session_id",
+        "parent_session_id",
+        "child_session_id",
+        "session_key",
+    ):
+        value = payload.get(key)
+        if value:
+            return hash_text(value)
+    return None
+
+
+def _tool_call_hash(payload: dict[str, Any]) -> str | None:
+    for key in ("tool_call_id", "call_id", "api_request_id"):
+        value = payload.get(key)
+        if value:
+            return hash_text(value)
+    return None
+
+
+def _tool_name(payload: dict[str, Any]) -> str | None:
+    value = payload.get("tool_name")
+    return str(value) if value else None
+
+
+def _build_event(hook_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
     payload = _payload_from_args(args, kwargs)
-    record = {
-        "hook": hook,
-        "observed_at": _now(),
-        "payload_keys": sorted(str(key) for key in payload.keys()),
-        "payload_safe": _safe_value(payload, warnings),
-        "warnings": sorted(set(warnings)),
-        "prototype": True,
+    redacted_payload, warnings = safe_serialize(payload)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "plugin_version": PLUGIN_VERSION,
+        "event_id": str(uuid.uuid4()),
+        "hook_name": hook_name,
+        "captured_at": _now(),
+        "capture_mode": _capture_mode(),
+        "session": {
+            "session_id_hash": _session_hash(payload),
+            "run_id": os.environ.get("HERMES_EVIDENCE_RUN_ID") or None,
+        },
+        "tool": {
+            "name": _tool_name(payload),
+            "call_id_hash": _tool_call_hash(payload),
+        },
+        "payload": {
+            "keys_observed": sorted(str(key) for key in payload.keys()),
+            "redacted": redacted_payload,
+        },
+        "provenance": {
+            "captured_by": "hermes-evidence-runtime",
+            "source": "Hermes hook callback",
+            "log_only": True,
+        },
+        "warnings": warnings,
     }
 
-    log_dir = os.environ.get("HERMES_EVIDENCE_HOOK_LOG_DIR")
-    if not log_dir:
-        return
+
+def _log_dir() -> pathlib.Path | None:
+    raw = os.environ.get("HERMES_EVIDENCE_HOOK_LOG_DIR")
+    if not raw:
+        return None
+    return pathlib.Path(raw).expanduser().resolve()
+
+
+def _append_event(log_dir: pathlib.Path, event: dict[str, Any]) -> None:
+    log_dir.mkdir(parents=True, exist_ok=True)
+    with (log_dir / LOG_FILE_NAME).open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _write_summary(log_dir: pathlib.Path, event: dict[str, Any]) -> None:
+    summary_path = log_dir / SUMMARY_FILE_NAME
+    try:
+        if summary_path.is_file():
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            if not isinstance(summary, dict):
+                summary = {}
+        else:
+            summary = {}
+    except Exception:
+        summary = {}
+
+    hooks = summary.get("hooks")
+    if not isinstance(hooks, dict):
+        hooks = {}
+    hook_name = str(event.get("hook_name", "unknown"))
+    hooks[hook_name] = int(hooks.get(hook_name, 0) or 0) + 1
+
+    modes = summary.get("capture_modes")
+    if not isinstance(modes, dict):
+        modes = {}
+    mode = str(event.get("capture_mode", "unknown"))
+    modes[mode] = int(modes.get(mode, 0) or 0) + 1
+
+    summary.update({
+        "schema_version": SCHEMA_VERSION,
+        "plugin_version": PLUGIN_VERSION,
+        "updated_at": _now(),
+        "event_count": int(summary.get("event_count", 0) or 0) + 1,
+        "hooks": hooks,
+        "capture_modes": modes,
+    })
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _record_hook(hook_name: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
+    log_dir = _log_dir()
+    if log_dir is None:
+        return None
 
     try:
-        target_dir = pathlib.Path(log_dir).expanduser().resolve()
-        target_dir.mkdir(parents=True, exist_ok=True)
-        with (target_dir / "hooks.jsonl").open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        event = _build_event(hook_name, args, kwargs)
+    except Exception as exc:
+        event = {
+            "schema_version": SCHEMA_VERSION,
+            "plugin_version": PLUGIN_VERSION,
+            "event_id": str(uuid.uuid4()),
+            "hook_name": hook_name,
+            "captured_at": _now(),
+            "capture_mode": _capture_mode(),
+            "session": {"session_id_hash": None, "run_id": None},
+            "tool": {"name": None, "call_id_hash": None},
+            "payload": {
+                "keys_observed": [],
+                "redacted": {
+                    "serialization_error": True,
+                    "error_type": type(exc).__name__,
+                },
+            },
+            "provenance": {
+                "captured_by": "hermes-evidence-runtime",
+                "source": "Hermes hook callback",
+                "log_only": True,
+            },
+            "warnings": ["serialization_error"],
+        }
+
+    try:
+        _append_event(log_dir, event)
+        _write_summary(log_dir, event)
     except Exception:
-        # Hooks are evidence probes only. A logging failure must not affect the
-        # user's tool call, session lifecycle, or subagent lifecycle.
-        return
+        # Observation-only hook capture must never break the Hermes session.
+        return None
+    return None
 
 
 def pre_tool_call(*args: Any, **kwargs: Any) -> None:
@@ -139,6 +195,11 @@ def pre_tool_call(*args: Any, **kwargs: Any) -> None:
 
 def post_tool_call(*args: Any, **kwargs: Any) -> None:
     _record_hook("post_tool_call", args, kwargs)
+    return None
+
+
+def on_session_start(*args: Any, **kwargs: Any) -> None:
+    _record_hook("on_session_start", args, kwargs)
     return None
 
 

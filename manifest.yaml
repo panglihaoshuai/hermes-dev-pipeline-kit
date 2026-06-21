@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.6.0
+version: 0.7.0
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -31,6 +31,11 @@ entrypoints:
   plugin_discovery_smoke: scripts/smoke/smoke-plugin-discovery-temp-home.sh
   plugin_hooks_source_smoke: scripts/smoke/smoke-plugin-hooks-source.sh
   plugin_hooks_discovery_smoke: scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  plugin_hooks_v07_unit_smoke: scripts/smoke/smoke-plugin-hooks-v07-unit.sh
+  plugin_hooks_v07_simulated_smoke: scripts/smoke/smoke-plugin-hooks-v07-simulated.sh
+  plugin_hooks_v07_real_runtime_smoke: scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
+  plugin_hooks_v07_non_mutation_smoke: scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
+  plugin_hooks_v07_secret_canary_smoke: scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
   worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
   worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   worker_normalizer_smoke: scripts/smoke/smoke-worker-normalizer.sh
@@ -55,7 +60,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.6.0
+      version: 0.7.0
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: false
       description: >
@@ -69,9 +74,11 @@ plugins:
         an explicit worker dry-run wrapper; real invocation is optional and
         disabled by default, and default CI records skipped invocation evidence
         only. v0.6 proves plugin enablement and evidence tool callability only.
-        It still does not claim official capture of worker output. It is not installed
-        into real ~/.hermes/plugins by default; live plugin enablement is a
-        separate explicit runtime step.
+        v0.7 captures selected Hermes hook payloads in log-only mode. Real
+        runtime smoke verified pre_tool_call and post_tool_call through the
+        Hermes model_tools path. It still does not claim official capture of
+        worker output. It is not installed into real ~/.hermes/plugins by
+        default; live plugin enablement is a separate explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
@@ -84,6 +91,7 @@ plugins:
       provides_hooks:
         - pre_tool_call
         - post_tool_call
+        - on_session_start
         - on_session_end
         - on_session_finalize
         - subagent_stop

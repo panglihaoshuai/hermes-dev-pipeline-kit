@@ -48,7 +48,9 @@ security_scan() {
   # assignment-like values, private keys, or SSH public keys.
   secret_hits=$(printf "%s\n" "$secret_raw" \
     | grep -E "$secret_assignment_pattern" \
-    | grep -vE "scripts/(policy-check|ci-local)\\.sh:" || true)
+    | grep -vE "scripts/(policy-check|ci-local)\\.sh:" \
+    | grep -vE "plugins/hermes-evidence-runtime/redaction\\.py:[0-9]+:.*BEGIN .*PRIVATE KEY" \
+    | grep -vE "scripts/smoke/smoke-plugin-hooks-v07-real-runtime\\.sh:[0-9]+:CANARY_(TOKEN|PASSWORD)=" || true)
 
   if [[ -n "$secret_hits" ]]; then
     echo "FAIL: secret-like assignment or key material found"
@@ -193,6 +195,11 @@ main() {
   bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
   bash scripts/smoke/smoke-plugin-hooks-source.sh
   bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-unit.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-simulated.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -213,6 +220,7 @@ main() {
   json_check schema/replay-result.schema.json
   json_check schema/artifact-manifest.schema.json
   json_check schema/worker-result.schema.json
+  json_check schema/hook-event.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

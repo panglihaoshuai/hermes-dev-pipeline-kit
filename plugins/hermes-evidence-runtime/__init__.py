@@ -155,6 +155,7 @@ def register(ctx: Any) -> None:
     for hook_name, hook_func in (
         ("pre_tool_call", hooks.pre_tool_call),
         ("post_tool_call", hooks.post_tool_call),
+        ("on_session_start", hooks.on_session_start),
         ("on_session_end", hooks.on_session_end),
         ("on_session_finalize", hooks.on_session_finalize),
         ("subagent_stop", hooks.subagent_stop),
