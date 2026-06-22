@@ -3,8 +3,8 @@ set -euo pipefail
 
 #
 # hermes-dev-pipeline-kit — install.sh
-# Installs dev-pipeline-orchestrator and dev-pipeline-report skills
-# into ~/.hermes/skills/software-development/
+# Installs dev-pipeline-orchestrator, dev-pipeline-report, harness scripts,
+# and the experimental hermes-evidence-runtime plugin source into ~/.hermes.
 #
 
 DRY_RUN=0
@@ -36,7 +36,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KIT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 HERMES_SKILLS_DIR="$HOME/.hermes/skills"
+HERMES_PLUGINS_DIR="$HOME/.hermes/plugins"
 TARGET_PARENT="$HERMES_SKILLS_DIR/software-development"
+PLUGIN_NAME="hermes-evidence-runtime"
 
 SKILL_NAMES=(
     "dev-pipeline-orchestrator"
@@ -96,6 +98,19 @@ backup_existing() {
             fi
         done
     fi
+
+    local plugin_target="$HERMES_PLUGINS_DIR/$PLUGIN_NAME"
+    if [[ -d "$plugin_target" ]]; then
+        local plugin_backup_dir="$HERMES_PLUGINS_DIR/.backup-${PLUGIN_NAME}-${ts}"
+        echo "[backup] Existing plugin found. Moving to: $plugin_backup_dir"
+        if [[ $DRY_RUN -eq 1 ]]; then
+            echo "[DRY-RUN]   Would move $plugin_target → $plugin_backup_dir"
+        else
+            mkdir -p "$HERMES_PLUGINS_DIR"
+            mv "$plugin_target" "$plugin_backup_dir"
+            echo "[backup]   Moved plugin: $PLUGIN_NAME"
+        fi
+    fi
 }
 
 install_skill() {
@@ -142,6 +157,29 @@ install_harness_scripts() {
             echo "[install] Copied harness script: $script → $dst"
         fi
     done
+}
+
+install_plugin() {
+    local src="$KIT_ROOT/plugins/$PLUGIN_NAME"
+    local dst="$HERMES_PLUGINS_DIR/$PLUGIN_NAME"
+
+    echo ""
+    echo "--- Installing experimental plugin source ---"
+
+    if [[ ! -d "$src" ]]; then
+        echo "[ERROR] Source plugin directory not found: $src"
+        exit 1
+    fi
+
+    if [[ $DRY_RUN -eq 1 ]]; then
+        echo "[DRY-RUN] Would copy $src → $dst"
+        echo "[DRY-RUN] Would NOT enable plugin automatically. Run: hermes plugins enable $PLUGIN_NAME"
+    else
+        mkdir -p "$HERMES_PLUGINS_DIR"
+        cp -R "$src" "$dst"
+        echo "[install] Copied plugin: $PLUGIN_NAME → $dst"
+        echo "[info] Plugin copied but not enabled automatically. Run: hermes plugins enable $PLUGIN_NAME"
+    fi
 }
 
 check_delegation_protocol() {
@@ -201,6 +239,17 @@ else
     echo "[ok] $HERMES_SKILLS_DIR exists."
 fi
 
+if [[ ! -d "$HERMES_PLUGINS_DIR" ]]; then
+    if [[ $DRY_RUN -eq 1 ]]; then
+        echo "[DRY-RUN] Would create $HERMES_PLUGINS_DIR"
+    else
+        mkdir -p "$HERMES_PLUGINS_DIR"
+        echo "[setup] Created $HERMES_PLUGINS_DIR"
+    fi
+else
+    echo "[ok] $HERMES_PLUGINS_DIR exists."
+fi
+
 # 2. Backup any existing dev-pipeline skills
 backup_existing
 
@@ -211,6 +260,7 @@ for skill in "${SKILL_NAMES[@]}"; do
     install_skill "$skill"
 done
 install_harness_scripts
+install_plugin
 
 # 4. Check delegation protocol
 check_delegation_protocol
@@ -233,8 +283,15 @@ for skill in "${SKILL_NAMES[@]}"; do
 done
 if [[ $DRY_RUN -eq 1 ]]; then
     echo "  [dry-run] v0.4 state-machine harness scripts (would be installed to dev-pipeline-orchestrator/bin)"
+    echo "  [dry-run] $PLUGIN_NAME plugin source (would be installed to $HERMES_PLUGINS_DIR/$PLUGIN_NAME)"
 else
     echo "  [ok] v0.4 state-machine harness scripts"
+    if [[ -d "$HERMES_PLUGINS_DIR/$PLUGIN_NAME" ]]; then
+        echo "  [ok] $PLUGIN_NAME plugin source"
+        echo "  [info] Plugin enablement is explicit: hermes plugins enable $PLUGIN_NAME"
+    else
+        echo "  [--] $PLUGIN_NAME plugin source missing"
+    fi
 fi
 echo ""
 echo "No global dependencies were installed."

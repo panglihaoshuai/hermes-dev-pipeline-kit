@@ -155,11 +155,11 @@ plugin enabled != tools callable
 tools callable != hook enforcement
 ```
 
-## What simple-code exposed
+## What an earlier smoke project exposed
 
-The `simple-code` history is a counterexample that the dev-pipeline must design
-against. It showed that a project can have a plausible process and still drift
-away from real completion.
+An earlier smoke-project history is a counterexample that the dev-pipeline must
+design against. It showed that a project can have a plausible process and still
+drift away from real completion.
 
 Observed failures:
 

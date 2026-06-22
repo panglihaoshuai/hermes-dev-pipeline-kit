@@ -210,6 +210,12 @@ policy-check/final-report to pass. AgentGuard `allow` is audit evidence only
 and must not be treated as engineering PASS; AgentGuard `block` does not
 replace policy-check or Codex review.
 
+v0.9.1 separates deterministic deployment readiness from external live E2E
+freshness. Deterministic CI may pass without calling an inference provider.
+External provider unavailability is classified as
+`SKIP_EXTERNAL_PROVIDER_UNAVAILABLE` with a specific reason such as
+`QUOTA_UNAVAILABLE`; it is never counted as `PASS_REAL_RUNTIME`.
+
 v0.5.2 adds prototype hook handlers for `pre_tool_call`, `post_tool_call`,
 `on_session_start`, `on_session_end`, `on_session_finalize`, and
 `subagent_stop`.
@@ -225,10 +231,12 @@ They do not replace the existing dev-pipeline-orchestrator skill.
 v0.7 hook logs are written to `hook-events.jsonl` using a structured event
 envelope with hashed session/tool call identifiers and redacted payload values.
 
-The plugin wrapper is validated through source-only smoke tests. The installer
-does not install it into a real `~/.hermes/plugins` directory. The temp-HOME
-discovery smoke copies the plugin to `/tmp/hermes-plugin-discovery-home` and
-uses `HERMES_HOME` to verify Hermes CLI discovery without touching real HOME.
+The plugin wrapper is validated through source-only smoke tests and explicit
+temp-HOME/live enablement checks. The installer copies the plugin source into
+`~/.hermes/plugins/hermes-evidence-runtime`, but enablement remains a separate
+explicit runtime step via `hermes plugins enable hermes-evidence-runtime`.
+The temp-HOME discovery smoke uses `HERMES_HOME` to verify Hermes CLI discovery
+without touching real HOME.
 v0.6 adds live enablement and tool-call smoke evidence, but it proves only
 plugin enablement and tool callability. v0.7 adds selected log-only hook
 payload capture evidence; it still does not add policy blocking.
@@ -665,8 +673,8 @@ state machine.
 - It does not capture official ClaudeCode/Codex/OpenCode output yet.
 - It does not call real ClaudeCode/Codex/OpenCode unless the explicit optional dry-run lane is enabled.
 - v0.8 does not implement enforcement and is not C档 production readiness.
-- It is not installed to real `~/.hermes/plugins` by `scripts/install.sh`; live
-  plugin enablement is a separate explicit runtime step.
+- `scripts/install.sh` copies it to `~/.hermes/plugins/hermes-evidence-runtime`;
+  live plugin enablement is a separate explicit runtime step.
 - Its smoke tests use source-only import and temp-HOME plugin discovery under `/tmp`.
 - Hook logs are written only when `HERMES_EVIDENCE_HOOK_LOG_DIR` is set.
 - Hook runtime payload shape is certified only for the hooks and trigger path covered by the v0.7 smoke.

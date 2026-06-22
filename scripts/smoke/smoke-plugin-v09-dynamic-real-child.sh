@@ -26,8 +26,9 @@ HERMES_HOME="$TMP_ROOT/home/.hermes" hermes plugins enable dynamic-workflows >/d
 HERMES_HOME="$TMP_ROOT/home/.hermes" \
 HERMES_DYNAMIC_WORKFLOWS_HOME="$TMP_ROOT/dynamic-store" \
 HERMES_DYNAMIC_WORKFLOWS_TMPDIR="$TMP_ROOT/dynamic-tmp" \
-"$HERMES_AGENT_PYTHON" - <<'PY' "$TMP_ROOT"
+"$HERMES_AGENT_PYTHON" - <<'PY' "$TMP_ROOT" "$REPO_ROOT"
 import hashlib
+import importlib.util
 import json
 import os
 import pathlib
@@ -35,25 +36,17 @@ import sys
 import time
 
 root = pathlib.Path(sys.argv[1])
+repo_root = pathlib.Path(sys.argv[2])
 work = root / "work"
 sys.path.insert(0, str(root / "home/.hermes/plugins/dynamic-workflows"))
 
 
-def classify_error(message: str) -> str:
-    lower = message.lower()
-    if "no inference provider" in lower or "unknown provider" in lower:
-        return "NO_PROVIDER_CONFIG"
-    if "auth" in lower or "credential" in lower or "api key" in lower or "401" in lower or "403" in lower:
-        return "AUTH_UNAVAILABLE"
-    if "model" in lower or "404" in lower:
-        return "MODEL_UNAVAILABLE"
-    if "network" in lower or "timeout" in lower or "connection" in lower:
-        return "NETWORK_UNAVAILABLE"
-    if "quota" in lower or "rate limit" in lower or "429" in lower:
-        return "QUOTA_UNAVAILABLE"
-    if "structured output" in lower:
-        return "STRUCTURED_OUTPUT_INVALID"
-    return "UNKNOWN"
+external_e2e_path = repo_root / "plugins/hermes-evidence-runtime/integrations/external_e2e.py"
+external_spec = importlib.util.spec_from_file_location("external_e2e", external_e2e_path)
+if external_spec is None or external_spec.loader is None:
+    raise RuntimeError(f"failed to load external E2E classifier: {external_e2e_path}")
+external_e2e = importlib.util.module_from_spec(external_spec)
+external_spec.loader.exec_module(external_e2e)
 
 
 # Resolve provider credentials from the live user config in memory only.
@@ -221,7 +214,7 @@ try:
         "error_classification": None,
     }
     if not ok:
-        summary["error_classification"] = classify_error(str(record.get("error") or ""))
+        summary["error_classification"] = external_e2e.classify_external_error(str(record.get("error") or ""))
         summary["error"] = str(record.get("error") or "")[:1200]
 except Exception as exc:
     summary = {
@@ -230,15 +223,25 @@ except Exception as exc:
         "backend": "hermes_dynamic_workflows",
         "backend_version": "0.1.0",
         "status": "failed",
-        "error_classification": classify_error(str(exc)),
+        "error_classification": external_e2e.classify_external_error(str(exc)),
         "error": f"{type(exc).__name__}: {exc}"[:1200],
     }
 
 (root / "dynamic-result.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 public = {key: value for key, value in summary.items() if key != "error"}
+if summary.get("ok"):
+    public["external_result"] = "PASS_REAL_RUNTIME"
+    public["external_exit_code"] = 0
+else:
+    public["external_result"] = external_e2e.external_result_for_classification(
+        str(summary.get("error_classification") or "UNKNOWN")
+    )
+    public["external_exit_code"] = external_e2e.exit_code_for_external_classification(
+        str(summary.get("error_classification") or "UNKNOWN")
+    )
 print(json.dumps(public, ensure_ascii=False, sort_keys=True))
 if not summary.get("ok"):
-    raise SystemExit(2)
+    raise SystemExit(public["external_exit_code"])
 PY
 
 echo "smoke-plugin-v09-dynamic-real-child: PASS"

@@ -68,7 +68,7 @@ plugins:
       name: hermes-evidence-runtime
       version: 0.9.0-integration-spike
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
-      default_install: false
+      default_install: true
       description: >
         Experimental plugin wrapper that registers tools around existing Bash
         harness scripts. v0.5.2 also includes prototype non-blocking hook probes
@@ -93,10 +93,12 @@ plugins:
         real-runtime smokes prove AgentGuard native allow/block hook behavior
         and Dynamic Workflows one-child completion when the optional backends
         and a provider are available. The combined explicit real-runtime smoke
-        records both backends into one policy-checked run. These adapters do not own engineering
-        acceptance and do not implement enforcement or repair loops. It is not installed into real
-        ~/.hermes/plugins by default; live plugin enablement is a separate
-        explicit runtime step.
+        records both backends into one policy-checked run. v0.9.1 separates
+        deterministic deployment readiness from external provider freshness:
+        provider quota/auth/model/network failures are SKIP, not PASS. These adapters do not own engineering
+        acceptance and do not implement enforcement or repair loops. The
+        installer copies this plugin source into ~/.hermes/plugins, but live
+        plugin enablement remains a separate explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
@@ -183,8 +185,8 @@ safety:
   installer_modifies:
     - "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
     - "~/.hermes/skills/software-development/dev-pipeline-report"
+    - "~/.hermes/plugins/hermes-evidence-runtime"
   installer_does_not_modify:
-    - "~/.hermes/plugins"  # installer does not install the experimental plugin wrapper
     - "~/.claude/CLAUDE.md"  # only warns, never writes
     - "~/.claude/settings.json"
     - "any business project"

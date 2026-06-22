@@ -823,7 +823,8 @@ v0.8 adds five C档 dry-run artifact tools:
 
 v0.5.1-v0.8 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
-It does not install into real `~/.hermes/plugins` by default.
+The installer now copies it into `~/.hermes/plugins/hermes-evidence-runtime`,
+but runtime enablement remains explicit.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
@@ -844,10 +845,12 @@ provider and do not capture official ClaudeCode/Codex/OpenCode output. The old
 `dev-pipeline-orchestrator` skill remains the user-facing development entrypoint.
 
 The wrapper is validated with source-only smoke tests and temp-HOME discovery
-under `/tmp`. It is not installed to real `~/.hermes/plugins` by the installer
-path. v0.7 real runtime smoke captured `pre_tool_call` and `post_tool_call`
-through the Hermes `model_tools.handle_function_call` path. Payload shape
-remains UNKNOWN for hooks and trigger paths not covered by that smoke.
+under `/tmp`. The installer copies it into real `~/.hermes/plugins`, while
+`hermes plugins enable hermes-evidence-runtime` remains the explicit runtime
+enablement step. v0.7 real runtime smoke captured `pre_tool_call` and
+`post_tool_call` through the Hermes `model_tools.handle_function_call` path.
+Payload shape remains UNKNOWN for hooks and trigger paths not covered by that
+smoke.
 
 v0.5.3 worker result tools wrap the existing Bash harness only. They validate
 and record simulated worker result contracts into `raw/worker/`, then the
@@ -882,3 +885,11 @@ v0.9 smoke checks contracts only; real backend claims require explicit
 real-runtime smoke evidence. The combined real-runtime smoke is the positive
 closure gate because it records AgentGuard and Dynamic Workflows evidence into
 one policy-checked run.
+
+v0.9.1 makes that gate deterministic by separating local deployment readiness
+from external provider freshness. Local deterministic tests cover syntax,
+contracts, AgentGuard native hook behavior, external error classification, and
+terminal registry restoration. Dynamic Workflows real child completion remains
+an explicit external E2E lane; provider quota/auth/model/network failures are
+reported as `SKIP_EXTERNAL_PROVIDER_UNAVAILABLE`, not as PASS and not as code
+regression without independent evidence.

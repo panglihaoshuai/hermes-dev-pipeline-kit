@@ -3,10 +3,23 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ci_pass=0
+ci_fail=0
+ci_skip=0
 
 section() {
   echo ""
   echo "== $1 =="
+}
+
+record_pass() {
+  ci_pass=$((ci_pass + 1))
+  echo "PASS: $1"
+}
+
+record_skip() {
+  ci_skip=$((ci_skip + 1))
+  echo "SKIP: $1"
 }
 
 expect_fail() {
@@ -202,6 +215,9 @@ main() {
   bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
   bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
   bash scripts/smoke/smoke-plugin-v09-integration-backends.sh
+  bash scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  bash scripts/smoke/smoke-plugin-v09-external-classification.sh
+  bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -244,8 +260,11 @@ main() {
     bash scripts/validate-worker-result.sh examples/worker-results/bad-codex-deferred-pass.json
 
   security_scan
+  record_pass "deterministic-suite"
+  record_skip "external-live-e2e-not-run-by-ci-local"
 
   echo ""
+  echo "ci-local summary: PASS=$ci_pass FAIL=$ci_fail SKIP=$ci_skip"
   echo "ci-local: PASS"
 }
 

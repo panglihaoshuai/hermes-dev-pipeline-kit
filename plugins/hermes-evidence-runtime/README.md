@@ -61,6 +61,12 @@ the explicit AgentGuard native hook smoke and Dynamic Workflows real child
 smoke; the combined explicit real-runtime smoke records both backend proofs
 into one policy-checked run.
 
+v0.9.1 deterministic checks do not call inference providers. If Dynamic
+Workflows real child completion cannot run because provider quota, auth, model,
+or network is unavailable, the result is `SKIP_EXTERNAL_PROVIDER_UNAVAILABLE`
+with a concrete classification such as `QUOTA_UNAVAILABLE`; it is not a fresh
+real-runtime PASS.
+
 v0.5.2 adds prototype hook handlers:
 
 - `pre_tool_call`
@@ -77,9 +83,10 @@ commit/push guards, do not implement a memory provider, do not replace old
 skills, and do not capture official ClaudeCode/Codex/OpenCode output yet.
 
 The plugin is intended for source-only, temporary-home, and explicit live
-enablement smoke validation. `scripts/install.sh` does not install it into a
-real `~/.hermes/plugins` directory. Hook payload shape remains unknown for
-hooks and trigger paths not covered by the v0.7 smoke.
+enablement smoke validation. `scripts/install.sh` copies it into
+`~/.hermes/plugins/hermes-evidence-runtime`, but does not enable it
+automatically. Hook payload shape remains unknown for hooks and trigger paths
+not covered by the v0.7 smoke.
 
 v0.5.3 adds a Worker Result Contract Adapter prototype. It validates and records
 simulated worker result JSON into the existing Bash harness evidence directory.

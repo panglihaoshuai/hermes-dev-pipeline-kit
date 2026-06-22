@@ -156,24 +156,13 @@ def call_json(fn, payload: dict, *, expect_ok: bool = True) -> dict:
     return data
 
 
-def classify_error(message: str) -> str:
-    lower = message.lower()
-    if "no inference provider" in lower or "unknown provider" in lower:
-        return "NO_PROVIDER_CONFIG"
-    if "auth" in lower or "credential" in lower or "api key" in lower or "401" in lower or "403" in lower:
-        return "AUTH_UNAVAILABLE"
-    if "model" in lower or "404" in lower:
-        return "MODEL_UNAVAILABLE"
-    if "network" in lower or "timeout" in lower or "connection" in lower:
-        return "NETWORK_UNAVAILABLE"
-    if "quota" in lower or "rate limit" in lower or "429" in lower:
-        return "QUOTA_UNAVAILABLE"
-    if "structured output" in lower:
-        return "STRUCTURED_OUTPUT_INVALID"
-    return "UNKNOWN"
-
-
 tools = load_runtime_tools()
+external_e2e_path = repo_root / "plugins/hermes-evidence-runtime/integrations/external_e2e.py"
+external_spec = importlib.util.spec_from_file_location("external_e2e", external_e2e_path)
+if external_spec is None or external_spec.loader is None:
+    raise RuntimeError(f"failed to load external E2E classifier: {external_e2e_path}")
+external_e2e = importlib.util.module_from_spec(external_spec)
+external_spec.loader.exec_module(external_e2e)
 init = call_json(
     tools.evidence_run_init,
     {
@@ -315,6 +304,10 @@ if not any("evidence" in item for item in callbacks):
     raise AssertionError(f"evidence pre_tool_call callback missing: {callbacks}")
 
 handler_calls = []
+original_terminal_entry = model_tools.registry.get_entry("terminal")
+if original_terminal_entry is None:
+    raise AssertionError("original terminal registry entry missing before AgentGuard canary")
+terminal_registry_restored = False
 
 
 def canary_handler(args=None, **_kwargs):
@@ -325,103 +318,129 @@ def canary_handler(args=None, **_kwargs):
     return {"ok": True, "handler_entered": True, "args": payload}
 
 
-model_tools.registry.register(
-    "terminal",
-    "terminal",
-    {
-        "type": "object",
-        "properties": {"command": {"type": "string"}},
-        "required": ["command"],
-    },
-    canary_handler,
-    override=True,
-)
-allow_result = model_tools.handle_function_call(
-    "terminal",
-    {"command": "pwd"},
-    task_id="agentguard-allow",
-    session_id="session-allow",
-    tool_call_id="call-allow",
-    enabled_toolsets=["terminal"],
-)
-allow_calls = len(handler_calls)
-block_result = model_tools.handle_function_call(
-    "terminal",
-    {"command": "rm -rf /"},
-    task_id="agentguard-block",
-    session_id="session-block",
-    tool_call_id="call-block",
-    enabled_toolsets=["terminal"],
-)
-block_calls = len(handler_calls) - allow_calls
-allow_parsed = allow_result if isinstance(allow_result, dict) else json.loads(allow_result)
-block_parsed = block_result if isinstance(block_result, dict) else json.loads(block_result)
-if allow_calls != 1 or allow_parsed.get("handler_entered") is not True:
-    raise AssertionError("AgentGuard native allow did not execute terminal handler once")
-if block_calls != 0:
-    raise AssertionError("AgentGuard native block still executed terminal handler")
-if "GoPlus AgentGuard" not in str(block_parsed.get("error", "")):
-    raise AssertionError(f"AgentGuard native block missing expected error: {block_parsed}")
+def restore_terminal_entry():
+    global terminal_registry_restored
+    model_tools.registry.register(
+        "terminal",
+        original_terminal_entry.toolset,
+        original_terminal_entry.schema,
+        original_terminal_entry.handler,
+        check_fn=original_terminal_entry.check_fn,
+        requires_env=original_terminal_entry.requires_env,
+        is_async=original_terminal_entry.is_async,
+        description=original_terminal_entry.description,
+        emoji=original_terminal_entry.emoji,
+        max_result_size_chars=original_terminal_entry.max_result_size_chars,
+        dynamic_schema_overrides=original_terminal_entry.dynamic_schema_overrides,
+        override=True,
+    )
+    terminal_registry_restored = True
 
-agentguard_audit = root / "agentguard-audit.jsonl"
-hook_log = root / "evidence-hook-log" / "hook-events.jsonl"
-if not agentguard_audit.is_file() or len(agentguard_audit.read_text(encoding="utf-8").splitlines()) < 4:
-    raise AssertionError("AgentGuard audit log missing native allow/block evidence")
-if not hook_log.is_file() or len(hook_log.read_text(encoding="utf-8").splitlines()) < 4:
-    raise AssertionError("evidence hook log missing real Hermes pre/post events")
 
-call_json(
-    tools.evidence_record_security_decision,
-    {
-        "run_dir": str(run_dir),
-        "decision": {
-            "backend": "agentguard",
-            "backend_version": "1.1.28",
-            "available": True,
-            "requested": True,
-            "required": True,
-            "selected": True,
-            "used": True,
-            "fallback_used": False,
-            "native_hook": True,
-            "adapter_only": False,
-            "handler_executed": True,
-            "handler_executed_after_block": False,
-            "decision": "allow",
-            "reason": "native AgentGuard pre_tool_call allowed benign terminal command",
-            "action_type": "shell",
-            "tool_name": "terminal",
-            "evaluated_at": now(),
-            "audit_reference": str(agentguard_audit),
+try:
+    model_tools.registry.register(
+        "terminal",
+        "terminal",
+        {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"],
         },
-    },
-)
-call_json(
-    tools.evidence_record_security_decision,
-    {
-        "run_dir": str(run_dir),
-        "decision": {
-            "backend": "agentguard",
-            "backend_version": "1.1.28",
-            "available": True,
-            "requested": True,
-            "required": True,
-            "selected": True,
-            "used": True,
-            "fallback_used": False,
-            "native_hook": True,
-            "adapter_only": False,
-            "handler_executed": False,
-            "handler_executed_after_block": False,
-            "decision": "block",
-            "reason": "native AgentGuard pre_tool_call blocked synthetic destructive terminal command",
-            "action_type": "shell",
-            "tool_name": "terminal",
-            "evaluated_at": now(),
-            "audit_reference": str(agentguard_audit),
+        canary_handler,
+        override=True,
+    )
+    allow_result = model_tools.handle_function_call(
+        "terminal",
+        {"command": "pwd"},
+        task_id="agentguard-allow",
+        session_id="session-allow",
+        tool_call_id="call-allow",
+        enabled_toolsets=["terminal"],
+    )
+    allow_calls = len(handler_calls)
+    block_result = model_tools.handle_function_call(
+        "terminal",
+        {"command": "rm -rf /"},
+        task_id="agentguard-block",
+        session_id="session-block",
+        tool_call_id="call-block",
+        enabled_toolsets=["terminal"],
+    )
+    block_calls = len(handler_calls) - allow_calls
+    allow_parsed = allow_result if isinstance(allow_result, dict) else json.loads(allow_result)
+    block_parsed = block_result if isinstance(block_result, dict) else json.loads(block_result)
+    if allow_calls != 1 or allow_parsed.get("handler_entered") is not True:
+        raise AssertionError("AgentGuard native allow did not execute terminal handler once")
+    if block_calls != 0:
+        raise AssertionError("AgentGuard native block still executed terminal handler")
+    if "GoPlus AgentGuard" not in str(block_parsed.get("error", "")):
+        raise AssertionError(f"AgentGuard native block missing expected error: {block_parsed}")
+
+    agentguard_audit = root / "agentguard-audit.jsonl"
+    hook_log = root / "evidence-hook-log" / "hook-events.jsonl"
+    if not agentguard_audit.is_file() or len(agentguard_audit.read_text(encoding="utf-8").splitlines()) < 4:
+        raise AssertionError("AgentGuard audit log missing native allow/block evidence")
+    if not hook_log.is_file() or len(hook_log.read_text(encoding="utf-8").splitlines()) < 4:
+        raise AssertionError("evidence hook log missing real Hermes pre/post events")
+
+    call_json(
+        tools.evidence_record_security_decision,
+        {
+            "run_dir": str(run_dir),
+            "decision": {
+                "backend": "agentguard",
+                "backend_version": "1.1.28",
+                "available": True,
+                "requested": True,
+                "required": True,
+                "selected": True,
+                "used": True,
+                "fallback_used": False,
+                "native_hook": True,
+                "adapter_only": False,
+                "handler_executed": True,
+                "handler_executed_after_block": False,
+                "decision": "allow",
+                "reason": "native AgentGuard pre_tool_call allowed benign terminal command",
+                "action_type": "shell",
+                "tool_name": "terminal",
+                "evaluated_at": now(),
+                "audit_reference": str(agentguard_audit),
+            },
         },
-    },
-)
+    )
+    call_json(
+        tools.evidence_record_security_decision,
+        {
+            "run_dir": str(run_dir),
+            "decision": {
+                "backend": "agentguard",
+                "backend_version": "1.1.28",
+                "available": True,
+                "requested": True,
+                "required": True,
+                "selected": True,
+                "used": True,
+                "fallback_used": False,
+                "native_hook": True,
+                "adapter_only": False,
+                "handler_executed": False,
+                "handler_executed_after_block": False,
+                "decision": "block",
+                "reason": "native AgentGuard pre_tool_call blocked synthetic destructive terminal command",
+                "action_type": "shell",
+                "tool_name": "terminal",
+                "evaluated_at": now(),
+                "audit_reference": str(agentguard_audit),
+            },
+        },
+    )
+finally:
+    restore_terminal_entry()
+
+restored_terminal_entry = model_tools.registry.get_entry("terminal")
+if restored_terminal_entry is None or restored_terminal_entry.handler is not original_terminal_entry.handler:
+    raise AssertionError("terminal registry entry was not restored after AgentGuard canary")
 
 # Resolve provider credentials from the live user config in memory only, then
 # restore HERMES_HOME so Dynamic Workflows writes all state under TMP_ROOT.
@@ -573,7 +592,27 @@ try:
         raise RuntimeError(f"Dynamic Workflows child did not complete with valid structured output: {record}")
 except Exception as exc:
     error = f"{type(exc).__name__}: {exc}"
-    raise RuntimeError(f"Dynamic Workflows real child completion failed [{classify_error(error)}]: {error}") from exc
+    classification = external_e2e.classify_external_error(error)
+    external_result = external_e2e.external_result_for_classification(classification)
+    external_exit_code = external_e2e.exit_code_for_external_classification(classification)
+    print(json.dumps({
+        "smoke": "plugin-v09-combined-real-backends",
+        "ok": False,
+        "agentguard": {
+            "native_hook": True,
+            "allow_handler_calls": allow_calls,
+            "block_handler_calls": block_calls,
+            "terminal_registry_restored": terminal_registry_restored,
+        },
+        "dynamic_workflows": {
+            "status": "failed",
+            "error_classification": classification,
+            "external_result": external_result,
+        },
+        "verdict": external_result,
+        "exit_code": external_exit_code,
+    }, ensure_ascii=False, sort_keys=True))
+    raise SystemExit(external_exit_code) from exc
 
 journal_path = pathlib.Path(str(record.get("journalFile") or ""))
 transcript_paths = [pathlib.Path(str(item)) for item in (record.get("transcriptFiles") or [])]
@@ -670,6 +709,7 @@ print(json.dumps({
         "native_hook": True,
         "allow_handler_calls": allow_calls,
         "block_handler_calls": block_calls,
+        "terminal_registry_restored": terminal_registry_restored,
         "callback_order": callbacks,
         "audit_path": str(agentguard_audit),
     },
