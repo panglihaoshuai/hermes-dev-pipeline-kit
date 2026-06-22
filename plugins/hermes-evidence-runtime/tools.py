@@ -99,3 +99,15 @@ def evidence_record_orchestration_result(args: Any = None, **kwargs: Any) -> str
 
 def evidence_record_security_decision(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_record_security_decision, args, **kwargs)
+
+
+def evidence_authorization_status(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_authorization_status, args, **kwargs)
+
+
+def evidence_prepare_live_approval(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_prepare_live_approval, args, **kwargs)
+
+
+def evidence_terminalize_run(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_terminalize_run, args, **kwargs)

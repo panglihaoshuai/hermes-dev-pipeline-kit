@@ -8,6 +8,7 @@ from . import hooks, schemas
 from .tools import (
     evidence_active_run_status,
     evidence_approval_inbox,
+    evidence_authorization_status,
     evidence_doctor,
     evidence_drive_s_run,
     evidence_final_report,
@@ -20,7 +21,9 @@ from .tools import (
     evidence_record_orchestration_result,
     evidence_record_security_decision,
     evidence_record_worker_result,
+    evidence_prepare_live_approval,
     evidence_run_init,
+    evidence_terminalize_run,
     evidence_validate_worker_result,
 )
 
@@ -214,6 +217,27 @@ def register(ctx: Any) -> None:
         evidence_record_security_decision,
         schemas.EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA,
         "Append raw security backend decision evidence into raw/security-decisions.jsonl.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_authorization_status",
+        evidence_authorization_status,
+        schemas.EVIDENCE_AUTHORIZATION_STATUS_SCHEMA,
+        "Check whether a Dev Pipeline mutation is allowed by the active authorization.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_prepare_live_approval",
+        evidence_prepare_live_approval,
+        schemas.EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA,
+        "Create a pending live mutation approval request; never self-approves.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_terminalize_run",
+        evidence_terminalize_run,
+        schemas.EVIDENCE_TERMINALIZE_RUN_SCHEMA,
+        "Emit a terminal verdict artifact and expire or complete authorization.",
     )
 
     for hook_name, hook_func in (

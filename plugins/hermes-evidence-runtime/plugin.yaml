@@ -1,5 +1,5 @@
 name: hermes-evidence-runtime
-version: 0.9.0-integration-spike
+version: 0.10.0-authorization-gate
 description: >
   Experimental Hermes plugin wrapper for hermes-dev-pipeline-kit evidence
   harness scripts. This plugin registers machine-readable tools around existing
@@ -16,7 +16,10 @@ description: >
   backend adapters for Hermes Dynamic Workflows and AgentGuard. These adapters
   record raw orchestration/security evidence only; they do not own engineering
   acceptance, do not implement repair/enforcement loops, and do not make C-class
-  production readiness claims.
+  production readiness claims. v0.10 adds deterministic run authorization,
+  secondary live approval, and terminal verdict helpers for selected Dev
+  Pipeline/Hermes mutation paths. It does not control Codex UI internal
+  continuation or external processes that bypass Hermes.
 provides_tools:
   - evidence_doctor
   - evidence_active_run_status
@@ -34,6 +37,9 @@ provides_tools:
   - evidence_integration_capabilities
   - evidence_record_orchestration_result
   - evidence_record_security_decision
+  - evidence_authorization_status
+  - evidence_prepare_live_approval
+  - evidence_terminalize_run
 provides_hooks:
   - pre_tool_call
   - post_tool_call

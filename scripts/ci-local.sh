@@ -218,6 +218,7 @@ main() {
   bash scripts/smoke/smoke-plugin-v09-agentguard-native.sh
   bash scripts/smoke/smoke-plugin-v09-external-classification.sh
   bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
+  bash scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -242,6 +243,9 @@ main() {
   json_check schema/approval-inbox.schema.json
   json_check schema/orchestration-backend-result.schema.json
   json_check schema/security-backend-decision.schema.json
+  json_check schema/run-authorization.schema.json
+  json_check schema/live-mutation-approval.schema.json
+  json_check schema/terminal-verdict.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

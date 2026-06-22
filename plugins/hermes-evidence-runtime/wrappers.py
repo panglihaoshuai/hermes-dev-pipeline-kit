@@ -18,9 +18,10 @@ from .integrations import (
     orchestration_result,
     security_decision,
 )
+from . import authorization
 
 PLUGIN_DIR = pathlib.Path(__file__).resolve().parent
-PLUGIN_VERSION = "0.9.0-integration-spike"
+PLUGIN_VERSION = "0.10.0-authorization-gate"
 
 
 def _candidate_script_dirs() -> list[pathlib.Path]:
@@ -139,6 +140,19 @@ def _read_json(path: pathlib.Path) -> dict[str, Any] | None:
     except json.JSONDecodeError:
         return None
     return data if isinstance(data, dict) else None
+
+
+def _authorization_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
+    if isinstance(payload.get("authorization"), dict):
+        return dict(payload["authorization"])
+    raw_path = payload.get("authorization_path")
+    if raw_path:
+        path = _as_path(raw_path, "authorization_path")
+        data = _read_json(path)
+        if not data:
+            raise WrapperError(f"invalid authorization JSON: {path}")
+        return data
+    return None
 
 
 def _read_jsonl(path: pathlib.Path) -> list[dict[str, Any]]:
@@ -1351,3 +1365,59 @@ def evidence_record_security_decision(payload: dict[str, Any]) -> dict[str, Any]
         "decision": normalized["decision"],
         "exit_code": 0,
     }
+
+
+def evidence_authorization_status(payload: dict[str, Any]) -> dict[str, Any]:
+    auth = _authorization_from_payload(payload)
+    result = authorization.check_mutation(
+        auth,
+        str(payload.get("action", "")),
+        str(payload.get("target_path", "")),
+        goal_hash=payload.get("goal_hash"),
+        live_approval=payload.get("live_approval") if isinstance(payload.get("live_approval"), dict) else None,
+        context_event=payload.get("context_event"),
+        c_class_run=bool(payload.get("c_class_run", False)),
+    )
+    result.update({
+        "script": "plugin:evidence_authorization_status",
+        "authorization_id": auth.get("authorization_id") if auth else "",
+        "authorization_status": auth.get("status") if auth else "missing",
+    })
+    return result
+
+
+def evidence_prepare_live_approval(payload: dict[str, Any]) -> dict[str, Any]:
+    auth = _authorization_from_payload(payload)
+    if not auth:
+        return {
+            "ok": False,
+            "script": "plugin:evidence_prepare_live_approval",
+            "reason": "missing_authorization",
+        }
+    result = authorization.prepare_live_approval(
+        auth,
+        str(payload.get("action", "")),
+        str(payload.get("target_path", "")),
+        source_user_message_id=str(payload.get("source_user_message_id", "")),
+        status=str(payload.get("status", "pending")),
+    )
+    result["script"] = "plugin:evidence_prepare_live_approval"
+    return result
+
+
+def evidence_terminalize_run(payload: dict[str, Any]) -> dict[str, Any]:
+    auth = _authorization_from_payload(payload)
+    if not auth:
+        return {
+            "ok": False,
+            "script": "plugin:evidence_terminalize_run",
+            "reason": "missing_authorization",
+        }
+    result = authorization.terminalize_run(
+        auth,
+        run_id=str(payload.get("run_id", "")),
+        verdict=str(payload.get("verdict", "")),
+        canary_status=payload.get("canary_status"),
+    )
+    result["script"] = "plugin:evidence_terminalize_run"
+    return result

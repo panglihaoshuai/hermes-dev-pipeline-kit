@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Pipeline Terminal Verdict",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "run_id",
+    "verdict",
+    "terminal",
+    "emitted_at",
+    "next_state",
+    "authorization_expired",
+    "continuation_allowed"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "verdict": { "type": "string", "minLength": 1 },
+    "terminal": { "type": "boolean" },
+    "emitted_at": { "type": "string", "minLength": 1 },
+    "next_state": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed_reauth_required",
+        "blocked_reauth_required",
+        "paused_reauth_required"
+      ]
+    },
+    "authorization_expired": { "type": "boolean" },
+    "continuation_allowed": { "type": "boolean" },
+    "next_goal_executable": { "type": "boolean" }
+  }
+}

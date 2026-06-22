@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1-v0.9 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.10 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -37,7 +37,7 @@ Hermes runtime smoke using the local `model_tools.handle_function_call` path.
 Other registered hooks remain simulated-only or untriggered unless separately
 proven.
 
-v0.5.1-v0.9 plugin wrapper is experimental.
+v0.5.1-v0.10 plugin wrapper is experimental.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
@@ -66,6 +66,13 @@ Workflows real child completion cannot run because provider quota, auth, model,
 or network is unavailable, the result is `SKIP_EXTERNAL_PROVIDER_UNAVAILABLE`
 with a concrete classification such as `QUOTA_UNAVAILABLE`; it is not a fresh
 real-runtime PASS.
+
+v0.10 adds run authorization and terminal-verdict helpers. The tools can block
+selected Dev Pipeline mutations when authorization is missing, expired, outside
+allowed paths, forbidden by action, missing secondary live approval, or after a
+terminal verdict. This is not universal enforcement: Codex UI internal
+continuation and external processes that bypass Hermes are outside this plugin's
+direct control.
 
 v0.5.2 adds prototype hook handlers:
 

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Pipeline Run Authorization",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "authorization_id",
+    "goal_hash",
+    "source_message_id",
+    "source_session_id",
+    "created_at",
+    "status",
+    "allowed_paths",
+    "allowed_actions",
+    "forbidden_actions",
+    "requires_secondary_approval",
+    "expires_on"
+  ],
+  "properties": {
+    "authorization_id": { "type": "string", "minLength": 1 },
+    "goal_hash": { "type": "string", "minLength": 1 },
+    "source_message_id": { "type": "string", "minLength": 1 },
+    "source_session_id": { "type": "string", "minLength": 1 },
+    "source_attachment_hash": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "active", "expired", "revoked", "completed"]
+    },
+    "allowed_paths": { "type": "array", "items": { "type": "string" } },
+    "allowed_actions": { "type": "array", "items": { "type": "string" } },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "requires_secondary_approval": { "type": "array", "items": { "type": "string" } },
+    "expires_on": { "type": "array", "items": { "type": "string" } },
+    "expired_at": { "type": ["string", "null"] },
+    "expiration_reason": { "type": ["string", "null"] }
+  }
+}

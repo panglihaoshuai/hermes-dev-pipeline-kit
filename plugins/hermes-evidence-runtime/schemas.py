@@ -285,3 +285,48 @@ EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA = {
         "decision": {"type": "object"},
     },
 }
+
+EVIDENCE_AUTHORIZATION_STATUS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "action": {"type": "string"},
+        "target_path": {"type": "string"},
+        "goal_hash": {"type": "string"},
+        "live_approval": {"type": "object"},
+        "context_event": {"type": "string"},
+        "c_class_run": {"type": "boolean", "default": False},
+    },
+}
+
+EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["action", "target_path", "source_user_message_id"],
+    "properties": {
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "action": {
+            "type": "string",
+            "enum": ["modify_live_home", "install_plugin", "uninstall_plugin", "rollback", "reinstall"],
+        },
+        "target_path": {"type": "string"},
+        "source_user_message_id": {"type": "string"},
+        "status": {"type": "string", "default": "pending"},
+    },
+}
+
+EVIDENCE_TERMINALIZE_RUN_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_id", "verdict"],
+    "properties": {
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "run_id": {"type": "string"},
+        "verdict": {"type": "string"},
+        "canary_status": {"type": "string"},
+    },
+}

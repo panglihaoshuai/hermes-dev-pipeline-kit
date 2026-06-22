@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Pipeline Live Mutation Approval",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "approval_id",
+    "authorization_id",
+    "action",
+    "target_path",
+    "requested_at",
+    "approved_at",
+    "status",
+    "source_user_message_id"
+  ],
+  "properties": {
+    "approval_id": { "type": "string", "minLength": 1 },
+    "authorization_id": { "type": "string", "minLength": 1 },
+    "action": {
+      "type": "string",
+      "enum": ["modify_live_home", "install_plugin", "uninstall_plugin", "rollback", "reinstall"]
+    },
+    "target_path": { "type": "string", "minLength": 1 },
+    "requested_at": { "type": "string", "minLength": 1 },
+    "approved_at": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "denied", "expired"]
+    },
+    "source_user_message_id": { "type": "string", "minLength": 1 },
+    "expires_on_terminal_verdict": { "type": "boolean" }
+  }
+}

@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.9.0-integration-spike
+version: 0.10.0-authorization-gate
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -39,8 +39,15 @@ entrypoints:
   plugin_v08_c_dry_run_smoke: scripts/smoke/smoke-plugin-v08-c-dry-run.sh
   plugin_v09_integration_backends_smoke: scripts/smoke/smoke-plugin-v09-integration-backends.sh
   plugin_v09_agentguard_native_smoke: scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  plugin_v09_external_classification_smoke: scripts/smoke/smoke-plugin-v09-external-classification.sh
+  plugin_v09_combined_deterministic_smoke: scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
   plugin_v09_dynamic_real_child_smoke: scripts/smoke/smoke-plugin-v09-dynamic-real-child.sh
   plugin_v09_combined_real_backends_smoke: scripts/smoke/smoke-plugin-v09-combined-real-backends.sh
+  plugin_v10_authorization_lifecycle_smoke: scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+  authorization_lifecycle_doc: docs/authorization-lifecycle.md
+  run_authorization_schema: schema/run-authorization.schema.json
+  live_mutation_approval_schema: schema/live-mutation-approval.schema.json
+  terminal_verdict_schema: schema/terminal-verdict.schema.json
   integration_contracts: docs/integration-contracts.md
   worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
   worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
@@ -66,7 +73,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.9.0-integration-spike
+      version: 0.10.0-authorization-gate
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: true
       description: >
@@ -95,7 +102,9 @@ plugins:
         and a provider are available. The combined explicit real-runtime smoke
         records both backends into one policy-checked run. v0.9.1 separates
         deterministic deployment readiness from external provider freshness:
-        provider quota/auth/model/network failures are SKIP, not PASS. These adapters do not own engineering
+        provider quota/auth/model/network failures are SKIP, not PASS. v0.10
+        adds run authorization, secondary live approval, and terminal verdict
+        helpers for selected Dev Pipeline mutation paths. These adapters do not own engineering
         acceptance and do not implement enforcement or repair loops. The
         installer copies this plugin source into ~/.hermes/plugins, but live
         plugin enablement remains a separate explicit runtime step.
@@ -116,6 +125,9 @@ plugins:
         - evidence_integration_capabilities
         - evidence_record_orchestration_result
         - evidence_record_security_decision
+        - evidence_authorization_status
+        - evidence_prepare_live_approval
+        - evidence_terminalize_run
       provides_hooks:
         - pre_tool_call
         - post_tool_call

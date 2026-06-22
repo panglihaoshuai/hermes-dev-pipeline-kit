@@ -893,3 +893,13 @@ terminal registry restoration. Dynamic Workflows real child completion remains
 an explicit external E2E lane; provider quota/auth/model/network failures are
 reported as `SKIP_EXTERNAL_PROVIDER_UNAVAILABLE`, not as PASS and not as code
 regression without independent evidence.
+
+v0.10 adds a run authorization lifecycle for selected Dev Pipeline mutation
+paths. Mutations require an active authorization bound to goal hash, source
+message/session metadata, allowed paths/actions, forbidden actions, and terminal
+expiration rules. Live HOME/plugin mutation additionally requires an approved
+secondary live-mutation artifact with exact action and target matching.
+Terminal `PASS_*`, `FAIL_*`, `PARTIAL_*`, and `BLOCKED` verdicts deactivate
+mutation authorization and disable continuation. Report `Next Goal` text is not
+authorization. This gate does not directly control Codex UI internal
+continuation or external processes that bypass Hermes.
