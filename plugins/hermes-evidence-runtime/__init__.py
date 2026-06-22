@@ -13,9 +13,12 @@ from .tools import (
     evidence_final_report,
     evidence_generate_run_state,
     evidence_invoke_worker_dry_run,
+    evidence_integration_capabilities,
     evidence_normalize_worker_result,
     evidence_policy_check,
     evidence_record_command,
+    evidence_record_orchestration_result,
+    evidence_record_security_decision,
     evidence_record_worker_result,
     evidence_run_init,
     evidence_validate_worker_result,
@@ -190,6 +193,27 @@ def register(ctx: Any) -> None:
         evidence_invoke_worker_dry_run,
         schemas.EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA,
         "Invoke or explicitly skip a timeout-bound worker dry-run and write machine-readable evidence.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_integration_capabilities",
+        evidence_integration_capabilities,
+        schemas.EVIDENCE_INTEGRATION_CAPABILITIES_SCHEMA,
+        "Detect optional Dynamic Workflows and AgentGuard integration backends.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_orchestration_result",
+        evidence_record_orchestration_result,
+        schemas.EVIDENCE_RECORD_ORCHESTRATION_RESULT_SCHEMA,
+        "Record raw orchestration backend evidence into raw/orchestration-backend-result.json.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_security_decision",
+        evidence_record_security_decision,
+        schemas.EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA,
+        "Append raw security backend decision evidence into raw/security-decisions.jsonl.",
     )
 
     for hook_name, hook_func in (

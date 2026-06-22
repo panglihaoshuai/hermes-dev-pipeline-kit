@@ -5,6 +5,15 @@
 Dev Pipeline is a Hermes-led software development orchestration and verification
 system.
 
+v0.9 adds optional integration backend adapters. Hermes Dynamic Workflows may
+provide raw orchestration evidence, and AgentGuard may provide raw security
+decision evidence. Neither backend owns engineering acceptance. Dynamic
+Workflows completion is not Codex PASS. AgentGuard `allow` is not delivery
+PASS, and AgentGuard `block` does not replace policy-check. Source-only adapter
+smokes are contract evidence only; native backend claims require explicit
+real-runtime smokes, with the combined real-runtime smoke as the positive
+policy-checked closure gate.
+
 It turns user goals into plans, work orders, worker execution, local
 verification, review gates, evidence artifacts, final reports, and approval
 inboxes.

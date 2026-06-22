@@ -246,3 +246,42 @@ EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA = {
         },
     },
 }
+
+EVIDENCE_INTEGRATION_CAPABILITIES_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "hermes_home": {
+            "type": "string",
+            "description": "Optional temp HERMES_HOME to inspect with hermes plugins list --json.",
+        },
+        "dynamic_workflows_path": {
+            "type": "string",
+            "description": "Optional source/plugin directory for lingjiuu/hermes-dynamic-workflows.",
+        },
+        "agentguard_path": {
+            "type": "string",
+            "description": "Optional source/plugin directory for GoPlusSecurity/agentguard Hermes plugin.",
+        },
+    },
+}
+
+EVIDENCE_RECORD_ORCHESTRATION_RESULT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "result"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "result": {"type": "object"},
+    },
+}
+
+EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "decision"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "decision": {"type": "object"},
+    },
+}

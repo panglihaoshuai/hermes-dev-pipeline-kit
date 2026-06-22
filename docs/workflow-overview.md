@@ -872,3 +872,13 @@ happened.
 v0.8 controlled-worker dry-run tools prove only a controlled C档 dry-run. They
 do not prove real worker capture, do not enforce tool blocking, and do not make
 the plugin production-grade for C档 use.
+
+v0.9 integration backend evidence is optional and raw-only. Hermes Dynamic
+Workflows records orchestration backend status into
+`raw/orchestration-backend-result.json`; AgentGuard records security decisions
+into `raw/security-decisions.jsonl`. Neither artifact can write acceptance or
+replace Codex review, policy-check, or final Hermes acceptance. The source-only
+v0.9 smoke checks contracts only; real backend claims require explicit
+real-runtime smoke evidence. The combined real-runtime smoke is the positive
+closure gate because it records AgentGuard and Dynamic Workflows evidence into
+one policy-checked run.

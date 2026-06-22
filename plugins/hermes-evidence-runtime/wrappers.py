@@ -12,9 +12,15 @@ import tempfile
 import time
 from typing import Any
 
+from .integrations import (
+    agentguard_capability,
+    dynamic_workflows_capability,
+    orchestration_result,
+    security_decision,
+)
 
 PLUGIN_DIR = pathlib.Path(__file__).resolve().parent
-PLUGIN_VERSION = "0.8.0"
+PLUGIN_VERSION = "0.9.0-integration-spike"
 
 
 def _candidate_script_dirs() -> list[pathlib.Path]:
@@ -147,6 +153,24 @@ def _read_jsonl(path: pathlib.Path) -> list[dict[str, Any]]:
             raise WrapperError(f"JSONL record is not an object: {path}")
         records.append(data)
     return records
+
+
+def _contains_key(data: Any, key: str) -> bool:
+    if isinstance(data, dict):
+        return key in data or any(_contains_key(value, key) for value in data.values())
+    if isinstance(data, list):
+        return any(_contains_key(item, key) for item in data)
+    return False
+
+
+def _contains_policy_pass(data: Any) -> bool:
+    if isinstance(data, dict):
+        if data.get("policy_verdict") == "PASS":
+            return True
+        return any(_contains_policy_pass(value) for value in data.values())
+    if isinstance(data, list):
+        return any(_contains_policy_pass(item) for item in data)
+    return False
 
 
 def _write_json(path: pathlib.Path, data: dict[str, Any]) -> None:
@@ -782,6 +806,12 @@ def evidence_generate_run_state(payload: dict[str, Any]) -> dict[str, Any]:
         "raw/claudecode-result.json",
         "raw/hook-events.jsonl",
     })
+    orchestration_path = run_dir / "raw" / "orchestration-backend-result.json"
+    security_path = run_dir / "raw" / "security-decisions.jsonl"
+    if orchestration_path.is_file():
+        sources.add("raw/orchestration-backend-result.json")
+    if security_path.is_file():
+        sources.add("raw/security-decisions.jsonl")
     for path in _worker_result_paths(run_dir):
         sources.add(_rel_to_run(run_dir, path))
     for path in sorted((run_dir / "work-orders").glob("*.json")):
@@ -845,6 +875,56 @@ def evidence_generate_run_state(payload: dict[str, Any]) -> dict[str, Any]:
         "final_report": "generated/final-report.md",
         "approval_inbox": "generated/approval-inbox.json",
     }
+    orchestration = _read_json(orchestration_path)
+    if orchestration:
+        state["orchestration"] = {
+            "backend": orchestration.get("backend", "unknown"),
+            "real_runtime": orchestration.get("capture_mode") == "real_runtime",
+            "requested": bool(orchestration.get("requested", True)),
+            "required": bool(orchestration.get("required", False)),
+            "selected": bool(orchestration.get("selected", False)),
+            "used": bool(orchestration.get("used", False)),
+            "fallback_used": bool(orchestration.get("fallback_used", False)),
+            "capability_callable": bool(orchestration.get("capability_callable", False)),
+            "child_completion_proven": bool(orchestration.get("child_completion_proven", False)),
+            "status": orchestration.get("status", "unknown"),
+            "run_id": orchestration.get("run_id", ""),
+            "journal_path": orchestration.get("journal_path", ""),
+            "transcript_paths": orchestration.get("transcript_paths", []),
+            "raw_evidence": "raw/orchestration-backend-result.json",
+            "owns_acceptance": False,
+        }
+    security_records = _read_jsonl(security_path)
+    if security_records:
+        latest_security = security_records[-1]
+        state["security"] = {
+            "backend": latest_security.get("backend", "unknown"),
+            "requested": bool(latest_security.get("requested", True)),
+            "required": bool(latest_security.get("required", False)),
+            "selected": bool(latest_security.get("selected", False)),
+            "used": bool(latest_security.get("used", False)),
+            "fallback_used": bool(latest_security.get("fallback_used", False)),
+            "native_hook": bool(latest_security.get("native_hook", False)),
+            "adapter_only": bool(latest_security.get("adapter_only", True)),
+            "handler_executed": bool(latest_security.get("handler_executed", False)),
+            "handler_executed_after_block": bool(latest_security.get("handler_executed_after_block", False)),
+            "decision": latest_security.get("decision", "unknown"),
+            "audit_reference": latest_security.get("audit_reference", ""),
+            "raw_evidence": "raw/security-decisions.jsonl",
+            "allow_is_delivery_pass": False,
+            "block_replaces_policy_check": False,
+        }
+    if orchestration or security_records:
+        state["integration_backends"] = {
+            "dynamic_workflows": state.get("orchestration", {}),
+            "agentguard": state.get("security", {}),
+            "policy_boundary": {
+                "backend_allow_does_not_equal_acceptance": True,
+                "backend_block_does_not_replace_policy_check": True,
+                "required_backend_incomplete_blocks_policy_pass": True,
+                "backend_used_requires_real_runtime_evidence": True,
+            },
+        }
     state["sequence_validation"] = {
         "red_exit_code": preflight["red_exit_code"],
         "green_exit_code": preflight["green_exit_code"],
@@ -1157,3 +1237,117 @@ def evidence_invoke_worker_dry_run(payload: dict[str, Any]) -> dict[str, Any]:
         "stderr_path": result["stderr_path"],
     })
     return parsed
+
+
+def evidence_integration_capabilities(payload: dict[str, Any]) -> dict[str, Any]:
+    dynamic = dynamic_workflows_capability(payload)
+    guard = agentguard_capability(payload)
+    return {
+        "ok": True,
+        "version": PLUGIN_VERSION,
+        "dynamic_workflows": dynamic,
+        "agentguard": guard,
+        "boundary": {
+            "dynamic_workflows_owns_acceptance": False,
+            "agentguard_allow_is_delivery_pass": False,
+            "agentguard_block_replaces_policy_check": False,
+        },
+    }
+
+
+def _validate_orchestration_result(data: dict[str, Any]) -> None:
+    required = {
+        "backend",
+        "backend_version",
+        "available",
+        "run_id",
+        "status",
+        "capture_mode",
+        "work_order_id",
+        "structured_result_path",
+        "journal_path",
+        "transcript_paths",
+        "workspace_path",
+        "started_at",
+        "ended_at",
+        "error",
+    }
+    missing = sorted(required - set(data))
+    if missing:
+        raise WrapperError("orchestration result missing fields: " + ", ".join(missing))
+    if "acceptance" in data:
+        raise WrapperError("orchestration backend result must not contain acceptance")
+    if data.get("backend") not in {"controlled_fixture", "hermes_dynamic_workflows"}:
+        raise WrapperError("invalid orchestration backend")
+    if data.get("capture_mode") not in {"real_runtime", "controlled_fixture"}:
+        raise WrapperError("invalid orchestration capture_mode")
+
+
+def evidence_record_orchestration_result(payload: dict[str, Any]) -> dict[str, Any]:
+    run_dir = _as_path(payload.get("run_dir"), "run_dir")
+    _ensure_run_dir(run_dir)
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        raise WrapperError("result must be an object")
+    if _contains_key(result, "acceptance"):
+        raise WrapperError("orchestration backend result must not contain acceptance")
+    if "record" in result:
+        result = orchestration_result(result)
+    _validate_orchestration_result(result)
+    out_path = run_dir / "raw" / "orchestration-backend-result.json"
+    _write_json(out_path, result)
+    return {
+        "ok": True,
+        "script": "plugin:evidence_record_orchestration_result",
+        "run_dir": str(run_dir),
+        "orchestration_result_path": str(out_path),
+        "backend": result["backend"],
+        "status": result["status"],
+        "exit_code": 0,
+    }
+
+
+def _validate_security_decision(data: dict[str, Any]) -> None:
+    required = {
+        "backend",
+        "backend_version",
+        "available",
+        "decision",
+        "reason",
+        "action_type",
+        "tool_name",
+        "evaluated_at",
+        "audit_reference",
+    }
+    missing = sorted(required - set(data))
+    if missing:
+        raise WrapperError("security decision missing fields: " + ", ".join(missing))
+    if data.get("decision") not in {"allow", "block", "unknown"}:
+        raise WrapperError("invalid security decision")
+    if "acceptance" in data or data.get("policy_verdict") == "PASS":
+        raise WrapperError("security backend decision must not write acceptance or policy verdict")
+
+
+def evidence_record_security_decision(payload: dict[str, Any]) -> dict[str, Any]:
+    run_dir = _as_path(payload.get("run_dir"), "run_dir")
+    _ensure_run_dir(run_dir)
+    data = payload.get("decision")
+    if not isinstance(data, dict):
+        raise WrapperError("decision must be an object")
+    if _contains_key(data, "acceptance") or _contains_policy_pass(data):
+        raise WrapperError("security backend decision must not write acceptance or policy verdict")
+    normalized = security_decision(data)
+    _validate_security_decision(normalized)
+    out_path = run_dir / "raw" / "security-decisions.jsonl"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(normalized, ensure_ascii=False, sort_keys=True) + "\n")
+    return {
+        "ok": True,
+        "script": "plugin:evidence_record_security_decision",
+        "run_dir": str(run_dir),
+        "security_decisions_path": str(out_path),
+        "backend": normalized["backend"],
+        "decision": normalized["decision"],
+        "exit_code": 0,
+    }

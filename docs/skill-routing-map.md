@@ -12,6 +12,15 @@ multi-worker orchestration.
 Other skills are internal capabilities. They must not compete as top-level
 development entries.
 
+## Optional Integration Backends
+
+v0.9 integration backend routing is optional:
+
+| Backend | Use For | Must Not Be Used For |
+|---|---|---|
+| Hermes Dynamic Workflows | raw orchestration evidence for delegated work | acceptance, Codex PASS, repair loop proof |
+| AgentGuard | raw security allow/block evidence | engineering PASS, policy-check replacement, Codex review replacement |
+
 ## Internal Planning Skills
 
 Planning skills help Hermes transform goals into plans and work orders:

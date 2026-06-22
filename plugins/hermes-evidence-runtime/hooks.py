@@ -19,7 +19,7 @@ from .redaction import hash_text, safe_serialize
 
 
 SCHEMA_VERSION = "0.7.0"
-PLUGIN_VERSION = "0.8.0"
+PLUGIN_VERSION = "0.9.0-integration-spike"
 LOG_FILE_NAME = "hook-events.jsonl"
 SUMMARY_FILE_NAME = "hook-summary.json"
 

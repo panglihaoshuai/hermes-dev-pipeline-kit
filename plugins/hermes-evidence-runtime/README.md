@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1-v0.8 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.9 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -17,6 +17,9 @@ This plugin registers tools that wrap the existing Bash evidence harness:
 - `evidence_record_worker_result` wraps `scripts/record-worker-result.sh`
 - `evidence_normalize_worker_result` wraps `scripts/normalize-worker-result.sh`
 - `evidence_invoke_worker_dry_run` wraps `scripts/invoke-worker-dry-run.sh`
+- `evidence_integration_capabilities` detects optional integration backends
+- `evidence_record_orchestration_result` records raw orchestration backend evidence
+- `evidence_record_security_decision` records raw security backend decisions
 
 The tools return machine-readable JSON strings.
 
@@ -34,7 +37,7 @@ Hermes runtime smoke using the local `model_tools.handle_function_call` path.
 Other registered hooks remain simulated-only or untriggered unless separately
 proven.
 
-v0.5.1-v0.8 plugin wrapper is experimental.
+v0.5.1-v0.9 plugin wrapper is experimental.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
@@ -47,6 +50,16 @@ generated final report, and a pending approval inbox.
 v0.8 does not prove real ClaudeCode/Codex/OpenCode worker capture. v0.8 does
 not implement enforcement, does not block Hermes tool calls, does not mutate
 tool parameters/results, and is not C档 production readiness.
+
+v0.9 adds optional integration backend adapters for Hermes Dynamic Workflows
+and AgentGuard. These adapters are raw evidence recorders only. Dynamic
+Workflows orchestration output must not contain `acceptance`, and AgentGuard
+`allow` must not be treated as engineering PASS. AgentGuard `block` does not
+replace policy-check, Codex review, or final Hermes acceptance. The
+source-only v0.9 smoke is a contract smoke only. Real backend claims require
+the explicit AgentGuard native hook smoke and Dynamic Workflows real child
+smoke; the combined explicit real-runtime smoke records both backend proofs
+into one policy-checked run.
 
 v0.5.2 adds prototype hook handlers:
 

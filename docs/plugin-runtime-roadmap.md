@@ -22,6 +22,17 @@ Current v0.8 boundary:
   evidence tool dispatch, real local command evidence, real pre/post hook
   evidence, generated run-state, generated policy result, generated final
   report, and a pending approval inbox.
+- v0.9 target: optional integration backend spike for Hermes Dynamic Workflows
+  and AgentGuard.
+- v0.9 status: raw evidence contracts exist. The source-only adapter smoke is
+  contract-only and does not claim real backend completion. Explicit real
+  runtime smokes separately prove AgentGuard native Hermes allow/block hook
+  behavior and Dynamic Workflows one-child completion when the optional backend
+  sources and a configured Hermes provider are available. The combined explicit
+  real-runtime smoke records both backend proofs into one policy-checked run.
+  Dynamic Workflows orchestration evidence does not own acceptance. AgentGuard
+  security decisions do not replace policy-check, Codex review, or final Hermes
+  acceptance.
 - Worker dry-run is explicit and disabled by default.
 - Official ClaudeCode/Codex/OpenCode capture is not implemented.
 - Enforcement is not implemented.
@@ -66,6 +77,9 @@ Existing source tools:
 - `evidence_record_worker_result`
 - `evidence_normalize_worker_result`
 - `evidence_invoke_worker_dry_run`
+- `evidence_integration_capabilities`
+- `evidence_record_orchestration_result`
+- `evidence_record_security_decision`
 
 Future C档 tools to add, expose, or prove callable:
 
@@ -155,11 +169,15 @@ Policies to enforce in C档:
 | E2 | `evidence_*` tools callable | active Hermes lists and calls tools successfully |
 | E3 | hook payload capture log-only | v0.7 real smoke captured `pre_tool_call` and `post_tool_call`; other hooks require separate evidence |
 | E4 | C档 dry-run with generated artifacts | v0.8 controlled-worker dry-run generated run-state, policy-result, final-report, and approval inbox |
-| E5 | selective enforcement | narrow pre_tool_call blocks with proven payload shape |
+| E5 | optional integration backend spike | v0.9 records Dynamic Workflows orchestration evidence and AgentGuard security decisions as raw evidence only; real backend smokes must be explicit and separate from default CI |
+| E6 | selective enforcement | narrow pre_tool_call blocks with proven payload shape |
 
-Do not skip from discoverable plugin to enforcement. v0.8 stops at
-controlled-worker dry-run. It does not prove policy blocking, real
-ClaudeCode/Codex/OpenCode worker capture, or C档 production readiness.
+Do not skip from discoverable plugin to enforcement. v0.9 stops at optional
+integration backend raw evidence. It proves AgentGuard native allow/block
+callback behavior and Dynamic Workflows one-child completion only when the
+explicit real-runtime smokes pass. It does not prove policy blocking, real
+ClaudeCode/Codex/OpenCode worker capture, repair loops, or C档 production
+readiness.
 
 ## Log-only Before Enforcement
 

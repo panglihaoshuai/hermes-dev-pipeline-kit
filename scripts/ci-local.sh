@@ -101,7 +101,7 @@ main() {
   echo "PASS: bash syntax"
 
   section "Plugin wrapper syntax"
-  python3 -m py_compile plugins/hermes-evidence-runtime/*.py
+  python3 -m py_compile plugins/hermes-evidence-runtime/*.py plugins/hermes-evidence-runtime/integrations/*.py
   echo "PASS: plugin wrapper Python compile"
 
   section "Manifest"
@@ -201,6 +201,7 @@ main() {
   bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
   bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
   bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
+  bash scripts/smoke/smoke-plugin-v09-integration-backends.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -223,6 +224,8 @@ main() {
   json_check schema/worker-result.schema.json
   json_check schema/hook-event.schema.json
   json_check schema/approval-inbox.schema.json
+  json_check schema/orchestration-backend-result.schema.json
+  json_check schema/security-backend-decision.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

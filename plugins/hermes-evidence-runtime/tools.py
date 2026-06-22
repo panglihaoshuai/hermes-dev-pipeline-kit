@@ -87,3 +87,15 @@ def evidence_normalize_worker_result(args: Any = None, **kwargs: Any) -> str:
 
 def evidence_invoke_worker_dry_run(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_invoke_worker_dry_run, args, **kwargs)
+
+
+def evidence_integration_capabilities(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_integration_capabilities, args, **kwargs)
+
+
+def evidence_record_orchestration_result(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_orchestration_result, args, **kwargs)
+
+
+def evidence_record_security_decision(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_security_decision, args, **kwargs)

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/hermes-dev-pipeline-kit/security-backend-decision.schema.json",
+  "title": "Security Backend Decision",
+  "description": "Raw security backend decision evidence. Allow is not engineering acceptance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "backend",
+    "backend_version",
+    "available",
+    "decision",
+    "reason",
+    "action_type",
+    "tool_name",
+    "evaluated_at",
+    "audit_reference"
+  ],
+  "properties": {
+    "backend": {
+      "type": "string",
+      "enum": ["none", "builtin_minimal", "agentguard"]
+    },
+    "backend_version": {
+      "type": "string"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["allow", "block", "unknown"]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "action_type": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "evaluated_at": {
+      "type": "string"
+    },
+    "audit_reference": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

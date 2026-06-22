@@ -167,6 +167,13 @@ Observed failures:
 - M4-M7 had scaffold, stubs, missing vendoring, and missing wiring.
 - README and public claims exceeded implementation evidence.
 - Tests sometimes checked interface shape rather than real integration.
+- v0.9 integration backend adapters must preserve boundary language. Dynamic
+  Workflows can provide orchestration evidence, and AgentGuard can provide
+  security evidence, but neither result is acceptance. Any future claim beyond
+  raw evidence needs a separate real-runtime smoke, and adapter-only evidence
+  must never be reported as native runtime use. Positive v0.9 closure needs the
+  combined real-runtime smoke so both backend proofs are policy-checked in the
+  same run.
 - There was no evidence that ClaudeCode had been spawned for required work.
 - Complete harness artifacts were missing.
 - Codex review sometimes meant real repo review, but sometimes meant text-only

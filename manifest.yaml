@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.8.0
+version: 0.9.0-integration-spike
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -37,6 +37,11 @@ entrypoints:
   plugin_hooks_v07_non_mutation_smoke: scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
   plugin_hooks_v07_secret_canary_smoke: scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
   plugin_v08_c_dry_run_smoke: scripts/smoke/smoke-plugin-v08-c-dry-run.sh
+  plugin_v09_integration_backends_smoke: scripts/smoke/smoke-plugin-v09-integration-backends.sh
+  plugin_v09_agentguard_native_smoke: scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  plugin_v09_dynamic_real_child_smoke: scripts/smoke/smoke-plugin-v09-dynamic-real-child.sh
+  plugin_v09_combined_real_backends_smoke: scripts/smoke/smoke-plugin-v09-combined-real-backends.sh
+  integration_contracts: docs/integration-contracts.md
   worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
   worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   worker_normalizer_smoke: scripts/smoke/smoke-worker-normalizer.sh
@@ -61,7 +66,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.8.0
+      version: 0.9.0-integration-spike
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: false
       description: >
@@ -82,8 +87,16 @@ plugins:
         real Hermes evidence tool dispatch, real local command evidence, real
         pre/post hook evidence, and generated artifacts. It is not C-class
         production readiness and does not prove real ClaudeCode/Codex/OpenCode
-        worker capture. It is not installed into real ~/.hermes/plugins by
-        default; live plugin enablement is a separate explicit runtime step.
+        worker capture. v0.9 adds optional raw evidence adapters for Hermes
+        Dynamic Workflows orchestration and AgentGuard security decisions.
+        The source-only v0.9 smoke is a contract smoke only. Separate explicit
+        real-runtime smokes prove AgentGuard native allow/block hook behavior
+        and Dynamic Workflows one-child completion when the optional backends
+        and a provider are available. The combined explicit real-runtime smoke
+        records both backends into one policy-checked run. These adapters do not own engineering
+        acceptance and do not implement enforcement or repair loops. It is not installed into real
+        ~/.hermes/plugins by default; live plugin enablement is a separate
+        explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
@@ -98,6 +111,9 @@ plugins:
         - evidence_record_worker_result
         - evidence_normalize_worker_result
         - evidence_invoke_worker_dry_run
+        - evidence_integration_capabilities
+        - evidence_record_orchestration_result
+        - evidence_record_security_decision
       provides_hooks:
         - pre_tool_call
         - post_tool_call
