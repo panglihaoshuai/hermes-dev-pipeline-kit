@@ -2,7 +2,7 @@
 
 ## Current State
 
-Current v0.7 boundary:
+Current v0.8 boundary:
 
 - `hermes-evidence-runtime` plugin source exists.
 - An installed copy exists in some local environments.
@@ -17,8 +17,14 @@ Current v0.7 boundary:
   real Hermes runtime smoke using the local `model_tools.handle_function_call`
   path. Other registered hooks remain simulated-only or untriggered unless
   separately proven.
+- v0.8 target: controlled-worker C-class dry-run with generated artifacts.
+- v0.8 status: controlled-worker C-class dry-run passes with real Hermes
+  evidence tool dispatch, real local command evidence, real pre/post hook
+  evidence, generated run-state, generated policy result, generated final
+  report, and a pending approval inbox.
 - Worker dry-run is explicit and disabled by default.
 - Official ClaudeCode/Codex/OpenCode capture is not implemented.
+- Enforcement is not implemented.
 - The plugin does not implement a memory provider.
 - The plugin does not replace `dev-pipeline-orchestrator`.
 
@@ -51,6 +57,11 @@ Existing source tools:
 - `evidence_active_run_status`
 - `evidence_run_init`
 - `evidence_drive_s_run`
+- `evidence_record_command`
+- `evidence_generate_run_state`
+- `evidence_policy_check`
+- `evidence_final_report`
+- `evidence_approval_inbox`
 - `evidence_validate_worker_result`
 - `evidence_record_worker_result`
 - `evidence_normalize_worker_result`
@@ -58,11 +69,6 @@ Existing source tools:
 
 Future C档 tools to add, expose, or prove callable:
 
-- `evidence_record_command`
-- `evidence_generate_run_state`
-- `evidence_policy_check`
-- `evidence_final_report`
-- `evidence_approval_inbox`
 - `evidence_route_check`
 - `evidence_public_claim_check`
 - `evidence_stub_check`
@@ -148,12 +154,12 @@ Policies to enforce in C档:
 | E1 | temp HOME enablement | plugin enabled in temp HOME only |
 | E2 | `evidence_*` tools callable | active Hermes lists and calls tools successfully |
 | E3 | hook payload capture log-only | v0.7 real smoke captured `pre_tool_call` and `post_tool_call`; other hooks require separate evidence |
-| E4 | C档 dry-run with generated artifacts | run-state, policy-result, final-report generated |
+| E4 | C档 dry-run with generated artifacts | v0.8 controlled-worker dry-run generated run-state, policy-result, final-report, and approval inbox |
 | E5 | selective enforcement | narrow pre_tool_call blocks with proven payload shape |
 
-Do not skip from discoverable plugin to enforcement. v0.7 stops at selected
-log-only observation and does not prove policy blocking, worker capture, or C档
-readiness.
+Do not skip from discoverable plugin to enforcement. v0.8 stops at
+controlled-worker dry-run. It does not prove policy blocking, real
+ClaudeCode/Codex/OpenCode worker capture, or C档 production readiness.
 
 ## Log-only Before Enforcement
 

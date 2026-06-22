@@ -200,6 +200,7 @@ main() {
   bash scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
   bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
   bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
+  bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -221,6 +222,7 @@ main() {
   json_check schema/artifact-manifest.schema.json
   json_check schema/worker-result.schema.json
   json_check schema/hook-event.schema.json
+  json_check schema/approval-inbox.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do

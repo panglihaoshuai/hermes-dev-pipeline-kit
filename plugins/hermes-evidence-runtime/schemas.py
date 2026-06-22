@@ -66,6 +66,72 @@ EVIDENCE_DRIVE_S_RUN_SCHEMA = {
     },
 }
 
+EVIDENCE_RECORD_COMMAND_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "work_dir", "command", "phase"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "work_dir": {"type": "string"},
+        "command": {"type": "string"},
+        "phase": {"type": "string", "enum": ["RED", "GREEN", "VERIFY", "red", "green", "verify"]},
+        "step_id": {"type": "string"},
+    },
+}
+
+EVIDENCE_GENERATE_RUN_STATE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "hook_log_path": {
+            "type": "string",
+            "description": "Optional hook-events.jsonl path or directory to copy into raw/hook-events.jsonl before generation.",
+        },
+    },
+}
+
+EVIDENCE_POLICY_CHECK_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+    },
+}
+
+EVIDENCE_FINAL_REPORT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+    },
+}
+
+EVIDENCE_APPROVAL_INBOX_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "status": {
+            "type": "string",
+            "description": "Must not be approved/granted; the tool only emits pending approval requests.",
+        },
+        "approved": {
+            "type": "boolean",
+            "description": "Must not be true; approval artifacts are not user approval.",
+        },
+        "items": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "Optional caller items are only accepted if all are pending/unapproved.",
+        },
+    },
+}
+
 EVIDENCE_VALIDATE_WORKER_RESULT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,

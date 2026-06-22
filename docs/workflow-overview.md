@@ -53,7 +53,8 @@ scripts/final-report.sh generates the owner report
   work-orders/
     WO-1.json
   raw/
-    claudecode-result.json
+    controlled-worker-result.json
+    claudecode-result.json  # legacy compatibility alias; not real ClaudeCode evidence
     worker/
       WO-1.worker-result.json
       WO-1.raw.txt
@@ -151,6 +152,34 @@ non-interactive, and `/tmp` scoped.
 
 This still does not claim official ClaudeCode/Codex/OpenCode capture. Harness
 policy owns final acceptance. Workers own result evidence only.
+
+## v0.8 Controlled-worker C-class Dry-run
+
+v0.8 connects the plugin wrapper to a controlled C档 dry-run:
+
+```text
+Hermes evidence tool dispatch
+  -> evidence_run_init
+  -> evidence_record_command RED / GREEN
+  -> controlled-worker-result.json
+  -> controlled worker-result fixture
+  -> evidence_generate_run_state
+  -> evidence_policy_check
+  -> evidence_final_report
+  -> evidence_approval_inbox
+```
+
+The v0.8 smoke uses a temp HOME, `/tmp` project, real local command execution,
+real `pre_tool_call` and `post_tool_call` hook evidence, generated artifacts,
+and pending approval inbox. The worker result is explicitly controlled; it is
+not official ClaudeCode/Codex/OpenCode capture. v0.8 does not implement
+enforcement, does not block Hermes tool calls, and is not C档 production
+readiness.
+
+For v0.8, `raw/controlled-worker-result.json` is the primary execution receipt.
+If `raw/claudecode-result.json` exists in a v0.8 run, it is only a legacy
+compatibility alias for older harness scripts and must be labeled as not real
+ClaudeCode evidence.
 
 ---
 
@@ -759,7 +788,7 @@ Canonical JSON means UTF-8 JSON with sorted keys and compact separators. This is
 
 ---
 
-## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 / v0.6 / v0.7 / v0.8 Experimental Plugin Wrapper
 
 v0.5.1 adds `plugins/hermes-evidence-runtime`, a conservative Hermes general
 plugin wrapper around the existing v0.4 Bash harness scripts.
@@ -784,7 +813,15 @@ v0.5.5 adds one explicit worker dry-run tool:
 
 - `evidence_invoke_worker_dry_run`
 
-v0.5.1-v0.7 plugin wrapper is experimental.
+v0.8 adds five C档 dry-run artifact tools:
+
+- `evidence_record_command`
+- `evidence_generate_run_state`
+- `evidence_policy_check`
+- `evidence_final_report`
+- `evidence_approval_inbox`
+
+v0.5.1-v0.8 plugin wrapper is experimental.
 It is source-validated and temp-HOME discovery validated.
 It does not install into real `~/.hermes/plugins` by default.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
@@ -831,3 +868,7 @@ invocation evidence only. Optional real dry-runs do not install plugins, do not
 modify `~/.claude` or `~/.hermes`, do not commit/push/open PRs, and must not be
 described as official worker integration unless a real invocation actually
 happened.
+
+v0.8 controlled-worker dry-run tools prove only a controlled C档 dry-run. They
+do not prove real worker capture, do not enforce tool blocking, and do not make
+the plugin production-grade for C档 use.

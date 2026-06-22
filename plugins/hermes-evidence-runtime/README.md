@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1-v0.7 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.8 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -8,6 +8,11 @@ This plugin registers tools that wrap the existing Bash evidence harness:
 - `evidence_active_run_status` reads project-local run metadata
 - `evidence_run_init` wraps `scripts/run-init.sh`
 - `evidence_drive_s_run` wraps `scripts/drive-s-run.sh`
+- `evidence_record_command` wraps `scripts/record-command.sh`
+- `evidence_generate_run_state` wraps `scripts/generate-run-state.sh` and adds v0.8 provenance checks
+- `evidence_policy_check` wraps `scripts/policy-check.sh`
+- `evidence_final_report` wraps `scripts/final-report.sh`
+- `evidence_approval_inbox` writes a pending approval artifact
 - `evidence_validate_worker_result` wraps `scripts/validate-worker-result.sh`
 - `evidence_record_worker_result` wraps `scripts/record-worker-result.sh`
 - `evidence_normalize_worker_result` wraps `scripts/normalize-worker-result.sh`
@@ -29,10 +34,19 @@ Hermes runtime smoke using the local `model_tools.handle_function_call` path.
 Other registered hooks remain simulated-only or untriggered unless separately
 proven.
 
-v0.5.1-v0.7 plugin wrapper is experimental.
+v0.5.1-v0.8 plugin wrapper is experimental.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
+
+v0.8 proves a controlled-worker C-class dry-run using real Hermes evidence tool
+dispatch, real local RED/GREEN command evidence, real `pre_tool_call` and
+`post_tool_call` hook evidence, generated run-state, generated policy result,
+generated final report, and a pending approval inbox.
+
+v0.8 does not prove real ClaudeCode/Codex/OpenCode worker capture. v0.8 does
+not implement enforcement, does not block Hermes tool calls, does not mutate
+tool parameters/results, and is not C档 production readiness.
 
 v0.5.2 adds prototype hook handlers:
 

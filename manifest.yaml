@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.7.0
+version: 0.8.0
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -36,6 +36,7 @@ entrypoints:
   plugin_hooks_v07_real_runtime_smoke: scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
   plugin_hooks_v07_non_mutation_smoke: scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
   plugin_hooks_v07_secret_canary_smoke: scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
+  plugin_v08_c_dry_run_smoke: scripts/smoke/smoke-plugin-v08-c-dry-run.sh
   worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
   worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   worker_normalizer_smoke: scripts/smoke/smoke-worker-normalizer.sh
@@ -60,7 +61,7 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.7.0
+      version: 0.8.0
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
       default_install: false
       description: >
@@ -77,13 +78,22 @@ plugins:
         v0.7 captures selected Hermes hook payloads in log-only mode. Real
         runtime smoke verified pre_tool_call and post_tool_call through the
         Hermes model_tools path. It still does not claim official capture of
-        worker output. It is not installed into real ~/.hermes/plugins by
+        worker output. v0.8 proves a controlled-worker C-class dry-run using
+        real Hermes evidence tool dispatch, real local command evidence, real
+        pre/post hook evidence, and generated artifacts. It is not C-class
+        production readiness and does not prove real ClaudeCode/Codex/OpenCode
+        worker capture. It is not installed into real ~/.hermes/plugins by
         default; live plugin enablement is a separate explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
         - evidence_run_init
         - evidence_drive_s_run
+        - evidence_record_command
+        - evidence_generate_run_state
+        - evidence_policy_check
+        - evidence_final_report
+        - evidence_approval_inbox
         - evidence_validate_worker_result
         - evidence_record_worker_result
         - evidence_normalize_worker_result

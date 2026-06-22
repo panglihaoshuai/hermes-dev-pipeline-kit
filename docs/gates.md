@@ -29,6 +29,7 @@ artifacts.
 | Active Version / Routing Gate | Wrong source/runtime/backup skill used | source HEAD, installed skill/plugin version, enabled list, active entry | optional | block when routing matters | block | Unknown active version prevents acceptance |
 | Plugin Enablement Gate | Plugin source/discovery mistaken for runtime enforcement | plugin enabled list, `evidence_*` tool visibility, temp-HOME/live smoke | no | optional | block | Plugin discoverable is not plugin enabled; C档 cannot claim plugin runtime |
 | Hook Payload Observation Gate | Hook source or simulated callback mistaken for runtime capture | hook JSONL, capture_mode, trigger path, redaction evidence, non-mutation evidence | no | optional | block when hooks are cited | Only captured hooks count; v0.7 covers `pre_tool_call` and `post_tool_call` only |
+| Controlled C Dry-run Gate | Controlled worker fixture mistaken for production C档 readiness | real evidence tool calls, RED/GREEN command log, real pre/post hook log, worker fixture marked controlled, generated run-state, policy result, final report, approval inbox | no | optional | block for v0.8 C dry-run claims | v0.8 may claim controlled-worker dry-run only, not real worker capture or enforcement |
 | Approval Inbox Gate | Commit/push/release/global edits happen without user approval | approval item, risk, default recommendation, user decision | optional | block if approval needed | block | Stop before gated action and wait for user |
 | Release / Publish Gate | Public release without complete evidence | final report, policy PASS, Codex gate, clean git, secret scan | no | optional | block | Release/publish blocked until evidence and approvals pass |
 | Generated State Provenance Gate | Generated state has no trace to raw evidence | `generated/run-state.json` with provenance source files | no | optional | block | Missing provenance means generated state is invalid |
@@ -92,6 +93,9 @@ Required C档 gates:
 - Codex gate when required;
 - plugin enablement or harness artifact evidence.
 - hook payload evidence when hook capture is cited as runtime evidence.
+- for v0.8 controlled-worker dry-run claims, worker evidence must be explicitly
+  marked controlled/simulated and must not be described as official worker
+  capture.
 
 C档 remains incomplete until plugin enablement smoke passes or the Bash harness
 generates the required artifacts for the run.

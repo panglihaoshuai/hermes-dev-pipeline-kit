@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/hermes-dev-pipeline-kit/approval-inbox.schema.json",
+  "title": "Hermes Dev Pipeline Approval Inbox",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "generated_by",
+    "generated_at",
+    "items",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.8.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "const": "pending"
+    },
+    "generated_by": {
+      "type": "string",
+      "const": "evidence_approval_inbox"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "status",
+          "approved",
+          "approval_required",
+          "reason",
+          "artifact_refs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "const": "pending"
+          },
+          "approved": {
+            "type": "boolean",
+            "const": false
+          },
+          "approval_required": {
+            "type": "boolean",
+            "const": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_files",
+        "approval_artifact_is_user_approval"
+      ],
+      "properties": {
+        "source_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "approval_artifact_is_user_approval": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  }
+}

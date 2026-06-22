@@ -190,11 +190,17 @@ Current boundary:
 - v0.7 proves log-only hook observation only for the hooks actually captured:
   `pre_tool_call` and `post_tool_call` through the Hermes
   `model_tools.handle_function_call` path.
+- v0.8 proves a controlled-worker C-class dry-run only: real Hermes evidence
+  tool dispatch, real local RED/GREEN command evidence, real pre/post hook
+  evidence, generated run-state, generated policy result, generated final
+  report, and pending approval inbox.
 - Other hook payloads remain UNKNOWN until separately captured.
+- Real ClaudeCode/Codex/OpenCode worker capture remains unproven.
+- Enforcement remains unimplemented.
 - Worker CLI exists is not worker integrated.
 - B档 remains human-auditable.
-- C档 remains incomplete until plugin tool/hook evidence or harness artifact
-  generation is proven for the run.
+- C档 production readiness remains incomplete until real worker capture and
+  enforcement paths are proven.
 
 ## Failure Modes
 

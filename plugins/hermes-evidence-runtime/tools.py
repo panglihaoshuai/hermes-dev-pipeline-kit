@@ -53,6 +53,26 @@ def evidence_drive_s_run(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_drive_s_run, args, **kwargs)
 
 
+def evidence_record_command(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_command, args, **kwargs)
+
+
+def evidence_generate_run_state(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_generate_run_state, args, **kwargs)
+
+
+def evidence_policy_check(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_policy_check, args, **kwargs)
+
+
+def evidence_final_report(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_final_report, args, **kwargs)
+
+
+def evidence_approval_inbox(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_approval_inbox, args, **kwargs)
+
+
 def evidence_validate_worker_result(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_validate_worker_result, args, **kwargs)
 

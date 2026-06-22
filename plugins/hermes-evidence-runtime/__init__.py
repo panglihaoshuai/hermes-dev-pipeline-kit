@@ -7,10 +7,15 @@ from typing import Any
 from . import hooks, schemas
 from .tools import (
     evidence_active_run_status,
+    evidence_approval_inbox,
     evidence_doctor,
     evidence_drive_s_run,
+    evidence_final_report,
+    evidence_generate_run_state,
     evidence_invoke_worker_dry_run,
     evidence_normalize_worker_result,
+    evidence_policy_check,
+    evidence_record_command,
     evidence_record_worker_result,
     evidence_run_init,
     evidence_validate_worker_result,
@@ -122,6 +127,41 @@ def register(ctx: Any) -> None:
         evidence_drive_s_run,
         schemas.EVIDENCE_DRIVE_S_RUN_SCHEMA,
         "Drive an S-level evidence run by wrapping scripts/drive-s-run.sh.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_command",
+        evidence_record_command,
+        schemas.EVIDENCE_RECORD_COMMAND_SCHEMA,
+        "Record a RED/GREEN/VERIFY command by wrapping scripts/record-command.sh.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_generate_run_state",
+        evidence_generate_run_state,
+        schemas.EVIDENCE_GENERATE_RUN_STATE_SCHEMA,
+        "Generate v0.8 provenance-backed run-state from raw evidence.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_policy_check",
+        evidence_policy_check,
+        schemas.EVIDENCE_POLICY_CHECK_SCHEMA,
+        "Run scripts/policy-check.sh against generated/run-state.json.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_final_report",
+        evidence_final_report,
+        schemas.EVIDENCE_FINAL_REPORT_SCHEMA,
+        "Run scripts/final-report.sh after policy-check.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_approval_inbox",
+        evidence_approval_inbox,
+        schemas.EVIDENCE_APPROVAL_INBOX_SCHEMA,
+        "Create a pending approval inbox artifact; never records user approval.",
     )
     _register_tool(
         ctx,

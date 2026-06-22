@@ -1,5 +1,5 @@
 name: hermes-evidence-runtime
-version: 0.7.0
+version: 0.8.0
 description: >
   Experimental Hermes plugin wrapper for hermes-dev-pipeline-kit evidence
   harness scripts. This plugin registers machine-readable tools around existing
@@ -9,12 +9,20 @@ description: >
   enablement and evidence tool callability only. v0.7 adds log-only hook payload
   capture for selected Hermes runtime hooks. It does not implement a memory
   provider, replacement skills, hook enforcement, or official worker output
-  capture.
+  capture. v0.8 adds a controlled-worker C-class dry-run artifact chain using
+  real Hermes tool dispatch, real local command evidence, and real pre/post
+  hook evidence. v0.8 is not C-class production readiness and does not prove
+  real ClaudeCode/Codex/OpenCode worker capture.
 provides_tools:
   - evidence_doctor
   - evidence_active_run_status
   - evidence_run_init
   - evidence_drive_s_run
+  - evidence_record_command
+  - evidence_generate_run_state
+  - evidence_policy_check
+  - evidence_final_report
+  - evidence_approval_inbox
   - evidence_validate_worker_result
   - evidence_record_worker_result
   - evidence_normalize_worker_result

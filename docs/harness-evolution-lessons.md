@@ -136,6 +136,16 @@ The v0.7 boundary is narrower and evidence-based:
 - untriggered hooks remain unproven and must not be counted as runtime
   coverage.
 
+The v0.8 boundary adds a controlled-worker dry-run:
+
+- evidence tools are invoked through the Hermes tool path;
+- local RED/GREEN command evidence is real;
+- `pre_tool_call` and `post_tool_call` hook evidence is real for the covered
+  tool path;
+- worker output is a controlled fixture and must be labeled as such;
+- approval inbox artifacts are pending requests, not user approval;
+- no enforcement is implemented.
+
 Permanent lesson:
 
 ```text
@@ -193,3 +203,6 @@ Design response:
 14. Hook source exists does not mean hook payloads are proven; only captured
     hooks with trigger-path evidence count.
 15. Harness policy owns acceptance; worker outputs are evidence only.
+16. Controlled-worker dry-run evidence must not be described as real
+    ClaudeCode/Codex/OpenCode capture.
+17. Approval artifacts are not approvals; user approval remains external.

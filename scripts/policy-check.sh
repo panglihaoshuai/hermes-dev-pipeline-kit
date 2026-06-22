@@ -356,7 +356,7 @@ if any(not prov.get(key) for key in required):
     print("true")
     sys.exit(0)
 
-if prov.get("generated_by") != "scripts/generate-run-state.sh":
+if prov.get("generated_by") not in {"scripts/generate-run-state.sh", "evidence_generate_run_state"}:
     print("true")
     sys.exit(0)
 
