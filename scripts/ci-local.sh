@@ -22,6 +22,18 @@ record_skip() {
   echo "SKIP: $1"
 }
 
+run_ci_optional_smoke() {
+  local label="$1"
+  shift
+
+  if [[ "${HERMES_CI:-0}" == "1" ]]; then
+    record_skip "$label requires local Hermes runtime; not run by GitHub CI"
+    return 0
+  fi
+
+  "$@"
+}
+
 expect_fail() {
   local label="$1"
   shift
@@ -205,19 +217,27 @@ main() {
   bash scripts/smoke/smoke-s-level-driver.sh
   bash scripts/smoke/smoke-s-level-driver-failure.sh
   bash scripts/smoke/smoke-plugin-wrapper.sh
-  bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
+  run_ci_optional_smoke "smoke-plugin-discovery-temp-home" \
+    bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
   bash scripts/smoke/smoke-plugin-hooks-source.sh
-  bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-discovery-temp-home" \
+    bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
   bash scripts/smoke/smoke-plugin-hooks-v07-unit.sh
   bash scripts/smoke/smoke-plugin-hooks-v07-simulated.sh
-  bash scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
-  bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
-  bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
-  bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-real-runtime" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-non-mutation" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-secret-canary" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
+  run_ci_optional_smoke "smoke-plugin-v08-c-dry-run" \
+    bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
   bash scripts/smoke/smoke-plugin-v09-integration-backends.sh
-  bash scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  run_ci_optional_smoke "smoke-plugin-v09-agentguard-native" \
+    bash scripts/smoke/smoke-plugin-v09-agentguard-native.sh
   bash scripts/smoke/smoke-plugin-v09-external-classification.sh
-  bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
+  run_ci_optional_smoke "smoke-plugin-v09-combined-deterministic-regression" \
+    bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
   bash scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
   bash scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
   bash scripts/smoke/smoke-worker-result-contract.sh

@@ -1,0 +1,69 @@
+name: Deterministic CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic:
+    name: deterministic validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HERMES_CI: "1"
+      HOME: ${{ runner.temp }}/home
+      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Prepare temporary HOME
+        run: |
+          mkdir -p "$HOME/.claude"
+          cp protocols/claude-delegation-protocol.md "$HOME/.claude/CLAUDE.md"
+
+      - name: Bash syntax
+        run: |
+          bash -n scripts/*.sh
+          bash -n scripts/smoke/*.sh
+
+      - name: Python compile
+        run: |
+          python3 -m py_compile plugins/hermes-evidence-runtime/*.py
+          python3 -m py_compile plugins/hermes-evidence-runtime/integrations/*.py
+
+      - name: Diff whitespace
+        run: git diff --check
+
+      - name: Authorization lifecycle smoke
+        run: bash scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+
+      - name: Authorization persistence smoke
+        run: bash scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
+
+      - name: Local deterministic suite
+        run: bash scripts/ci-local.sh
+
+      - name: Doctor
+        run: bash scripts/doctor.sh
+
+      - name: Safety scan
+        run: |
+          echo "Dynamic real-child E2E: NOT_RUN_BY_POLICY"
+          echo "External provider E2E: NOT_RUN_BY_POLICY"
+          git status --short
+          if find . -not -path './.git/*' \( -name '.env' -o -name '*.log' -o -name '*.bak*' -o -name '__pycache__' -o -name '*.pyc' \) -print | grep -q .; then
+            echo "Unexpected env/log/backup/cache file found"
+            exit 1
+          fi
