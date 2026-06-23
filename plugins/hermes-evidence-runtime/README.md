@@ -1,6 +1,6 @@
 # hermes-evidence-runtime
 
-Experimental v0.5.1-v0.10 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
+Experimental v0.5.1-v0.10.1 Hermes plugin wrapper for `hermes-dev-pipeline-kit`.
 
 This plugin registers tools that wrap the existing Bash evidence harness:
 
@@ -37,7 +37,7 @@ Hermes runtime smoke using the local `model_tools.handle_function_call` path.
 Other registered hooks remain simulated-only or untriggered unless separately
 proven.
 
-v0.5.1-v0.10 plugin wrapper is experimental.
+v0.5.1-v0.10.1 plugin wrapper is experimental.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
@@ -73,6 +73,19 @@ allowed paths, forbidden by action, missing secondary live approval, or after a
 terminal verdict. This is not universal enforcement: Codex UI internal
 continuation and external processes that bypass Hermes are outside this plugin's
 direct control.
+
+v0.10.1 persists runtime-owned control artifacts under the canonical run
+directory: `.hermes-runs/<run-id>/control/`. The store contains
+`authorization.json`, `authorization.sha256`, `approvals/<approval-id>.json`,
+`terminal-verdict.json`, `control-state.json`, and append-only `events.jsonl`.
+The `/tmp` bootstrap authorization used by a local development session is not
+the durable runtime store. Missing, malformed, mismatched, or stale control
+artifacts fail closed.
+
+This store protects consistency inside Dev Pipeline-managed execution. It is not
+a cryptographic trust boundary against the same OS user, does not control
+external tools that bypass Hermes, and does not directly control Codex UI
+internal continuation.
 
 v0.5.2 adds prototype hook handlers:
 

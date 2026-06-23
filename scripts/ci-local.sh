@@ -219,6 +219,7 @@ main() {
   bash scripts/smoke/smoke-plugin-v09-external-classification.sh
   bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
   bash scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+  bash scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh

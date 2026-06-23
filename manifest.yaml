@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.10.0-authorization-gate
+version: 0.10.1-durable-authorization
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -44,6 +44,7 @@ entrypoints:
   plugin_v09_dynamic_real_child_smoke: scripts/smoke/smoke-plugin-v09-dynamic-real-child.sh
   plugin_v09_combined_real_backends_smoke: scripts/smoke/smoke-plugin-v09-combined-real-backends.sh
   plugin_v10_authorization_lifecycle_smoke: scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+  plugin_v101_authorization_persistence_smoke: scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
   authorization_lifecycle_doc: docs/authorization-lifecycle.md
   run_authorization_schema: schema/run-authorization.schema.json
   live_mutation_approval_schema: schema/live-mutation-approval.schema.json
@@ -104,7 +105,9 @@ plugins:
         deterministic deployment readiness from external provider freshness:
         provider quota/auth/model/network failures are SKIP, not PASS. v0.10
         adds run authorization, secondary live approval, and terminal verdict
-        helpers for selected Dev Pipeline mutation paths. These adapters do not own engineering
+        helpers for selected Dev Pipeline mutation paths. v0.10.1 persists
+        authorization, approval, terminal verdict, control state, hashes, and
+        control events under the canonical run directory. These adapters do not own engineering
         acceptance and do not implement enforcement or repair loops. The
         installer copies this plugin source into ~/.hermes/plugins, but live
         plugin enablement remains a separate explicit runtime step.
@@ -126,6 +129,7 @@ plugins:
         - evidence_record_orchestration_result
         - evidence_record_security_decision
         - evidence_authorization_status
+        - evidence_persist_authorization
         - evidence_prepare_live_approval
         - evidence_terminalize_run
       provides_hooks:

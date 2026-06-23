@@ -4,25 +4,34 @@
   "type": "object",
   "additionalProperties": true,
   "required": [
+    "artifact_version",
+    "run_id",
     "authorization_id",
     "goal_hash",
     "source_message_id",
     "source_session_id",
     "created_at",
+    "updated_at",
     "status",
     "allowed_paths",
     "allowed_actions",
     "forbidden_actions",
     "requires_secondary_approval",
-    "expires_on"
+    "expires_on",
+    "expired_at",
+    "expiration_reason",
+    "written_by"
   ],
   "properties": {
+    "artifact_version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
     "authorization_id": { "type": "string", "minLength": 1 },
     "goal_hash": { "type": "string", "minLength": 1 },
     "source_message_id": { "type": "string", "minLength": 1 },
     "source_session_id": { "type": "string", "minLength": 1 },
     "source_attachment_hash": { "type": ["string", "null"] },
     "created_at": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 },
     "status": {
       "type": "string",
       "enum": ["pending", "active", "expired", "revoked", "completed"]
@@ -33,6 +42,7 @@
     "requires_secondary_approval": { "type": "array", "items": { "type": "string" } },
     "expires_on": { "type": "array", "items": { "type": "string" } },
     "expired_at": { "type": ["string", "null"] },
-    "expiration_reason": { "type": ["string", "null"] }
+    "expiration_reason": { "type": ["string", "null"] },
+    "written_by": { "type": "string", "const": "hermes-evidence-runtime" }
   }
 }

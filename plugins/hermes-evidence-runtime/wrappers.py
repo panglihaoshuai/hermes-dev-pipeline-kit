@@ -18,10 +18,10 @@ from .integrations import (
     orchestration_result,
     security_decision,
 )
-from . import authorization
+from . import authorization, control_store
 
 PLUGIN_DIR = pathlib.Path(__file__).resolve().parent
-PLUGIN_VERSION = "0.10.0-authorization-gate"
+PLUGIN_VERSION = "0.10.1-durable-authorization"
 
 
 def _candidate_script_dirs() -> list[pathlib.Path]:
@@ -663,6 +663,7 @@ def evidence_run_init(payload: dict[str, Any]) -> dict[str, Any]:
     run_dir_text = result["stdout"].strip().splitlines()[-1] if result["stdout"].strip() else ""
     run_dir = pathlib.Path(run_dir_text).expanduser().resolve() if run_dir_text else None
     if result["exit_code"] == 0 and run_dir and run_dir.is_dir():
+        control_store.initialize_control_store(run_dir)
         _write_active_run(project_root, run_dir, "CLASSIFIED")
 
     return {
@@ -1368,6 +1369,77 @@ def evidence_record_security_decision(payload: dict[str, Any]) -> dict[str, Any]
 
 
 def evidence_authorization_status(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("run_dir"):
+        run_dir = _as_path(payload.get("run_dir"), "run_dir")
+        target_path = str(payload.get("target_path", ""))
+        if target_path and control_store.is_control_path(run_dir, target_path):
+            return {
+                "ok": True,
+                "allowed": False,
+                "reason": "runtime_control_artifact_protected",
+                "read_only_only": False,
+                "script": "plugin:evidence_authorization_status",
+                "run_dir": str(run_dir),
+            }
+        recovered = control_store.recover_control_state(run_dir)
+        if not recovered["ok"]:
+            return {
+                "ok": True,
+                "allowed": False,
+                "reason": recovered["reason"],
+                "detail": recovered.get("detail", ""),
+                "read_only_only": True,
+                "script": "plugin:evidence_authorization_status",
+                "run_dir": str(run_dir),
+            }
+        if recovered.get("terminal"):
+            return {
+                "ok": True,
+                "allowed": False,
+                "reason": "terminal_verdict_exists",
+                "read_only_only": bool(payload.get("context_event")),
+                "script": "plugin:evidence_authorization_status",
+                "run_dir": str(run_dir),
+                "authorization_id": recovered["authorization"].get("authorization_id", ""),
+                "authorization_status": recovered["authorization"].get("status", ""),
+                "control_state": recovered["state"],
+            }
+        live_approval = None
+        if payload.get("approval_id"):
+            try:
+                live_approval = control_store.load_approval(run_dir, str(payload["approval_id"]))
+            except control_store.ControlStoreError as exc:
+                return {
+                    "ok": True,
+                    "allowed": False,
+                    "reason": exc.reason,
+                    "detail": exc.detail,
+                    "read_only_only": True,
+                    "script": "plugin:evidence_authorization_status",
+                    "run_dir": str(run_dir),
+                }
+        elif isinstance(payload.get("live_approval"), dict):
+            live_approval = payload["live_approval"]
+        auth = dict(recovered["authorization"])
+        auth.pop("_authorization_hash", None)
+        result = authorization.check_mutation(
+            auth,
+            str(payload.get("action", "")),
+            target_path,
+            goal_hash=payload.get("goal_hash"),
+            live_approval=live_approval,
+            context_event=payload.get("context_event"),
+            c_class_run=bool(payload.get("c_class_run", False)),
+        )
+        result.update({
+            "script": "plugin:evidence_authorization_status",
+            "run_dir": str(run_dir),
+            "authorization_id": auth.get("authorization_id", ""),
+            "authorization_status": auth.get("status", ""),
+            "control_state": recovered["state"],
+        })
+        return result
+
     auth = _authorization_from_payload(payload)
     result = authorization.check_mutation(
         auth,
@@ -1386,7 +1458,52 @@ def evidence_authorization_status(payload: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def evidence_persist_authorization(payload: dict[str, Any]) -> dict[str, Any]:
+    run_dir = _as_path(payload.get("run_dir"), "run_dir")
+    auth = payload.get("authorization")
+    if not isinstance(auth, dict):
+        raise WrapperError("authorization must be an object")
+    result = control_store.persist_authorization(run_dir, auth)
+    result["script"] = "plugin:evidence_persist_authorization"
+    return result
+
+
 def evidence_prepare_live_approval(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("run_dir"):
+        run_dir = _as_path(payload.get("run_dir"), "run_dir")
+        recovered = control_store.recover_control_state(run_dir)
+        if not recovered["ok"]:
+            return {
+                "ok": False,
+                "script": "plugin:evidence_prepare_live_approval",
+                "reason": recovered["reason"],
+                "detail": recovered.get("detail", ""),
+            }
+        if recovered.get("terminal"):
+            return {
+                "ok": False,
+                "script": "plugin:evidence_prepare_live_approval",
+                "reason": "terminal_verdict_exists",
+            }
+        result = authorization.prepare_live_approval(
+            recovered["authorization"],
+            str(payload.get("action", "")),
+            str(payload.get("target_path", "")),
+            source_user_message_id=str(payload.get("source_user_message_id", "")),
+            status=str(payload.get("status", "pending")),
+        )
+        if not result.get("ok"):
+            result["script"] = "plugin:evidence_prepare_live_approval"
+            return result
+        persisted = control_store.persist_approval(run_dir, result["approval"])
+        result.update({
+            "script": "plugin:evidence_prepare_live_approval",
+            "run_dir": str(run_dir),
+            "approval_path": persisted["approval_path"],
+            "authorization_hash": persisted["authorization_hash"],
+        })
+        return result
+
     auth = _authorization_from_payload(payload)
     if not auth:
         return {
@@ -1406,6 +1523,38 @@ def evidence_prepare_live_approval(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def evidence_terminalize_run(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("run_dir"):
+        run_dir = _as_path(payload.get("run_dir"), "run_dir")
+        recovered = control_store.recover_control_state(run_dir)
+        if not recovered["ok"]:
+            return {
+                "ok": False,
+                "script": "plugin:evidence_terminalize_run",
+                "reason": recovered["reason"],
+                "detail": recovered.get("detail", ""),
+            }
+        if recovered.get("terminal"):
+            return {
+                "ok": False,
+                "script": "plugin:evidence_terminalize_run",
+                "reason": "terminal_verdict_exists",
+            }
+        auth = dict(recovered["authorization"])
+        auth.pop("_authorization_hash", None)
+        result = authorization.terminalize_run(
+            auth,
+            run_id=run_dir.name,
+            verdict=str(payload.get("verdict", "")),
+            canary_status=payload.get("canary_status"),
+        )
+        if not result.get("ok"):
+            result["script"] = "plugin:evidence_terminalize_run"
+            return result
+        persisted = control_store.persist_terminal_verdict(run_dir, result)
+        result.update(persisted)
+        result["script"] = "plugin:evidence_terminalize_run"
+        return result
+
     auth = _authorization_from_payload(payload)
     if not auth:
         return {

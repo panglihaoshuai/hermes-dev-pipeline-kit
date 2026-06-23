@@ -225,6 +225,24 @@ Codex UNKNOWN → acceptance complete 必须为 false
 
 ---
 
+## 8.1 Runtime-owned Control Artifacts
+
+Authorization, secondary approval, terminal verdict, control-state, hashes, and
+control events are runtime-owned artifacts. They live under the canonical run
+directory at `.hermes-runs/<run-id>/control/`.
+
+Agents may request authorization or approval. Agents and ordinary worker/file
+mutation tools must not directly write `control/**`. Dev Pipeline-managed
+mutation checks targeting `control/**` must fail closed. Missing or invalid
+control artifacts must not reactivate a run; recovery is read-only until a fresh
+authorization is persisted.
+
+This rule protects consistency inside Dev Pipeline-managed execution. It is not
+a cryptographic boundary against the same OS user and does not control external
+tools that bypass Hermes.
+
+---
+
 ## 9. Skill Trace and Evidence
 
 Hermes must disclose the active `dev-pipeline-orchestrator` workflow at task start and report the current phase, planned sub-skills, required ClaudeCode Matt skill, Codex gates, and planned policy/doctor checks.

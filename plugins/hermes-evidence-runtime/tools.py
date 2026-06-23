@@ -105,6 +105,10 @@ def evidence_authorization_status(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_authorization_status, args, **kwargs)
 
 
+def evidence_persist_authorization(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_persist_authorization, args, **kwargs)
+
+
 def evidence_prepare_live_approval(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_prepare_live_approval, args, **kwargs)
 

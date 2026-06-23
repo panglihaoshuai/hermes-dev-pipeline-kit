@@ -21,6 +21,7 @@ from .tools import (
     evidence_record_orchestration_result,
     evidence_record_security_decision,
     evidence_record_worker_result,
+    evidence_persist_authorization,
     evidence_prepare_live_approval,
     evidence_run_init,
     evidence_terminalize_run,
@@ -224,6 +225,13 @@ def register(ctx: Any) -> None:
         evidence_authorization_status,
         schemas.EVIDENCE_AUTHORIZATION_STATUS_SCHEMA,
         "Check whether a Dev Pipeline mutation is allowed by the active authorization.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_persist_authorization",
+        evidence_persist_authorization,
+        schemas.EVIDENCE_PERSIST_AUTHORIZATION_SCHEMA,
+        "Persist run authorization into the canonical run directory control store.",
     )
     _register_tool(
         ctx,

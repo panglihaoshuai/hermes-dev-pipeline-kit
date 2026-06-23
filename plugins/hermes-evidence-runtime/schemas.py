@@ -290,14 +290,26 @@ EVIDENCE_AUTHORIZATION_STATUS_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
+        "run_dir": {"type": "string"},
         "authorization": {"type": "object"},
         "authorization_path": {"type": "string"},
         "action": {"type": "string"},
         "target_path": {"type": "string"},
         "goal_hash": {"type": "string"},
         "live_approval": {"type": "object"},
+        "approval_id": {"type": "string"},
         "context_event": {"type": "string"},
         "c_class_run": {"type": "boolean", "default": False},
+    },
+}
+
+EVIDENCE_PERSIST_AUTHORIZATION_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "authorization"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "authorization": {"type": "object"},
     },
 }
 
@@ -306,6 +318,7 @@ EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA = {
     "additionalProperties": False,
     "required": ["action", "target_path", "source_user_message_id"],
     "properties": {
+        "run_dir": {"type": "string"},
         "authorization": {"type": "object"},
         "authorization_path": {"type": "string"},
         "action": {
@@ -321,8 +334,9 @@ EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA = {
 EVIDENCE_TERMINALIZE_RUN_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["run_id", "verdict"],
+    "required": ["verdict"],
     "properties": {
+        "run_dir": {"type": "string"},
         "authorization": {"type": "object"},
         "authorization_path": {"type": "string"},
         "run_id": {"type": "string"},

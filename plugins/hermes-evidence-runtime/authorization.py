@@ -36,6 +36,7 @@ def hash_goal(text: str) -> str:
 
 def new_authorization(
     *,
+    run_id: str | None = None,
     authorization_id: str | None = None,
     goal_hash: str,
     source_message_id: str,
@@ -51,14 +52,18 @@ def new_authorization(
         raise ValueError("goal_hash is required")
     if not source_message_id or not source_session_id:
         raise ValueError("source message/session are required")
-    return {
+    created_at = now_utc()
+    data = {
         "authorization_version": "1.0",
+        "artifact_version": "1.0",
+        "run_id": run_id or "",
         "authorization_id": authorization_id or f"AUTH-{uuid.uuid4()}",
         "goal_hash": goal_hash,
         "source_message_id": source_message_id,
         "source_session_id": source_session_id,
         "source_attachment_hash": source_attachment_hash,
-        "created_at": now_utc(),
+        "created_at": created_at,
+        "updated_at": created_at,
         "status": "active",
         "allowed_paths": [str(pathlib.Path(item).expanduser().resolve()) for item in allowed_paths],
         "allowed_actions": list(allowed_actions),
@@ -67,7 +72,9 @@ def new_authorization(
         "expires_on": list(expires_on or []),
         "expired_at": None,
         "expiration_reason": None,
+        "written_by": "hermes-evidence-runtime",
     }
+    return data
 
 
 def pending_authorization_request(
@@ -76,13 +83,17 @@ def pending_authorization_request(
     source_message_id: str = "unavailable",
     source_session_id: str = "unavailable",
 ) -> dict[str, Any]:
+    created_at = now_utc()
     return {
         "authorization_version": "1.0",
+        "artifact_version": "1.0",
+        "run_id": "",
         "authorization_id": f"PENDING-{uuid.uuid4()}",
         "goal_hash": goal_hash,
         "source_message_id": source_message_id,
         "source_session_id": source_session_id,
-        "created_at": now_utc(),
+        "created_at": created_at,
+        "updated_at": created_at,
         "status": "pending",
         "allowed_paths": [],
         "allowed_actions": [],
@@ -92,6 +103,7 @@ def pending_authorization_request(
         "expired_at": None,
         "expiration_reason": "host_user_source_not_verified",
         "mutation_allowed": False,
+        "written_by": "hermes-evidence-runtime",
     }
 
 

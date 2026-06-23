@@ -903,3 +903,13 @@ Terminal `PASS_*`, `FAIL_*`, `PARTIAL_*`, and `BLOCKED` verdicts deactivate
 mutation authorization and disable continuation. Report `Next Goal` text is not
 authorization. This gate does not directly control Codex UI internal
 continuation or external processes that bypass Hermes.
+
+v0.10.1 persists that lifecycle under the canonical run directory:
+`.hermes-runs/<run-id>/control/`. The durable store contains authorization,
+authorization SHA256 sidecar, secondary approvals, terminal verdict,
+control-state, and append-only control events. `/tmp` bootstrap authorization is
+only a local session starter; it is not the durable runtime store. Restart and
+recovery read disk artifacts and fail closed when authorization, hash, approval,
+terminal, or control-state binding is missing or invalid. The store protects
+Dev Pipeline-managed consistency only; it is not a cryptographic boundary
+against the same OS user and does not control tools that bypass Hermes.
