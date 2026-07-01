@@ -16,8 +16,6 @@ jobs:
     timeout-minutes: 30
     env:
       HERMES_CI: "1"
-      HOME: ${{ runner.temp }}/home
-      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
 
     steps:
       - name: Checkout
@@ -30,8 +28,10 @@ jobs:
 
       - name: Prepare temporary HOME
         run: |
-          mkdir -p "$HOME/.claude"
-          cp protocols/claude-delegation-protocol.md "$HOME/.claude/CLAUDE.md"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+          echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/pycache" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/home/.claude"
+          cp protocols/claude-delegation-protocol.md "$RUNNER_TEMP/home/.claude/CLAUDE.md"
 
       - name: Bash syntax
         run: |
