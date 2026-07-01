@@ -46,8 +46,9 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 ## 目录
 
 - [免责声明 / Disclaimer](#免责声明--disclaimer)
+- [Architecture / Operating Model](#architecture--operating-model)
 - [这是什么](#这是什么)
-- [v0.1 vs v0.5.5](#v01-vs-v055)
+- [v0.1 vs v0.10.1](#v01-vs-v0101)
 - [角色分工](#角色分工)
 - [前置条件](#前置条件)
 - [安装前须知](#安装前须知)
@@ -66,6 +67,17 @@ This is NOT an official project of Hermes Agent, Claude Code, Codex, or gstack.
 
 ---
 
+## Architecture / Operating Model
+
+- [Operating Model](docs/operating-model.md)
+- [Skill Routing Map](docs/skill-routing-map.md)
+- [Dev Pipeline Gates](docs/gates.md)
+- [Harness Evolution Lessons](docs/harness-evolution-lessons.md)
+- [Plugin Runtime Roadmap](docs/plugin-runtime-roadmap.md)
+- [Integration Contracts](docs/integration-contracts.md)
+
+---
+
 ## 这是什么
 
 hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完整的软件开发调度能力：
@@ -78,7 +90,7 @@ hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完�
 
 整个流程有 9+ 个 Gate，每个 Gate 有明确的输入/输出/通过标准。
 
-## v0.1 vs v0.5.5
+## v0.1 vs v0.10.1
 
 | 版本 | 状态 | 说明 |
 |------|------|------|
@@ -91,6 +103,12 @@ hermes-dev-pipeline-kit 是一套 Hermes skills，安装后让 Hermes 具备完�
 | v0.5.3 | prototype | + worker result contract adapter around simulated worker output |
 | v0.5.4 | prototype | + worker output normalizer for caller-supplied/simulated ClaudeCode, Codex, OpenCode, and raw adapter output |
 | v0.5.5 | prototype | + explicit worker dry-run wrapper; real invocation is optional and disabled by default |
+| v0.6 | experimental | + plugin enabled in Hermes config and evidence tools callable through the active Hermes tool registry |
+| v0.7 | experimental | + selected Hermes hook payloads captured in log-only mode; pre/post tool hooks verified through a real Hermes runtime smoke |
+| v0.8 | experimental | + controlled-worker C-class dry-run using real Hermes evidence tool dispatch, real local command evidence, real pre/post hook evidence, generated run-state, policy result, final report, and pending approval inbox |
+| v0.9 | spike | + optional integration backend adapters for Hermes Dynamic Workflows and AgentGuard; records raw orchestration/security evidence only |
+| v0.10 | prototype | + run authorization, secondary live approval, and terminal verdict gates for selected Dev Pipeline mutation paths |
+| v0.10.1 | prototype | + durable authorization, secondary approval, terminal verdict, control state, hashes, and events under each canonical run directory |
 
 本项目是 **harness kit**，不是完整 runtime。它提供：
 - 可安装的 Hermes skill 文件和模板
@@ -119,7 +137,7 @@ bash scripts/final-report.sh <run-dir>/generated/run-state.json
 
 ---
 
-## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 Experimental Plugin Wrapper
+## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 / v0.6 / v0.7 / v0.8 / v0.9 / v0.10 Experimental Plugin Wrapper
 
 v0.5.1 adds a source-only experimental Hermes plugin wrapper at
 `plugins/hermes-evidence-runtime`.
@@ -144,15 +162,93 @@ v0.5.5 adds one machine-readable explicit worker dry-run tool:
 
 - `evidence_invoke_worker_dry_run`
 
-v0.5.1 plugin wrapper is experimental.
-It is source-validated and temp-HOME discovery validated.
-It does not install into real `~/.hermes/plugins` by default.
+v0.8 adds five machine-readable runtime artifact tools:
+
+- `evidence_record_command`
+- `evidence_generate_run_state`
+- `evidence_policy_check`
+- `evidence_final_report`
+- `evidence_approval_inbox`
+
+v0.9 adds three machine-readable integration backend tools:
+
+- `evidence_integration_capabilities`
+- `evidence_record_orchestration_result`
+- `evidence_record_security_decision`
+
+v0.10 adds machine-readable authorization lifecycle tools:
+
+- `evidence_authorization_status`
+- `evidence_persist_authorization`
+- `evidence_prepare_live_approval`
+- `evidence_terminalize_run`
+
+v0.6 target: plugin enabled + evidence tools callable.
+v0.6 status: plugin enabled and evidence tools callable when Hermes config
+enables `hermes-evidence-runtime` and the wrapper can locate the kit scripts
+through source layout, current working directory, or
+`HERMES_DEV_PIPELINE_KIT_ROOT`.
+
+v0.7 captures selected Hermes hook payloads in log-only mode.
+`pre_tool_call` and `post_tool_call` were verified through a real Hermes
+runtime smoke using the local `model_tools.handle_function_call` tool path.
+Other registered hooks remain simulated-only or untriggered unless separately
+proven.
+
+v0.5.1-v0.10.1 plugin wrapper is experimental.
 It does not replace built-in ClaudeCode/Codex/OpenCode skills.
 It does not replace the existing dev-pipeline-orchestrator skill.
 It does not capture official ClaudeCode/Codex/OpenCode output yet.
 
+v0.8 status: controlled-worker C-class dry-run passes with real Hermes evidence
+tool dispatch, real local RED/GREEN command evidence, real `pre_tool_call` and
+`post_tool_call` hook evidence, generated run-state, generated policy result,
+generated final report, and a pending approval inbox. v0.8 does not prove real
+ClaudeCode/Codex/OpenCode worker capture, does not implement enforcement, does
+not block Hermes tool calls, and is not C档 production readiness.
+
+v0.9 status: optional integration backend spike. It defines raw evidence
+contracts for Hermes Dynamic Workflows orchestration output and AgentGuard
+security decisions. The default source-only smoke is contract-only and does not
+claim real backend completion. Separate explicit real-runtime smokes prove
+AgentGuard native Hermes `pre_tool_call` allow/block behavior and Dynamic
+Workflows one-child completion when the optional backend sources and a
+configured Hermes provider are available. The combined explicit real-runtime
+smoke records both backend proofs into one generated run-state and requires
+policy-check/final-report to pass. AgentGuard `allow` is audit evidence only
+and must not be treated as engineering PASS; AgentGuard `block` does not
+replace policy-check or Codex review.
+
+v0.9.1 separates deterministic deployment readiness from external live E2E
+freshness. Deterministic CI may pass without calling an inference provider.
+External provider unavailability is classified as
+`SKIP_EXTERNAL_PROVIDER_UNAVAILABLE` with a specific reason such as
+`QUOTA_UNAVAILABLE`; it is never counted as `PASS_REAL_RUNTIME`.
+
+v0.10 status: authorization lifecycle prototype for selected Dev Pipeline and
+Hermes mutation paths. It binds run authorization to a goal hash, source
+message/session metadata, allowed paths/actions, forbidden actions, secondary
+live approval requirements, and terminal-verdict expiration. It does not
+directly control Codex UI internal continuation, processes that bypass Hermes,
+or universal OS-level mutation.
+
+v0.10.1 status: durable authorization persistence. The `/tmp` bootstrap
+authorization used to start a local Codex run is not the durable runtime store.
+Durable run authorization lives under the canonical Dev Pipeline run directory:
+`.hermes-runs/<run-id>/control/`. The store contains authorization,
+authorization hash sidecar, secondary approvals, terminal verdict,
+control-state, and append-only control events. Authorization state survives
+process restart, terminal verdict remains authoritative after restart, and
+missing or invalid control artifacts fail closed.
+
+The durable store protects consistency inside Dev Pipeline-managed execution. It
+is not a cryptographic trust boundary against the same OS user, does not control
+external tools that bypass Hermes, and does not directly control Codex UI
+internal continuation.
+
 v0.5.2 adds prototype hook handlers for `pre_tool_call`, `post_tool_call`,
-`on_session_end`, `on_session_finalize`, and `subagent_stop`.
+`on_session_start`, `on_session_end`, `on_session_finalize`, and
+`subagent_stop`.
 
 v0.5.2 hooks are prototype only.
 They are non-blocking and do not enforce commit, push, policy, or command guards.
@@ -162,14 +258,21 @@ They do not implement a memory provider.
 They do not capture official ClaudeCode/Codex/OpenCode output yet.
 They do not replace built-in ClaudeCode/Codex/OpenCode skills.
 They do not replace the existing dev-pipeline-orchestrator skill.
+v0.7 hook logs are written to `hook-events.jsonl` using a structured event
+envelope with hashed session/tool call identifiers and redacted payload values.
 
-The plugin wrapper is validated through source-only smoke tests. The installer
-does not install it into a real `~/.hermes/plugins` directory. The temp-HOME
-discovery smoke copies the plugin to `/tmp/hermes-plugin-discovery-home` and
-uses `HERMES_HOME` to verify Hermes CLI discovery without touching real HOME.
+The plugin wrapper is validated through source-only smoke tests and explicit
+temp-HOME/live enablement checks. The installer copies the plugin source into
+`~/.hermes/plugins/hermes-evidence-runtime`, but enablement remains a separate
+explicit runtime step via `hermes plugins enable hermes-evidence-runtime`.
+The temp-HOME discovery smoke uses `HERMES_HOME` to verify Hermes CLI discovery
+without touching real HOME.
+v0.6 adds live enablement and tool-call smoke evidence, but it proves only
+plugin enablement and tool callability. v0.7 adds selected log-only hook
+payload capture evidence; it still does not add policy blocking.
 The v0.5.2 hook discovery smoke uses `/tmp/hermes-plugin-hooks-discovery-home`;
-real runtime hook payload shape remains UNKNOWN until a future interactive
-Hermes runtime probe.
+payload shape remains UNKNOWN for hooks and trigger paths not covered by the
+v0.7 real runtime smoke.
 
 v0.5.3 adds a Worker Result Contract Adapter prototype. It validates and records
 simulated worker result JSON into `raw/worker/` and links that evidence into the
@@ -581,7 +684,7 @@ Policy fixtures are examples for policy validation only. Runtime validation requ
 
 ---
 
-## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 Plugin Wrapper Boundary
+## v0.5.1 / v0.5.2 / v0.5.3 / v0.5.4 / v0.5.5 / v0.6 / v0.7 / v0.8 Plugin Wrapper Boundary
 
 `plugins/hermes-evidence-runtime` is an experimental wrapper around the existing
 v0.4 Bash harness scripts. It is not a new runtime and does not rewrite the
@@ -594,12 +697,17 @@ state machine.
 - v0.5.3 worker result adapter validates simulated worker result contracts only.
 - v0.5.4 normalizer converts caller-supplied or simulated worker output into the v0.5.3 worker-result contract.
 - v0.5.5 explicit worker dry-run records invocation truth (`real_invocation`, `skipped_reason`, and artifact paths).
+- v0.6 proves plugin enablement and `evidence_*` tool callability only.
+- v0.7 proves log-only observation for the hooks actually captured. Real smoke captured `pre_tool_call` and `post_tool_call`.
+- v0.8 proves a controlled-worker C-class dry-run using real Hermes evidence tool dispatch, real command logs, real pre/post hook evidence, generated run-state, generated policy result, generated final report, and pending approval inbox.
 - It does not capture official ClaudeCode/Codex/OpenCode output yet.
 - It does not call real ClaudeCode/Codex/OpenCode unless the explicit optional dry-run lane is enabled.
-- It is not installed to real `~/.hermes/plugins` by `scripts/install.sh`.
+- v0.8 does not implement enforcement and is not C档 production readiness.
+- `scripts/install.sh` copies it to `~/.hermes/plugins/hermes-evidence-runtime`;
+  live plugin enablement is a separate explicit runtime step.
 - Its smoke tests use source-only import and temp-HOME plugin discovery under `/tmp`.
 - Hook logs are written only when `HERMES_EVIDENCE_HOOK_LOG_DIR` is set.
-- Hook runtime payload shape is not certified by this kit yet.
+- Hook runtime payload shape is certified only for the hooks and trigger path covered by the v0.7 smoke.
 
 ---
 

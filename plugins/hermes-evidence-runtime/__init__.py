@@ -7,12 +7,24 @@ from typing import Any
 from . import hooks, schemas
 from .tools import (
     evidence_active_run_status,
+    evidence_approval_inbox,
+    evidence_authorization_status,
     evidence_doctor,
     evidence_drive_s_run,
+    evidence_final_report,
+    evidence_generate_run_state,
     evidence_invoke_worker_dry_run,
+    evidence_integration_capabilities,
     evidence_normalize_worker_result,
+    evidence_policy_check,
+    evidence_record_command,
+    evidence_record_orchestration_result,
+    evidence_record_security_decision,
     evidence_record_worker_result,
+    evidence_persist_authorization,
+    evidence_prepare_live_approval,
     evidence_run_init,
+    evidence_terminalize_run,
     evidence_validate_worker_result,
 )
 
@@ -27,6 +39,19 @@ def _register_tool(
     description: str,
 ) -> None:
     """Register against known Hermes plugin API shapes without hard-coding one."""
+    try:
+        ctx.register_tool(
+            name=name,
+            toolset="evidence_runtime",
+            schema=schema,
+            handler=func,
+            description=description,
+            emoji="🧾",
+        )
+        return
+    except TypeError:
+        pass
+
     try:
         ctx.register_tool(name, func, schema=schema, description=description)
         return
@@ -112,6 +137,41 @@ def register(ctx: Any) -> None:
     )
     _register_tool(
         ctx,
+        "evidence_record_command",
+        evidence_record_command,
+        schemas.EVIDENCE_RECORD_COMMAND_SCHEMA,
+        "Record a RED/GREEN/VERIFY command by wrapping scripts/record-command.sh.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_generate_run_state",
+        evidence_generate_run_state,
+        schemas.EVIDENCE_GENERATE_RUN_STATE_SCHEMA,
+        "Generate v0.8 provenance-backed run-state from raw evidence.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_policy_check",
+        evidence_policy_check,
+        schemas.EVIDENCE_POLICY_CHECK_SCHEMA,
+        "Run scripts/policy-check.sh against generated/run-state.json.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_final_report",
+        evidence_final_report,
+        schemas.EVIDENCE_FINAL_REPORT_SCHEMA,
+        "Run scripts/final-report.sh after policy-check.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_approval_inbox",
+        evidence_approval_inbox,
+        schemas.EVIDENCE_APPROVAL_INBOX_SCHEMA,
+        "Create a pending approval inbox artifact; never records user approval.",
+    )
+    _register_tool(
+        ctx,
         "evidence_validate_worker_result",
         evidence_validate_worker_result,
         schemas.EVIDENCE_VALIDATE_WORKER_RESULT_SCHEMA,
@@ -138,10 +198,60 @@ def register(ctx: Any) -> None:
         schemas.EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA,
         "Invoke or explicitly skip a timeout-bound worker dry-run and write machine-readable evidence.",
     )
+    _register_tool(
+        ctx,
+        "evidence_integration_capabilities",
+        evidence_integration_capabilities,
+        schemas.EVIDENCE_INTEGRATION_CAPABILITIES_SCHEMA,
+        "Detect optional Dynamic Workflows and AgentGuard integration backends.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_orchestration_result",
+        evidence_record_orchestration_result,
+        schemas.EVIDENCE_RECORD_ORCHESTRATION_RESULT_SCHEMA,
+        "Record raw orchestration backend evidence into raw/orchestration-backend-result.json.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_record_security_decision",
+        evidence_record_security_decision,
+        schemas.EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA,
+        "Append raw security backend decision evidence into raw/security-decisions.jsonl.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_authorization_status",
+        evidence_authorization_status,
+        schemas.EVIDENCE_AUTHORIZATION_STATUS_SCHEMA,
+        "Check whether a Dev Pipeline mutation is allowed by the active authorization.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_persist_authorization",
+        evidence_persist_authorization,
+        schemas.EVIDENCE_PERSIST_AUTHORIZATION_SCHEMA,
+        "Persist run authorization into the canonical run directory control store.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_prepare_live_approval",
+        evidence_prepare_live_approval,
+        schemas.EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA,
+        "Create a pending live mutation approval request; never self-approves.",
+    )
+    _register_tool(
+        ctx,
+        "evidence_terminalize_run",
+        evidence_terminalize_run,
+        schemas.EVIDENCE_TERMINALIZE_RUN_SCHEMA,
+        "Emit a terminal verdict artifact and expire or complete authorization.",
+    )
 
     for hook_name, hook_func in (
         ("pre_tool_call", hooks.pre_tool_call),
         ("post_tool_call", hooks.post_tool_call),
+        ("on_session_start", hooks.on_session_start),
         ("on_session_end", hooks.on_session_end),
         ("on_session_finalize", hooks.on_session_finalize),
         ("subagent_stop", hooks.subagent_stop),

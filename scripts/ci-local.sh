@@ -3,10 +3,35 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ci_pass=0
+ci_fail=0
+ci_skip=0
 
 section() {
   echo ""
   echo "== $1 =="
+}
+
+record_pass() {
+  ci_pass=$((ci_pass + 1))
+  echo "PASS: $1"
+}
+
+record_skip() {
+  ci_skip=$((ci_skip + 1))
+  echo "SKIP: $1"
+}
+
+run_ci_optional_smoke() {
+  local label="$1"
+  shift
+
+  if [[ "${HERMES_CI:-0}" == "1" ]]; then
+    record_skip "$label requires local Hermes runtime; not run by GitHub CI"
+    return 0
+  fi
+
+  "$@"
 }
 
 expect_fail() {
@@ -48,7 +73,9 @@ security_scan() {
   # assignment-like values, private keys, or SSH public keys.
   secret_hits=$(printf "%s\n" "$secret_raw" \
     | grep -E "$secret_assignment_pattern" \
-    | grep -vE "scripts/(policy-check|ci-local)\\.sh:" || true)
+    | grep -vE "scripts/(policy-check|ci-local)\\.sh:" \
+    | grep -vE "plugins/hermes-evidence-runtime/redaction\\.py:[0-9]+:.*BEGIN .*PRIVATE KEY" \
+    | grep -vE "scripts/smoke/smoke-plugin-hooks-v07-real-runtime\\.sh:[0-9]+:CANARY_(TOKEN|PASSWORD)=" || true)
 
   if [[ -n "$secret_hits" ]]; then
     echo "FAIL: secret-like assignment or key material found"
@@ -99,7 +126,7 @@ main() {
   echo "PASS: bash syntax"
 
   section "Plugin wrapper syntax"
-  python3 -m py_compile plugins/hermes-evidence-runtime/*.py
+  python3 -m py_compile plugins/hermes-evidence-runtime/*.py plugins/hermes-evidence-runtime/integrations/*.py
   echo "PASS: plugin wrapper Python compile"
 
   section "Manifest"
@@ -190,9 +217,29 @@ main() {
   bash scripts/smoke/smoke-s-level-driver.sh
   bash scripts/smoke/smoke-s-level-driver-failure.sh
   bash scripts/smoke/smoke-plugin-wrapper.sh
-  bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
+  run_ci_optional_smoke "smoke-plugin-discovery-temp-home" \
+    bash scripts/smoke/smoke-plugin-discovery-temp-home.sh
   bash scripts/smoke/smoke-plugin-hooks-source.sh
-  bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-discovery-temp-home" \
+    bash scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-unit.sh
+  bash scripts/smoke/smoke-plugin-hooks-v07-simulated.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-real-runtime" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-non-mutation" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
+  run_ci_optional_smoke "smoke-plugin-hooks-v07-secret-canary" \
+    bash scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
+  run_ci_optional_smoke "smoke-plugin-v08-c-dry-run" \
+    bash scripts/smoke/smoke-plugin-v08-c-dry-run.sh
+  bash scripts/smoke/smoke-plugin-v09-integration-backends.sh
+  run_ci_optional_smoke "smoke-plugin-v09-agentguard-native" \
+    bash scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  bash scripts/smoke/smoke-plugin-v09-external-classification.sh
+  run_ci_optional_smoke "smoke-plugin-v09-combined-deterministic-regression" \
+    bash scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
+  bash scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+  bash scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
   bash scripts/smoke/smoke-worker-result-contract.sh
   bash scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   bash scripts/smoke/smoke-worker-normalizer.sh
@@ -213,6 +260,13 @@ main() {
   json_check schema/replay-result.schema.json
   json_check schema/artifact-manifest.schema.json
   json_check schema/worker-result.schema.json
+  json_check schema/hook-event.schema.json
+  json_check schema/approval-inbox.schema.json
+  json_check schema/orchestration-backend-result.schema.json
+  json_check schema/security-backend-decision.schema.json
+  json_check schema/run-authorization.schema.json
+  json_check schema/live-mutation-approval.schema.json
+  json_check schema/terminal-verdict.schema.json
   json_check examples/run-state.sample.json
   json_check examples/dev-pipeline-report.sample.json
   for f in examples/policy/*.json; do
@@ -231,8 +285,11 @@ main() {
     bash scripts/validate-worker-result.sh examples/worker-results/bad-codex-deferred-pass.json
 
   security_scan
+  record_pass "deterministic-suite"
+  record_skip "external-live-e2e-not-run-by-ci-local"
 
   echo ""
+  echo "ci-local summary: PASS=$ci_pass FAIL=$ci_fail SKIP=$ci_skip"
   echo "ci-local: PASS"
 }
 

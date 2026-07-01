@@ -66,6 +66,72 @@ EVIDENCE_DRIVE_S_RUN_SCHEMA = {
     },
 }
 
+EVIDENCE_RECORD_COMMAND_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "work_dir", "command", "phase"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "work_dir": {"type": "string"},
+        "command": {"type": "string"},
+        "phase": {"type": "string", "enum": ["RED", "GREEN", "VERIFY", "red", "green", "verify"]},
+        "step_id": {"type": "string"},
+    },
+}
+
+EVIDENCE_GENERATE_RUN_STATE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "hook_log_path": {
+            "type": "string",
+            "description": "Optional hook-events.jsonl path or directory to copy into raw/hook-events.jsonl before generation.",
+        },
+    },
+}
+
+EVIDENCE_POLICY_CHECK_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+    },
+}
+
+EVIDENCE_FINAL_REPORT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+    },
+}
+
+EVIDENCE_APPROVAL_INBOX_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "status": {
+            "type": "string",
+            "description": "Must not be approved/granted; the tool only emits pending approval requests.",
+        },
+        "approved": {
+            "type": "boolean",
+            "description": "Must not be true; approval artifacts are not user approval.",
+        },
+        "items": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "Optional caller items are only accepted if all are pending/unapproved.",
+        },
+    },
+}
+
 EVIDENCE_VALIDATE_WORKER_RESULT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -178,5 +244,103 @@ EVIDENCE_INVOKE_WORKER_DRY_RUN_SCHEMA = {
             "type": "string",
             "description": "Optional prompt file for real dry-run invocation.",
         },
+    },
+}
+
+EVIDENCE_INTEGRATION_CAPABILITIES_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "hermes_home": {
+            "type": "string",
+            "description": "Optional temp HERMES_HOME to inspect with hermes plugins list --json.",
+        },
+        "dynamic_workflows_path": {
+            "type": "string",
+            "description": "Optional source/plugin directory for lingjiuu/hermes-dynamic-workflows.",
+        },
+        "agentguard_path": {
+            "type": "string",
+            "description": "Optional source/plugin directory for GoPlusSecurity/agentguard Hermes plugin.",
+        },
+    },
+}
+
+EVIDENCE_RECORD_ORCHESTRATION_RESULT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "result"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "result": {"type": "object"},
+    },
+}
+
+EVIDENCE_RECORD_SECURITY_DECISION_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "decision"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "decision": {"type": "object"},
+    },
+}
+
+EVIDENCE_AUTHORIZATION_STATUS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "run_dir": {"type": "string"},
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "action": {"type": "string"},
+        "target_path": {"type": "string"},
+        "goal_hash": {"type": "string"},
+        "live_approval": {"type": "object"},
+        "approval_id": {"type": "string"},
+        "context_event": {"type": "string"},
+        "c_class_run": {"type": "boolean", "default": False},
+    },
+}
+
+EVIDENCE_PERSIST_AUTHORIZATION_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["run_dir", "authorization"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "authorization": {"type": "object"},
+    },
+}
+
+EVIDENCE_PREPARE_LIVE_APPROVAL_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["action", "target_path", "source_user_message_id"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "action": {
+            "type": "string",
+            "enum": ["modify_live_home", "install_plugin", "uninstall_plugin", "rollback", "reinstall"],
+        },
+        "target_path": {"type": "string"},
+        "source_user_message_id": {"type": "string"},
+        "status": {"type": "string", "default": "pending"},
+    },
+}
+
+EVIDENCE_TERMINALIZE_RUN_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["verdict"],
+    "properties": {
+        "run_dir": {"type": "string"},
+        "authorization": {"type": "object"},
+        "authorization_path": {"type": "string"},
+        "run_id": {"type": "string"},
+        "verdict": {"type": "string"},
+        "canary_status": {"type": "string"},
     },
 }

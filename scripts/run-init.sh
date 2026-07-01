@@ -85,12 +85,16 @@ mkdir -p \
   "$RUN_DIR/work-orders" \
   "$RUN_DIR/raw/stdout" \
   "$RUN_DIR/raw/stderr" \
-  "$RUN_DIR/generated"
+  "$RUN_DIR/generated" \
+  "$RUN_DIR/control/approvals"
+chmod 700 "$RUN_DIR/control" "$RUN_DIR/control/approvals" 2>/dev/null || true
 
 cp "$TASK_FILE" "$RUN_DIR/task.md"
 : > "$RUN_DIR/raw/command-log.jsonl"
 : > "$RUN_DIR/raw/files-touched.txt"
 : > "$RUN_DIR/events.jsonl"
+: > "$RUN_DIR/control/events.jsonl"
+chmod 600 "$RUN_DIR/control/events.jsonl" 2>/dev/null || true
 
 CREATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
@@ -151,6 +155,23 @@ cat > "$RUN_DIR/state.json" <<EOF
   "updated_at": "$CREATED_AT"
 }
 EOF
+
+cat > "$RUN_DIR/control/control-state.json" <<EOF
+{
+  "artifact_version": "1.0",
+  "run_id": "$RUN_ID",
+  "authorization_id": "",
+  "authorization_status": "pending",
+  "current_state": "unauthorized",
+  "terminal": false,
+  "continuation_allowed": false,
+  "secondary_approvals": [],
+  "updated_at": "$CREATED_AT",
+  "last_event_id": "",
+  "written_by": "hermes-evidence-runtime"
+}
+EOF
+chmod 600 "$RUN_DIR/control/control-state.json" 2>/dev/null || true
 
 "$SCRIPT_DIR/append-event.sh" \
   --run-dir "$RUN_DIR" \

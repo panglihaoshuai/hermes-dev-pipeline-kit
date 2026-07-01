@@ -3,8 +3,8 @@ set -euo pipefail
 
 #
 # hermes-dev-pipeline-kit — uninstall.sh
-# Removes dev-pipeline-orchestrator and dev-pipeline-report skills
-# from ~/.hermes/skills/software-development/
+# Removes dev-pipeline-orchestrator, dev-pipeline-report, and the
+# hermes-evidence-runtime plugin source installed by scripts/install.sh.
 #
 
 DRY_RUN=0
@@ -34,6 +34,7 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 TARGET_PARENT="$HOME/.hermes/skills/software-development"
+PLUGIN_TARGET="$HOME/.hermes/plugins/hermes-evidence-runtime"
 
 SKILL_NAMES=(
     "dev-pipeline-orchestrator"
@@ -62,6 +63,15 @@ for skill in "${SKILL_NAMES[@]}"; do
     fi
 done
 
+if [[ -d "$PLUGIN_TARGET" ]]; then
+    TO_REMOVE+=("$PLUGIN_TARGET")
+    echo "[found] $PLUGIN_TARGET"
+    ((removed++))
+else
+    echo "[skip] Not found: $PLUGIN_TARGET"
+    ((skipped++))
+fi
+
 echo ""
 
 # If nothing to remove, just report and exit
@@ -81,8 +91,8 @@ if [[ $DRY_RUN -eq 1 ]]; then
         echo "  Would remove: $target"
     done
     echo ""
-    echo "Would remove: ${#TO_REMOVE[@]} skill(s)"
-    echo "Skipped: $skipped skill(s) (not found)"
+    echo "Would remove: ${#TO_REMOVE[@]} item(s)"
+    echo "Skipped: $skipped item(s) (not found)"
     echo ""
     echo "(No changes made — dry-run mode.)"
     exit 0
@@ -128,8 +138,8 @@ echo "========================================"
 echo " Uninstall Summary"
 echo "========================================"
 echo ""
-echo "  Removed: $removed skill(s)"
-echo "  Skipped: $skipped skill(s) (not found)"
+echo "  Removed: $removed item(s)"
+echo "  Skipped: $skipped item(s) (not found)"
 echo ""
-echo "Note: Other skills in ~/.hermes/skills/ were NOT touched."
+echo "Note: Other skills/plugins in ~/.hermes/ were NOT touched."
 echo "Done."

@@ -356,7 +356,7 @@ if any(not prov.get(key) for key in required):
     print("true")
     sys.exit(0)
 
-if prov.get("generated_by") != "scripts/generate-run-state.sh":
+if prov.get("generated_by") not in {"scripts/generate-run-state.sh", "evidence_generate_run_state"}:
     print("true")
     sys.exit(0)
 
@@ -758,6 +758,88 @@ for item in d.get("worker_results") or []:
 
 for item in d.get("worker_result_violations") or []:
     if isinstance(item, dict) and "skipped worker invocation missing skipped_reason" in str(item.get("violation", "")):
+        print("true")
+        sys.exit(0)
+
+print("false")
+PY
+}
+
+jintegration_backend_violation() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    d = json.load(f)
+
+orch = d.get("orchestration") or {}
+sec = d.get("security") or {}
+
+
+def truthy(obj, key):
+    return isinstance(obj, dict) and obj.get(key) is True
+
+
+def non_empty(obj, key):
+    return isinstance(obj, dict) and bool(str(obj.get(key) or "").strip())
+
+
+if isinstance(orch, dict) and orch:
+    status = str(orch.get("status") or "")
+    real_runtime = truthy(orch, "real_runtime")
+    child_done = truthy(orch, "child_completion_proven")
+    used = truthy(orch, "used")
+    required = truthy(orch, "required")
+    selected = truthy(orch, "selected")
+    fallback_used = truthy(orch, "fallback_used")
+    complete = status == "completed" and real_runtime and child_done
+
+    if required and not complete:
+        print("true")
+        sys.exit(0)
+    if used and not complete:
+        print("true")
+        sys.exit(0)
+    if selected and not (used or fallback_used or status in {"failed", "stopped"}):
+        print("true")
+        sys.exit(0)
+    if used and not selected:
+        print("true")
+        sys.exit(0)
+    if truthy(orch, "capability_callable") and used and not child_done:
+        print("true")
+        sys.exit(0)
+    if required and status in {"failed", "stopped", "unknown"}:
+        print("true")
+        sys.exit(0)
+    if used and not (non_empty(orch, "journal_path") and isinstance(orch.get("transcript_paths"), list) and orch.get("transcript_paths")):
+        print("true")
+        sys.exit(0)
+
+if isinstance(sec, dict) and sec:
+    used = truthy(sec, "used")
+    required = truthy(sec, "required")
+    selected = truthy(sec, "selected")
+    native_hook = truthy(sec, "native_hook")
+    adapter_only = truthy(sec, "adapter_only")
+    fallback_used = truthy(sec, "fallback_used")
+    decision = str(sec.get("decision") or "")
+
+    if required and not used:
+        print("true")
+        sys.exit(0)
+    if used and (not native_hook or adapter_only):
+        print("true")
+        sys.exit(0)
+    if used and not selected:
+        print("true")
+        sys.exit(0)
+    if selected and not (used or fallback_used):
+        print("true")
+        sys.exit(0)
+    if decision == "block" and truthy(sec, "handler_executed_after_block"):
         print("true")
         sys.exit(0)
 
@@ -1760,6 +1842,14 @@ print('')
     record "failed-run-status" "FAIL"
   else
     record "failed-run-status" "PASS"
+  fi
+
+  local integration_backend_bad
+  integration_backend_bad=$(jintegration_backend_violation "$f")
+  if [[ "$integration_backend_bad" == "true" ]]; then
+    record "integration-backend-consistency" "FAIL"
+  else
+    record "integration-backend-consistency" "PASS"
   fi
 
   # v0.4 hash-linked state-machine checks.

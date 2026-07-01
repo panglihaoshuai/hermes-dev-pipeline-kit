@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Pipeline Terminal Verdict",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "artifact_version",
+    "run_id",
+    "authorization_id",
+    "authorization_hash",
+    "verdict",
+    "terminal",
+    "emitted_at",
+    "next_state",
+    "authorization_expired",
+    "continuation_allowed",
+    "written_by"
+  ],
+  "properties": {
+    "artifact_version": { "type": "string", "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "authorization_id": { "type": "string", "minLength": 1 },
+    "authorization_hash": { "type": "string", "pattern": "^sha256:" },
+    "verdict": { "type": "string", "minLength": 1 },
+    "terminal": { "type": "boolean" },
+    "emitted_at": { "type": "string", "minLength": 1 },
+    "next_state": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed_reauth_required",
+        "blocked_reauth_required",
+        "paused_reauth_required"
+      ]
+    },
+    "authorization_expired": { "type": "boolean" },
+    "continuation_allowed": { "type": "boolean" },
+    "next_goal_executable": { "type": "boolean" },
+    "written_by": { "type": "string", "const": "hermes-evidence-runtime" }
+  }
+}

@@ -265,6 +265,24 @@ The following checks are mandatory for all pipeline runs:
 | codex-deferred-no-pass | block | block | block |
 | worker-raw-output-tracked | when present | block | block |
 
+## Durable Control Artifact Contract
+
+For authorization-gated runs, final reports must reference the runtime-owned
+control artifacts under `.hermes-runs/<run-id>/control/`:
+
+- `authorization.json`
+- `authorization.sha256`
+- `approvals/<approval-id>.json` when a secondary approval was requested
+- `terminal-verdict.json` after terminal verdict
+- `control-state.json`
+- `events.jsonl`
+
+Reports must distinguish `/tmp` bootstrap authorization from durable runtime
+authorization. Missing, malformed, hash-invalid, or stale control artifacts are
+blocking until a fresh authorization is persisted in the canonical run
+directory. A terminal verdict is authoritative after restart and must report
+`continuation_allowed=false`.
+
 ## Not mandatory yet
 
 The JSON contract is introduced in v0.2 as an opt-in enhancement. Existing

@@ -1,24 +1,52 @@
 name: hermes-evidence-runtime
-version: 0.5.5
+version: 0.10.1-durable-authorization
 description: >
   Experimental Hermes plugin wrapper for hermes-dev-pipeline-kit evidence
   harness scripts. This plugin registers machine-readable tools around existing
   scripts; existing hook probes are source-only and non-blocking. v0.5.4 adds a
   worker output normalizer tool. v0.5.5 adds an explicit worker dry-run wrapper
-  whose real invocation lane is disabled by default. It does not implement a
-  memory provider, replacement skills, or official worker output capture.
+  whose real invocation lane is disabled by default. v0.6 proves plugin
+  enablement and evidence tool callability only. v0.7 adds log-only hook payload
+  capture for selected Hermes runtime hooks. It does not implement a memory
+  provider, replacement skills, hook enforcement, or official worker output
+  capture. v0.8 adds a controlled-worker C-class dry-run artifact chain using
+  real Hermes tool dispatch, real local command evidence, and real pre/post
+  hook evidence. v0.8 is not C-class production readiness and does not prove
+  real ClaudeCode/Codex/OpenCode worker capture. v0.9 adds optional integration
+  backend adapters for Hermes Dynamic Workflows and AgentGuard. These adapters
+  record raw orchestration/security evidence only; they do not own engineering
+  acceptance, do not implement repair/enforcement loops, and do not make C-class
+  production readiness claims. v0.10 adds deterministic run authorization,
+  secondary live approval, and terminal verdict helpers for selected Dev
+  Pipeline/Hermes mutation paths. v0.10.1 persists authorization, secondary
+  approval, terminal verdict, control state, hashes, and control events under
+  the canonical run directory. It does not control Codex UI internal
+  continuation or external processes that bypass Hermes.
 provides_tools:
   - evidence_doctor
   - evidence_active_run_status
   - evidence_run_init
   - evidence_drive_s_run
+  - evidence_record_command
+  - evidence_generate_run_state
+  - evidence_policy_check
+  - evidence_final_report
+  - evidence_approval_inbox
   - evidence_validate_worker_result
   - evidence_record_worker_result
   - evidence_normalize_worker_result
   - evidence_invoke_worker_dry_run
+  - evidence_integration_capabilities
+  - evidence_record_orchestration_result
+  - evidence_record_security_decision
+  - evidence_authorization_status
+  - evidence_persist_authorization
+  - evidence_prepare_live_approval
+  - evidence_terminalize_run
 provides_hooks:
   - pre_tool_call
   - post_tool_call
+  - on_session_start
   - on_session_end
   - on_session_finalize
   - subagent_stop

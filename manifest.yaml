@@ -1,5 +1,5 @@
 name: hermes-dev-pipeline-kit
-version: 0.5.5
+version: 0.10.1-durable-authorization
 description: >
   Portable Hermes workflow skills for development pipeline orchestration.
   Hermes as PM/architect/QA, ClaudeCode as executor, Codex as review gate.
@@ -31,6 +31,25 @@ entrypoints:
   plugin_discovery_smoke: scripts/smoke/smoke-plugin-discovery-temp-home.sh
   plugin_hooks_source_smoke: scripts/smoke/smoke-plugin-hooks-source.sh
   plugin_hooks_discovery_smoke: scripts/smoke/smoke-plugin-hooks-discovery-temp-home.sh
+  plugin_hooks_v07_unit_smoke: scripts/smoke/smoke-plugin-hooks-v07-unit.sh
+  plugin_hooks_v07_simulated_smoke: scripts/smoke/smoke-plugin-hooks-v07-simulated.sh
+  plugin_hooks_v07_real_runtime_smoke: scripts/smoke/smoke-plugin-hooks-v07-real-runtime.sh
+  plugin_hooks_v07_non_mutation_smoke: scripts/smoke/smoke-plugin-hooks-v07-non-mutation.sh
+  plugin_hooks_v07_secret_canary_smoke: scripts/smoke/smoke-plugin-hooks-v07-secret-canary.sh
+  plugin_v08_c_dry_run_smoke: scripts/smoke/smoke-plugin-v08-c-dry-run.sh
+  plugin_v09_integration_backends_smoke: scripts/smoke/smoke-plugin-v09-integration-backends.sh
+  plugin_v09_agentguard_native_smoke: scripts/smoke/smoke-plugin-v09-agentguard-native.sh
+  plugin_v09_external_classification_smoke: scripts/smoke/smoke-plugin-v09-external-classification.sh
+  plugin_v09_combined_deterministic_smoke: scripts/smoke/smoke-plugin-v09-combined-deterministic-regression.sh
+  plugin_v09_dynamic_real_child_smoke: scripts/smoke/smoke-plugin-v09-dynamic-real-child.sh
+  plugin_v09_combined_real_backends_smoke: scripts/smoke/smoke-plugin-v09-combined-real-backends.sh
+  plugin_v10_authorization_lifecycle_smoke: scripts/smoke/smoke-plugin-v10-authorization-lifecycle.sh
+  plugin_v101_authorization_persistence_smoke: scripts/smoke/smoke-plugin-v101-authorization-persistence.sh
+  authorization_lifecycle_doc: docs/authorization-lifecycle.md
+  run_authorization_schema: schema/run-authorization.schema.json
+  live_mutation_approval_schema: schema/live-mutation-approval.schema.json
+  terminal_verdict_schema: schema/terminal-verdict.schema.json
+  integration_contracts: docs/integration-contracts.md
   worker_result_contract_smoke: scripts/smoke/smoke-worker-result-contract.sh
   worker_result_invalid_acceptance_smoke: scripts/smoke/smoke-worker-result-invalid-acceptance.sh
   worker_normalizer_smoke: scripts/smoke/smoke-worker-normalizer.sh
@@ -55,9 +74,9 @@ plugins:
   experimental:
     - path: plugins/hermes-evidence-runtime
       name: hermes-evidence-runtime
-      version: 0.5.5
+      version: 0.10.0-authorization-gate
       install_to: "~/.hermes/plugins/hermes-evidence-runtime"
-      default_install: false
+      default_install: true
       description: >
         Experimental plugin wrapper that registers tools around existing Bash
         harness scripts. v0.5.2 also includes prototype non-blocking hook probes
@@ -68,21 +87,55 @@ plugins:
         normalizer for caller-supplied or simulated worker output. v0.5.5 adds
         an explicit worker dry-run wrapper; real invocation is optional and
         disabled by default, and default CI records skipped invocation evidence
-        only. It still does not claim official worker capture. It is
-        source-validated and temp-HOME discovery validated, but is not installed
-        into real ~/.hermes/plugins by default.
+        only. v0.6 proves plugin enablement and evidence tool callability only.
+        v0.7 captures selected Hermes hook payloads in log-only mode. Real
+        runtime smoke verified pre_tool_call and post_tool_call through the
+        Hermes model_tools path. It still does not claim official capture of
+        worker output. v0.8 proves a controlled-worker C-class dry-run using
+        real Hermes evidence tool dispatch, real local command evidence, real
+        pre/post hook evidence, and generated artifacts. It is not C-class
+        production readiness and does not prove real ClaudeCode/Codex/OpenCode
+        worker capture. v0.9 adds optional raw evidence adapters for Hermes
+        Dynamic Workflows orchestration and AgentGuard security decisions.
+        The source-only v0.9 smoke is a contract smoke only. Separate explicit
+        real-runtime smokes prove AgentGuard native allow/block hook behavior
+        and Dynamic Workflows one-child completion when the optional backends
+        and a provider are available. The combined explicit real-runtime smoke
+        records both backends into one policy-checked run. v0.9.1 separates
+        deterministic deployment readiness from external provider freshness:
+        provider quota/auth/model/network failures are SKIP, not PASS. v0.10
+        adds run authorization, secondary live approval, and terminal verdict
+        helpers for selected Dev Pipeline mutation paths. v0.10.1 persists
+        authorization, approval, terminal verdict, control state, hashes, and
+        control events under the canonical run directory. These adapters do not own engineering
+        acceptance and do not implement enforcement or repair loops. The
+        installer copies this plugin source into ~/.hermes/plugins, but live
+        plugin enablement remains a separate explicit runtime step.
       provides_tools:
         - evidence_doctor
         - evidence_active_run_status
         - evidence_run_init
         - evidence_drive_s_run
+        - evidence_record_command
+        - evidence_generate_run_state
+        - evidence_policy_check
+        - evidence_final_report
+        - evidence_approval_inbox
         - evidence_validate_worker_result
         - evidence_record_worker_result
         - evidence_normalize_worker_result
         - evidence_invoke_worker_dry_run
+        - evidence_integration_capabilities
+        - evidence_record_orchestration_result
+        - evidence_record_security_decision
+        - evidence_authorization_status
+        - evidence_persist_authorization
+        - evidence_prepare_live_approval
+        - evidence_terminalize_run
       provides_hooks:
         - pre_tool_call
         - post_tool_call
+        - on_session_start
         - on_session_end
         - on_session_finalize
         - subagent_stop
@@ -148,8 +201,8 @@ safety:
   installer_modifies:
     - "~/.hermes/skills/software-development/dev-pipeline-orchestrator"
     - "~/.hermes/skills/software-development/dev-pipeline-report"
+    - "~/.hermes/plugins/hermes-evidence-runtime"
   installer_does_not_modify:
-    - "~/.hermes/plugins"  # v0.5.5 plugin wrapper is source-only / experimental
     - "~/.claude/CLAUDE.md"  # only warns, never writes
     - "~/.claude/settings.json"
     - "any business project"

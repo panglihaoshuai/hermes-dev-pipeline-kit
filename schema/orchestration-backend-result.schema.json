@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/hermes-dev-pipeline-kit/orchestration-backend-result.schema.json",
+  "title": "Orchestration Backend Result",
+  "description": "Raw orchestration backend evidence. This is not engineering acceptance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "backend",
+    "backend_version",
+    "available",
+    "run_id",
+    "status",
+    "capture_mode",
+    "work_order_id",
+    "structured_result_path",
+    "journal_path",
+    "transcript_paths",
+    "workspace_path",
+    "started_at",
+    "ended_at",
+    "error"
+  ],
+  "properties": {
+    "backend": {
+      "type": "string",
+      "enum": ["controlled_fixture", "hermes_dynamic_workflows"]
+    },
+    "backend_version": {
+      "type": "string"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "completed", "failed", "stopped", "unknown"]
+    },
+    "capture_mode": {
+      "type": "string",
+      "enum": ["real_runtime", "controlled_fixture"]
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "structured_result_path": {
+      "type": "string"
+    },
+    "journal_path": {
+      "type": "string"
+    },
+    "transcript_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workspace_path": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "ended_at": {
+      "type": "string"
+    },
+    "error": {
+      "type": ["string", "null"]
+    },
+    "claims": {
+      "type": "object",
+      "description": "Optional backend-reported claims. Dev Pipeline must independently verify commands, files, tests, and acceptance.",
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

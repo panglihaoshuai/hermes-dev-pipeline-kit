@@ -53,6 +53,26 @@ def evidence_drive_s_run(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_drive_s_run, args, **kwargs)
 
 
+def evidence_record_command(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_command, args, **kwargs)
+
+
+def evidence_generate_run_state(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_generate_run_state, args, **kwargs)
+
+
+def evidence_policy_check(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_policy_check, args, **kwargs)
+
+
+def evidence_final_report(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_final_report, args, **kwargs)
+
+
+def evidence_approval_inbox(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_approval_inbox, args, **kwargs)
+
+
 def evidence_validate_worker_result(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_validate_worker_result, args, **kwargs)
 
@@ -67,3 +87,31 @@ def evidence_normalize_worker_result(args: Any = None, **kwargs: Any) -> str:
 
 def evidence_invoke_worker_dry_run(args: Any = None, **kwargs: Any) -> str:
     return _json_tool(wrappers.evidence_invoke_worker_dry_run, args, **kwargs)
+
+
+def evidence_integration_capabilities(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_integration_capabilities, args, **kwargs)
+
+
+def evidence_record_orchestration_result(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_orchestration_result, args, **kwargs)
+
+
+def evidence_record_security_decision(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_record_security_decision, args, **kwargs)
+
+
+def evidence_authorization_status(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_authorization_status, args, **kwargs)
+
+
+def evidence_persist_authorization(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_persist_authorization, args, **kwargs)
+
+
+def evidence_prepare_live_approval(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_prepare_live_approval, args, **kwargs)
+
+
+def evidence_terminalize_run(args: Any = None, **kwargs: Any) -> str:
+    return _json_tool(wrappers.evidence_terminalize_run, args, **kwargs)
